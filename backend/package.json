@@ -1,0 +1,9 @@
+{
+  "name": "berogetai-backend",
+  "private": true,
+  "scripts": {
+    "dev": "npm run start:dev --prefix api",
+    "start": "npm start --prefix api",
+    "build": "npm run build --prefix api"
+  }
+}
