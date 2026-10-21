@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const site = "http://localhost:3001";
+const site = process.env.NEXT_PUBLIC_PUBLIC_SITE_URL ?? "http://localhost:3001";
 
 const links = [
   { href: "/flights", label: "Flights" },

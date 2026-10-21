@@ -1,14 +1,14 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
+import 'api_base_io.dart' if (dart.library.html) 'api_base_web.dart';
 
 const _definedBase = String.fromEnvironment('API_BASE');
 
 String apiBase() {
   if (_definedBase.isNotEmpty) return _definedBase;
-  if (!kIsWeb && Platform.isAndroid) return 'http://10.0.2.2:3000/api/v1';
-  return 'http://localhost:3000/api/v1';
+  return defaultApiBase();
 }
 
 class ApiException implements Exception {
@@ -213,37 +213,28 @@ Future<void> logoutAgent(String refreshToken) async {
 }
 
 Future<List<Map<String, dynamic>>> _get(String path, String accessToken, {String failure = 'Could not load your customers.'}) async {
-  final client = HttpClient();
   try {
-    final request = await client.getUrl(Uri.parse('${apiBase()}$path')).timeout(const Duration(seconds: 8));
-    request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $accessToken');
-    final response = await request.close().timeout(const Duration(seconds: 8));
-    final text = await response.transform(utf8.decoder).join();
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(failure);
-    }
-    final decoded = jsonDecode(text);
+    final response = await http.get(
+      Uri.parse('${apiBase()}$path'),
+      headers: {'Authorization': 'Bearer $accessToken'},
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode < 200 || response.statusCode >= 300) throw ApiException(failure);
+    final decoded = jsonDecode(response.body);
     if (decoded is! List) return [];
     return decoded.map((row) => Map<String, dynamic>.from(row as Map)).toList();
   } on ApiException {
     rethrow;
   } catch (_) {
     throw ApiException('The API is not reachable.');
-  } finally {
-    client.close(force: true);
   }
 }
 
 Future<Map<String, dynamic>> _post(String path, Map<String, dynamic> payload, {String? accessToken, Duration timeout = const Duration(seconds: 8)}) async {
-  final client = HttpClient();
   try {
-    final request = await client.postUrl(Uri.parse('${apiBase()}$path')).timeout(timeout);
-    request.headers.contentType = ContentType.json;
-    if (accessToken != null && accessToken.isNotEmpty) request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $accessToken');
-    request.add(utf8.encode(jsonEncode(payload)));
-    final response = await request.close().timeout(timeout);
-    final text = await response.transform(utf8.decoder).join();
-    final json = text.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(jsonDecode(text) as Map);
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    if (accessToken != null && accessToken.isNotEmpty) headers['Authorization'] = 'Bearer $accessToken';
+    final response = await http.post(Uri.parse('${apiBase()}$path'), headers: headers, body: jsonEncode(payload)).timeout(timeout);
+    final json = response.body.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(jsonDecode(response.body) as Map);
     if (response.statusCode >= 200 && response.statusCode < 300) return json;
     final message = json['message'];
     final detail = message is List ? message.join(' ') : message is String ? message : 'Could not sign in.';
@@ -252,7 +243,5 @@ Future<Map<String, dynamic>> _post(String path, Map<String, dynamic> payload, {S
     rethrow;
   } catch (_) {
     throw ApiException('The API is not reachable.');
-  } finally {
-    client.close(force: true);
   }
 }
