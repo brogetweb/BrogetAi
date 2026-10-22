@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 const configuredSite = process.env.NEXT_PUBLIC_PUBLIC_SITE_URL?.replace(/\/$/, "");
@@ -8,24 +9,18 @@ export const publicWebsiteUrl =
 const site = publicWebsiteUrl;
 
 const links = [
-  { href: "/flights", label: "Flights" },
-  { href: "/hotels", label: "Hotels" },
-  { href: "/cibil", label: "Credit score" },
-  { href: "/sip", label: "SIP" },
+  { href: "/#travel", label: "Travel" },
+  { href: "/#banking", label: "Banking" },
+  { href: "/#payment", label: "Payment" },
+  { href: "/#products", label: "Our Services" },
   { href: "/about", label: "About us" },
   { href: "/contact", label: "Contact us" },
 ];
 
-function Brand() {
+function Brand({ plate = false }: { plate?: boolean }) {
   return (
-    <a href={site} className="inline-flex items-center gap-2.5" aria-label="BerogetAI home">
-      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-500 to-fuchsia-500 shadow-lg shadow-indigo-900/20">
-        <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-white/90 text-sm font-extrabold text-white">B</span>
-      </span>
-      <span className="text-[22px] font-extrabold tracking-[-0.06em] text-[#12141a]">
-        Beroget<span className="text-indigo-600">AI</span>
-        <span className="ml-1 align-top text-[10px] font-bold tracking-normal text-slate-400">®</span>
-      </span>
+    <a href={site} className={`inline-flex shrink-0 items-center ${plate ? "rounded-2xl bg-white px-2.5 py-1.5" : ""}`} aria-label="BrogetAI home">
+      <Image src="/brand/broget-logo.jpg" alt="BrogetAI" width={929} height={242} priority className="h-12 w-auto max-w-[min(16rem,52vw)] object-contain object-left" />
     </a>
   );
 }
@@ -34,8 +29,8 @@ export function PublicHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
+    <header className="sticky top-0 z-40 shrink-0 border-b border-slate-200 bg-white">
+      <div className="mx-auto flex h-[5.25rem] max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
         <Brand />
         <nav aria-label="Main navigation" className="hidden items-center gap-1 text-sm font-semibold lg:flex">
           {links.map((link) => (
@@ -81,12 +76,37 @@ export function PublicHeader() {
 
 const columns = [
   {
-    title: "Book",
+    title: "Travel",
     links: [
-      { href: "/flights", label: "Flights" },
-      { href: "/hotels", label: "Hotels" },
-      { href: "/cibil", label: "Credit score" },
+      { href: "/services/flight-booking", label: "Flight Booking" },
+      { href: "/services/train-booking", label: "Train Booking" },
+      { href: "/services/bus-booking", label: "Bus Booking" },
+      { href: "/services/hotel-booking", label: "Hotel Booking" },
+    ],
+  },
+  {
+    title: "Banking",
+    links: [
+      { href: "/cibil", label: "CIBIL" },
       { href: "/sip", label: "SIP" },
+      { href: "/services/fd-rd", label: "FD & RD" },
+    ],
+  },
+  {
+    title: "Payment",
+    links: [
+      { href: "https://gateway.brogetpay.com/", label: "Payment Gateway" },
+      { href: "/services/payment-link", label: "Payment Link" },
+      { href: "/services/payout", label: "PayOut" },
+    ],
+  },
+  {
+    title: "Our Services",
+    links: [
+      { href: "/services/education", label: "Education Ecosystem" },
+      { href: "/services/health-care", label: "Health Care" },
+      { href: "/services/agriculture", label: "Agriculture" },
+      { href: "https://www.builderbroget.com/", label: "Builder Ships" },
     ],
   },
   {
@@ -98,41 +118,29 @@ const columns = [
       { href: "/terms", label: "Terms" },
     ],
   },
-  {
-    title: "Account",
-    links: [
-      { href: "/login", label: "Log in" },
-      { href: "/register", label: "Create account" },
-    ],
-  },
 ];
 
 export function PublicFooter() {
   return (
-    <footer className="relative overflow-hidden bg-[#1b2230] text-white">
+    <footer className="relative shrink-0 bg-[#1b2230] text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-200/80 to-transparent" />
       <div className="relative mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-16">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="flex flex-col items-start gap-5 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <a href={site} className="inline-flex items-center gap-2.5" aria-label="BerogetAI home">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-500 to-fuchsia-500">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-white/90 text-sm font-extrabold text-white">B</span>
-              </span>
-              <span className="text-[22px] font-extrabold tracking-[-0.06em] text-white">
-                Beroget<span className="text-indigo-200">AI</span>
-              </span>
-            </a>
-            <p className="mt-5 max-w-xs text-sm leading-7 text-slate-300">Fares and stays in one search. Hold a trip, then finish it when you are ready.</p>
-            <a href={`${site}/contact`} className="mt-6 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#17191e] hover:bg-indigo-50">
-              Write to the trip desk
-            </a>
+            <Brand plate />
+            <p className="mt-4 max-w-md text-sm leading-7 text-slate-300">Travel, banking, payments, and the services beside them. One BrogetAI desk.</p>
           </div>
+          <a href={`${site}/contact`} className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#17191e] hover:bg-indigo-50">
+            Contact the desk
+          </a>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
           {columns.map((column) => (
-            <div key={column.title}>
+            <div key={column.title} className="min-w-0">
               <h2 className="text-xs font-bold tracking-[0.16em] text-indigo-200 uppercase">{column.title}</h2>
-              <div className="mt-4 flex flex-col items-start gap-1 text-sm">
+              <div className="mt-3 flex flex-col items-start gap-1 text-sm">
                 {column.links.map((link) => (
-                  <a key={link.href} href={`${site}${link.href}`} className="rounded-lg px-2 py-1.5 text-slate-200 hover:bg-white/10 hover:text-white">
+                  <a key={link.href} href={link.href.startsWith("http") ? link.href : `${site}${link.href}`} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="rounded-lg py-1.5 text-slate-200 hover:text-white">
                     {link.label}
                   </a>
                 ))}

@@ -53,7 +53,7 @@ export function SiteFooter() {
                       {link.label}
                     </OpenAccount>
                   ) : (
-                    <Link key={link.href} href={link.href} className="max-w-full rounded-lg py-1.5 text-slate-200 hover:text-white">
+                    <Link key={link.href} href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="max-w-full rounded-lg py-1.5 text-slate-200 hover:text-white">
                       {link.label}
                     </Link>
                   ),

@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useState, type FormEvent } from "react";
-import { PublicFooter, PublicHeader, publicWebsiteUrl } from "@/components/public-chrome";
+import { PublicFooter, PublicHeader } from "@/components/public-chrome";
 import { login, type AdminSession } from "@/lib/api";
 
 export function LoginScreen({ onSuccess, onError }: { onSuccess: (session: AdminSession) => void; onError: (message: string) => void }) {
@@ -35,83 +34,60 @@ export function LoginScreen({ onSuccess, onError }: { onSuccess: (session: Admin
   }
 
   return (
-    <div className="flex h-dvh flex-col overflow-y-auto bg-[#eef3fb]">
+    <div className="flex h-dvh flex-col overflow-y-auto bg-white">
       <PublicHeader />
-      <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="relative hidden overflow-hidden bg-[#0e1b33] text-white lg:flex lg:flex-col lg:justify-between lg:px-12 lg:py-12">
-          <div className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-[#2f6bff]/30 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 -left-16 h-64 w-64 rounded-full bg-[#2f6bff]/20 blur-3xl" />
-          <a href={publicWebsiteUrl} className="relative flex w-fit items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-white/70" aria-label="Open the public website">
-            <Image src="/mark.png" alt="" width={48} height={48} className="h-12 w-12 rounded-2xl" />
-            <div>
-              <p className="text-lg font-extrabold tracking-tight">BerogetAI</p>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-[#9fb0d0]">SUPER ADMIN</p>
-            </div>
-          </a>
-          <div className="relative max-w-md">
-            <h1 className="text-4xl font-extrabold tracking-tight">The whole desk, in one sign-in.</h1>
-            <p className="mt-4 text-base font-semibold leading-7 text-[#c5d2ea]">Flights, hotels, every agent's customers, and the CIBIL reports they run.</p>
-            <div className="mt-8 grid gap-3">
-              {["Flights and hotels", "Every agent's customers", "CIBIL reports from the agents"].map((item) => (
-                <p key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold">{item}</p>
-              ))}
-            </div>
-          </div>
-          <p className="relative text-xs font-bold tracking-[0.12em] text-[#7f93b8]">SIGNED IN THROUGH THE API</p>
-        </section>
+      <div className="grid min-h-[36rem] flex-1 lg:grid-cols-2">
+      <section className="relative hidden overflow-hidden bg-[#0b1b3a] text-white lg:flex lg:flex-col lg:justify-between lg:px-16 lg:py-14">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(47,107,255,0.35),transparent_36%)]" />
+        <div className="relative max-w-lg">
+          <p className="text-xs font-bold tracking-[0.22em] text-blue-100 uppercase">Super admin</p>
+          <h1 className="mt-4 text-5xl leading-[1.05] font-extrabold tracking-[-0.045em]">The whole desk, in one sign-in.</h1>
+          <p className="mt-5 max-w-md text-lg leading-8 text-white/75">Flights, hotels, every agent's customers, and the CIBIL reports they run.</p>
+        </div>
+        <p className="relative text-sm font-semibold text-blue-100/80">Signed in through the API</p>
+      </section>
 
-        <section className="flex items-center justify-center px-4 py-10">
-          <div className="w-full max-w-[420px]">
-            <a href={publicWebsiteUrl} className="mb-6 flex w-fit items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#2f6bff] lg:hidden" aria-label="Open the public website">
-              <Image src="/mark.png" alt="" width={44} height={44} className="h-11 w-11 rounded-2xl" />
-              <div>
-                <p className="text-base font-extrabold">BerogetAI</p>
-                <p className="text-[10px] font-bold tracking-[0.14em] text-[#8b95a7]">SUPER ADMIN</p>
-              </div>
-            </a>
-            <div className="rounded-[28px] border border-[#e6ebf5] bg-white p-6 shadow-[0_20px_50px_rgba(18,24,43,0.06)] sm:p-8">
-              <h2 className="text-2xl font-extrabold tracking-tight">Welcome back</h2>
-              <p className="mt-1 text-sm font-semibold text-[#5c677a]">Sign in with the super admin email and password.</p>
-              <form className="mt-6 space-y-4" onSubmit={submit}>
-                <label className="block text-sm font-extrabold">
-                  Email
-                  <input
-                    type="email"
-                    autoComplete="username"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="admin@beroget.ai"
-                    className="mt-1 w-full rounded-xl border border-[#e6ebf5] bg-[#f8fafc] px-3 py-3 font-semibold outline-none transition-colors duration-200 focus:border-[#2f6bff]"
-                  />
-                </label>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="admin-password" className="text-sm font-extrabold">Password</label>
-                    <button type="button" onClick={() => setShow((open) => !open)} className="text-xs font-extrabold text-[#2f6bff]">
-                      {show ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  <input
-                    id="admin-password"
-                    type={show ? "text" : "password"}
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Password"
-                    className="mt-1 w-full rounded-xl border border-[#e6ebf5] bg-[#f8fafc] px-3 py-3 font-semibold outline-none transition-colors duration-200 focus:border-[#2f6bff]"
-                  />
-                </div>
-                {error ? <p className="text-sm font-bold text-[#dc2626]">{error}</p> : null}
-                <button type="submit" disabled={pending} className="w-full rounded-xl bg-[#2f6bff] py-3 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(47,107,255,0.28)] disabled:opacity-60">
-                  {pending ? "Signing in" : "Login"}
+      <section className="flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-[400px]">
+          <p className="text-xs font-bold tracking-[0.2em] text-[#1d4ed8] uppercase">Welcome back</p>
+          <h2 className="mt-3 text-4xl font-extrabold tracking-[-0.04em] text-[#12182b]">Sign in</h2>
+          <p className="mt-3 text-base leading-7 text-[#5c677a]">Use the super admin email and password.</p>
+          <form className="mt-8 space-y-5" onSubmit={submit}>
+            <label className="block text-sm font-bold text-[#12182b]">
+              Email
+              <input
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="admin@beroget.ai"
+                className="mt-2 w-full border-b border-slate-300 bg-transparent px-0 py-3 font-semibold outline-none transition placeholder:text-slate-400 focus:border-[#1d4ed8]"
+              />
+            </label>
+            <div>
+              <div className="flex items-center justify-between">
+                <label htmlFor="admin-password" className="text-sm font-bold text-[#12182b]">Password</label>
+                <button type="button" onClick={() => setShow((open) => !open)} className="text-xs font-bold text-[#1d4ed8]">
+                  {show ? "Hide" : "Show"}
                 </button>
-              </form>
-              <p className="mt-5 rounded-2xl bg-[#f4f7fc] px-4 py-3 text-xs font-semibold leading-5 text-[#5c677a]">
-                Sign-in is checked by the API. The first super admin is created in Mongo from the API env.
-              </p>
+              </div>
+              <input
+                id="admin-password"
+                type={show ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Password"
+                className="mt-2 w-full border-b border-slate-300 bg-transparent px-0 py-3 font-semibold outline-none transition placeholder:text-slate-400 focus:border-[#1d4ed8]"
+              />
             </div>
-          </div>
-        </section>
+            {error ? <p role="alert" className="text-sm font-semibold text-rose-700">{error}</p> : null}
+            <button type="submit" disabled={pending} className="mt-2 w-full bg-[#1d4ed8] py-3.5 text-sm font-bold text-white transition hover:bg-[#1e40af] disabled:opacity-60">
+              {pending ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </div>
+      </section>
       </div>
       <PublicFooter />
     </div>

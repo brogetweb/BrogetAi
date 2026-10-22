@@ -45,7 +45,7 @@ export const menuGroups: MenuGroup[] = [
     headline: "Take money in. Send money out.",
     lede: "A gateway, a payment link, and a payout rail for banks, wallets, and UPI.",
     items: [
-      { slug: "payment-gateway", href: "/services/payment-gateway", label: "Payment Gateway", text: "Accept secure online payments for purchases, subscriptions, and more.", image: "/images/home/home-gateway.jpg", soon: true },
+      { href: "https://gateway.brogetpay.com/", label: "Payment Gateway", text: "Accept secure online payments for purchases, subscriptions, and more.", image: "/images/home/home-gateway.jpg" },
       { slug: "payment-link", href: "/services/payment-link", label: "Payment Link", text: "Send a link and collect the payment without a checkout page.", image: "/images/home/home-payment-link.jpg", soon: true },
       { slug: "payout", href: "/services/payout", label: "PayOut", text: "Disburse payments to bank accounts, wallets, UPI, and cards.", image: "/images/home/home-payout.jpg", soon: true },
     ],
@@ -59,7 +59,7 @@ export const menuGroups: MenuGroup[] = [
       { slug: "education", href: "/services/education", label: "Education Ecosystem", text: "Learning, campuses, and student services in one place.", image: "/images/home/home-education.jpg", soon: true },
       { slug: "health-care", href: "/services/health-care", label: "Health Care", text: "Clinics, care, and health services for families.", image: "/images/home/home-health.jpg", soon: true },
       { slug: "agriculture", href: "/services/agriculture", label: "Agriculture", text: "Farm inputs, markets, and grower services.", image: "/images/home/home-agriculture.jpg", soon: true },
-      { slug: "builder-ships", href: "/services/builder-ships", label: "Builder Ships", text: "Construction, sites, and builder projects in one place.", image: "/images/home/home-builder.jpg", soon: true },
+      { href: "https://www.builderbroget.com/", label: "Builder Ships", text: "Construction, sites, and builder projects in one place.", image: "/images/home/home-builder.jpg" },
     ],
   },
 ];

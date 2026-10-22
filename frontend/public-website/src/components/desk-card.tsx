@@ -11,10 +11,10 @@ export function deskGrid(count: number) {
 export function DeskCard({ item, titleAs = "h3" }: { item: MenuItem; titleAs?: "h3" | "h4" }) {
   const Title = titleAs;
   return (
-    <Link href={item.href} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.4rem] bg-white shadow-[0_16px_40px_rgba(18,24,38,0.08)] ring-1 ring-slate-200 transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(18,24,38,0.12)]">
+    <Link href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined} className="desk-card group relative flex h-full min-w-0 flex-col overflow-hidden rounded-[1.4rem] bg-white ring-1 ring-slate-200">
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <Image src={item.image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" className="object-cover object-center transition duration-700 group-hover:scale-[1.03]" />
-        {item.soon ? <span className="absolute top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] text-[#1d4ed8] uppercase shadow-sm">Coming soon</span> : null}
+        <span className={`absolute top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] uppercase shadow-sm ${item.soon ? "text-[#1d4ed8]" : "text-emerald-700"}`}>{item.soon ? "Coming soon" : "Active"}</span>
       </div>
       <div className="flex flex-1 flex-col bg-white px-4 py-5 text-center">
         <Title className="text-lg font-semibold tracking-tight text-[#1d4ed8]">{item.label}</Title>

@@ -100,10 +100,10 @@ export function HomeHero() {
                   priority={slideIndex === 0}
                   loading={slideIndex === 0 ? undefined : "eager"}
                   sizes="100vw"
-                  className="object-cover"
+                  className={`hero-photo object-cover ${current ? "is-live" : ""}`}
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(7,16,31,0.92)_0%,rgba(13,47,134,0.78)_46%,rgba(13,47,134,0.28)_100%)]" />
-                <div className="relative mx-auto flex min-h-[26rem] max-w-7xl flex-col justify-center px-4 py-12 sm:min-h-[30rem] sm:px-5 lg:px-8">
+                <div className={`hero-copy relative mx-auto flex min-h-[26rem] max-w-7xl flex-col justify-center px-4 py-12 sm:min-h-[30rem] sm:px-5 lg:px-8 ${current && animate ? "is-live" : ""}`}>
                   <p className="text-[11px] font-bold tracking-[0.2em] text-blue-100 uppercase">{slide.eyebrow}</p>
                   <Title className="mt-3 max-w-3xl text-[2.15rem] leading-[1.05] font-semibold tracking-[-0.045em] sm:text-6xl">
                     {slide.title}
@@ -124,7 +124,7 @@ export function HomeHero() {
         </div>
       </div>
       <div className="relative mx-auto -mt-8 max-w-7xl px-4 pb-10 sm:-mt-10 sm:px-5 sm:pb-12 lg:px-8">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="hero-shelf grid grid-cols-2 gap-3 sm:grid-cols-4">
           {slides.map((slide, slideIndex) => {
             const selected = slideIndex === active;
             return (
@@ -134,7 +134,7 @@ export function HomeHero() {
                 onClick={() => goTo(slideIndex)}
                 aria-label={`Show ${slide.label}`}
                 aria-pressed={selected}
-                className={`overflow-hidden rounded-2xl bg-white text-center shadow-[0_14px_30px_rgba(18,24,38,0.16)] ring-1 ${selected ? "ring-2 ring-[#1d4ed8]" : "ring-white/70"}`}
+                className={`hero-thumb overflow-hidden rounded-2xl bg-white text-center shadow-[0_16px_34px_rgba(7,16,31,0.22)] ring-1 ${selected ? "is-selected ring-2 ring-[#1d4ed8]" : "ring-white/70"}`}
               >
                 <div className="relative h-20 sm:h-24">
                   <Image src={slide.src} alt="" fill priority sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />

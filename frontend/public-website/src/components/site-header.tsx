@@ -144,10 +144,10 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
                   {expanded ? (
                     <div className="grid gap-1 px-2 pb-2">
                       {group.items.map((item) => (
-                        <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="rounded-xl bg-white px-3 py-3 ring-1 ring-slate-200">
+                        <Link key={item.href} href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined} onClick={() => setOpen(false)} className="rounded-xl bg-white px-3 py-3 ring-1 ring-slate-200">
                           <span className="flex items-center justify-between gap-3">
                             <span className="font-semibold text-slate-900">{item.label}</span>
-                            {item.soon ? <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold tracking-[0.12em] text-amber-700 uppercase">Soon</span> : null}
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-[0.12em] uppercase ${item.soon ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>{item.soon ? "Soon" : "Active"}</span>
                           </span>
                           <span className="mt-1 block text-sm leading-5 text-slate-500">{item.text}</span>
                         </Link>
@@ -216,12 +216,12 @@ function DesktopGroup({
         <div className="absolute left-0 top-full z-50 w-[22rem] pt-3">
           <div className="rounded-2xl bg-white p-2 text-slate-900 shadow-[0_18px_50px_rgba(18,24,43,0.16)] ring-1 ring-slate-200">
             {group.items.map((item) => (
-              <Link key={item.href} href={item.href} onClick={onClose} className="flex items-start justify-between gap-3 rounded-xl px-3 py-3 hover:bg-slate-50">
+              <Link key={item.href} href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined} onClick={onClose} className="flex items-start justify-between gap-3 rounded-xl px-3 py-3 hover:bg-slate-50">
                 <span>
                   <span className="block font-semibold">{item.label}</span>
                   <span className="mt-0.5 block text-xs leading-5 font-medium text-slate-500">{item.text}</span>
                 </span>
-                {item.soon ? <span className="mt-0.5 shrink-0 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold tracking-[0.12em] text-amber-700 uppercase">Soon</span> : null}
+                <span className={`mt-0.5 shrink-0 rounded-full px-2 py-1 text-[10px] font-bold tracking-[0.12em] uppercase ${item.soon ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>{item.soon ? "Soon" : "Active"}</span>
               </Link>
             ))}
           </div>

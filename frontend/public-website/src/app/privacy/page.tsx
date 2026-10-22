@@ -16,7 +16,7 @@ const sections = [
     clauses: [
       "A hold form takes the passenger or guest name and email, together with the reference shown on screen.",
       "Log in and Register take the name, email, and password you choose for an account.",
-      "The contact form takes your name, email, topic, and message so the trip desk can read the note.",
+      "The contact form takes your name, email, phone, topic, and message so the desk can read the note.",
     ],
   },
   {
