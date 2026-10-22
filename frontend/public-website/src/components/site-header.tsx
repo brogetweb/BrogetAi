@@ -3,34 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { menuGroups, pageLabel, plainLinks, type MenuGroup } from "@/lib/menu";
 import { Brand } from "./brand";
 import { useAuth } from "./auth-drawer";
-
-const links = [
-  { href: "/flights", label: "Flights" },
-  { href: "/hotels", label: "Hotels" },
-  { href: "/cibil", label: "Credit score" },
-  { href: "/sip", label: "SIP" },
-  { href: "/about", label: "About us" },
-  { href: "/contact", label: "Contact us" },
-];
-
-const pageName: Record<string, string> = {
-  "/": "Home",
-  "/flights": "Flights",
-  "/hotels": "Hotels",
-  "/cibil": "Credit score",
-  "/sip": "SIP",
-  "/about": "About us",
-  "/contact": "Contact us",
-  "/privacy": "Privacy",
-  "/terms": "Terms",
-};
 
 export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const pathname = usePathname();
   const { openAuth } = useAuth();
   const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState<string | null>(null);
+  const [mobileGroup, setMobileGroup] = useState<string | null>("travel");
   const [scrolled, setScrolled] = useState(false);
   const [moving, setMoving] = useState(false);
   const [notice, setNotice] = useState("");
@@ -45,9 +27,10 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
 
   useEffect(() => {
     setOpen(false);
+    setMenu(null);
     if (lastPath.current === pathname) return;
     lastPath.current = pathname;
-    setNotice(pageName[pathname] ?? "Page");
+    setNotice(pageLabel(pathname));
     setMoving(true);
     const hide = window.setTimeout(() => setMoving(false), 560);
     return () => window.clearTimeout(hide);
@@ -87,17 +70,21 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
         {moving ? <div className="route-bar h-full bg-indigo-500" /> : null}
       </div>
       <p className="sr-only" aria-live="polite">{notice ? `Now on ${notice}` : ""}</p>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
+      <div className="mx-auto flex h-[5.25rem] max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
         <Brand tone={tone} />
-        <nav aria-label="Main navigation" className="hidden items-center gap-1 text-sm font-semibold lg:flex">
-          {links.map((link) => {
+        <nav aria-label="Main navigation" className="hidden items-center gap-0.5 text-sm font-semibold lg:flex" onMouseLeave={() => setMenu(null)}>
+          {menuGroups.map((group) => (
+            <DesktopGroup key={group.id} group={group} open={menu === group.id} solid={solid} pathname={pathname} onOpen={() => setMenu(group.id)} onToggle={() => setMenu((current) => (current === group.id ? null : group.id))} onClose={() => setMenu(null)} />
+          ))}
+          {plainLinks.map((link) => {
             const current = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 aria-current={current ? "page" : undefined}
-                className={`rounded-full px-3 py-2 transition ${
+                onMouseEnter={() => setMenu(null)}
+                className={`rounded-full px-2.5 py-2 transition xl:px-3 ${
                   current
                     ? solid
                       ? "bg-slate-100 text-slate-900"
@@ -113,12 +100,9 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => { setOpen(false); openAuth("login"); }} className={`hidden rounded-full px-3.5 py-2 text-sm font-semibold sm:inline-flex ${solid ? "text-slate-700 hover:bg-slate-100" : "text-white hover:bg-white/10"}`}>
+          <button type="button" onClick={() => { setOpen(false); openAuth("login"); }} className={`hidden rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 sm:inline-flex`}>
             Log in
           </button>
-          <Link href="/flights" className="hidden rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 sm:inline-flex">
-            Search flights
-          </Link>
           <button
             type="button"
             className={`inline-flex h-10 w-10 items-center justify-center rounded-full lg:hidden ${solid ? "text-slate-900 hover:bg-slate-100" : "text-white hover:bg-white/10"}`}
@@ -141,32 +125,108 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
       </div>
       {open ? (
         <nav id="mobile-nav" aria-label="Mobile navigation" className="border-t border-slate-200 bg-white px-5 py-4 lg:hidden">
-          <div className="mx-auto flex max-w-7xl flex-col gap-1">
-            {links.map((link) => {
-              const current = pathname === link.href;
+          <div className="mx-auto flex max-h-[calc(100dvh-5.5rem)] max-w-7xl flex-col gap-1 overflow-y-auto">
+            {menuGroups.map((group) => {
+              const expanded = mobileGroup === group.id;
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={current ? "page" : undefined}
-                  onClick={() => setOpen(false)}
-                  className={`rounded-xl px-3 py-3 text-base font-semibold ${current ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-slate-50"}`}
-                >
-                  {link.label}
-                </Link>
+                <div key={group.id} className="rounded-2xl bg-slate-50">
+                  <button
+                    type="button"
+                    aria-expanded={expanded}
+                    onClick={() => setMobileGroup(expanded ? null : group.id)}
+                    className="flex w-full items-center justify-between px-3 py-3 text-left text-base font-semibold text-slate-900"
+                  >
+                    {group.label}
+                    <svg viewBox="0 0 24 24" className={`h-4 w-4 text-slate-400 transition ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  {expanded ? (
+                    <div className="grid gap-1 px-2 pb-2">
+                      {group.items.map((item) => (
+                        <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="rounded-xl bg-white px-3 py-3 ring-1 ring-slate-200">
+                          <span className="flex items-center justify-between gap-3">
+                            <span className="font-semibold text-slate-900">{item.label}</span>
+                            {item.soon ? <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold tracking-[0.12em] text-amber-700 uppercase">Soon</span> : null}
+                          </span>
+                          <span className="mt-1 block text-sm leading-5 text-slate-500">{item.text}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => { setOpen(false); openAuth("login"); }} className="rounded-xl border border-slate-200 px-3 py-3 text-center text-sm font-semibold text-slate-800">
-                Log in
-              </button>
-              <Link href="/flights" onClick={() => setOpen(false)} className="rounded-xl bg-indigo-600 px-3 py-3 text-center text-sm font-semibold text-white">
-                Search flights
+            {plainLinks.map((link) => (
+              <Link key={link.href} href={link.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                {link.label}
               </Link>
-            </div>
+            ))}
+            <button type="button" onClick={() => { setOpen(false); openAuth("login"); }} className="mt-3 rounded-xl bg-indigo-600 px-3 py-3 text-center text-sm font-semibold text-white">
+              Log in
+            </button>
           </div>
         </nav>
       ) : null}
     </header>
+  );
+}
+
+function DesktopGroup({
+  group,
+  open,
+  solid,
+  pathname,
+  onOpen,
+  onToggle,
+  onClose,
+}: {
+  group: MenuGroup;
+  open: boolean;
+  solid: boolean;
+  pathname: string;
+  onOpen: () => void;
+  onToggle: () => void;
+  onClose: () => void;
+}) {
+  const current = group.items.some((item) => pathname === item.href);
+  return (
+    <div className="relative" onMouseEnter={onOpen}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={onToggle}
+        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-2 xl:px-3 ${
+          current || open
+            ? solid
+              ? "bg-slate-100 text-slate-900"
+              : "bg-white/15 text-white"
+            : solid
+              ? "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              : "text-white/85 hover:bg-white/10 hover:text-white"
+        }`}
+      >
+        {group.label}
+        <svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 transition ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open ? (
+        <div className="absolute left-0 top-full z-50 w-[22rem] pt-3">
+          <div className="rounded-2xl bg-white p-2 text-slate-900 shadow-[0_18px_50px_rgba(18,24,43,0.16)] ring-1 ring-slate-200">
+            {group.items.map((item) => (
+              <Link key={item.href} href={item.href} onClick={onClose} className="flex items-start justify-between gap-3 rounded-xl px-3 py-3 hover:bg-slate-50">
+                <span>
+                  <span className="block font-semibold">{item.label}</span>
+                  <span className="mt-0.5 block text-xs leading-5 font-medium text-slate-500">{item.text}</span>
+                </span>
+                {item.soon ? <span className="mt-0.5 shrink-0 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold tracking-[0.12em] text-amber-700 uppercase">Soon</span> : null}
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }

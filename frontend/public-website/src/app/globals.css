@@ -4,6 +4,10 @@
 :root { color-scheme: light; }
 html { scroll-behavior: smooth; }
 body { margin: 0; font-family: "DM Sans", sans-serif; background: #f7f6f3; color: #12141a; }
+@media (max-width: 767px) {
+  html, body { overflow-x: hidden; max-width: 100%; }
+  img, video { max-width: 100%; }
+}
 a, button { transition: color .22s ease, background-color .22s ease, border-color .22s ease, box-shadow .22s ease, opacity .22s ease, transform .22s ease, filter .22s ease; }
 a:hover img, button:hover img { filter: brightness(1.08); }
 h1, h2, h3, h4 { font-family: Manrope, sans-serif; }

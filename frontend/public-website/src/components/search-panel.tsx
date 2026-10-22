@@ -152,7 +152,7 @@ export function SearchPanel(initial: SearchValues = {}) {
               <span className="mt-0.5 block truncate text-sm font-semibold text-slate-900">{partyLabel}</span>
             </button>
             {open === "party" ? (
-              <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
+              <div className="absolute right-0 z-30 mt-2 w-[min(18rem,calc(100vw-2.5rem))] rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
                 <Stepper label="Adults" hint="Age 12+" value={adults} min={1} max={8} onChange={setAdults} />
                 <Stepper label="Children" hint="Age 2–11" value={children} min={0} max={6} onChange={setChildren} />
                 <label className="mt-3 block text-xs font-bold tracking-wide text-slate-400 uppercase" htmlFor="cabin">Cabin</label>
@@ -178,7 +178,7 @@ export function SearchPanel(initial: SearchValues = {}) {
               <span className="mt-0.5 block text-sm font-semibold text-slate-900">{guests} guest{guests > 1 ? "s" : ""}</span>
             </button>
             {open === "party" ? (
-              <div className="absolute right-0 z-30 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
+              <div className="absolute right-0 z-30 mt-2 w-[min(16rem,calc(100vw-2.5rem))] rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
                 <Stepper label="Guests" hint="In one room" value={guests} min={1} max={8} onChange={setGuests} />
                 <button type="button" onClick={() => setOpen(null)} className="mt-3 w-full rounded-xl bg-[#12141a] py-2.5 text-sm font-bold text-white">Done</button>
               </div>

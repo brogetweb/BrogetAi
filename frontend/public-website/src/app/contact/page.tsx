@@ -19,7 +19,7 @@ export default function ContactPage() {
   return (
     <>
       <main className="bg-[#f6f5f2] pb-20 text-[#17191e]">
-        <section className="relative mt-16 h-[300px] overflow-hidden sm:h-[360px]">
+        <section className="relative mt-[5.25rem] h-[300px] overflow-hidden sm:h-[360px]">
           <Image src="/images/hotel-suite.jpg" alt="" fill priority sizes="100vw" className="object-cover object-[center_40%]" />
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(8,16,32,0.72)_0%,rgba(8,16,32,0.28)_42%,transparent_70%)]" />
           <div className="absolute inset-x-0 bottom-0 h-20 bg-[linear-gradient(to_top,rgba(8,16,32,0.35),transparent)]" />

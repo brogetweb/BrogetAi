@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "BerogetAI — Go further. Feel every moment.",
-  description: "Discover flight and hotel booking with BerogetAI. CIBIL score checking and SIP services are coming soon.",
+  description: "BerogetAI for travel booking, banking, payments, and services across education, health, agriculture, and builder work.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

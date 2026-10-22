@@ -80,7 +80,7 @@ export function FlightExplorer({
 
   return (
     <div>
-      <section className="relative mt-16 h-[400px] overflow-hidden sm:h-[460px]">
+      <section className="relative mt-[5.25rem] h-[400px] overflow-hidden sm:h-[460px]">
         <Image src="/images/hero-flights-full.jpg" alt="" fill priority sizes="100vw" className="object-cover object-[center_40%]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(8,16,32,0.78)_0%,rgba(8,16,32,0.36)_46%,transparent_72%)]" />
         <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(to_top,rgba(8,16,32,0.45),transparent)]" />
