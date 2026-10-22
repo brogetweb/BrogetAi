@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { LoginScreen } from "@/components/login-screen";
+import { publicWebsiteUrl } from "@/components/public-chrome";
 import { clearSession, logout, restoreSession, saveSession, type AdminAccount, type AdminSession } from "@/lib/api";
 import { agentLabel, findCustomer, groups, maskAadhaar, maskPan, phoneLabel, sections, type DeskCustomer } from "@/lib/desk";
 
@@ -132,11 +133,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
         />
         <aside className={`fixed inset-y-0 left-0 z-40 flex h-dvh w-[280px] max-w-[86vw] flex-col overflow-hidden bg-[#0e1b33] text-white shadow-[12px_0_40px_rgba(8,16,36,0.28)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:max-w-none lg:translate-x-0 lg:shadow-none ${menu ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex shrink-0 items-center gap-3 px-4 py-4">
-            <Image src="/mark.png" alt="BerogetAI" width={40} height={40} className="h-10 w-10 rounded-2xl" />
-            <div className="min-w-0">
-              <p className="text-[15px] font-extrabold tracking-tight">BerogetAI</p>
-              <p className="text-[10px] font-bold tracking-[0.12em] text-[#9fb0d0]">SUPER ADMIN</p>
-            </div>
+            <a href={publicWebsiteUrl} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-white/70" aria-label="Open the public website">
+              <Image src="/mark.png" alt="" width={40} height={40} className="h-10 w-10 rounded-2xl" />
+              <div className="min-w-0">
+                <p className="text-[15px] font-extrabold tracking-tight">BerogetAI</p>
+                <p className="text-[10px] font-bold tracking-[0.12em] text-[#9fb0d0]">SUPER ADMIN</p>
+              </div>
+            </a>
             <button type="button" onClick={() => setMenu(false)} className="ml-auto grid h-9 w-9 place-items-center rounded-xl text-white/80 hover:bg-white/10 lg:hidden" aria-label="Close menu">
               <Icon name="close" />
             </button>

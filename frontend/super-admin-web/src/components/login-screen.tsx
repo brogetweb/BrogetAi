@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
-import { PublicFooter, PublicHeader } from "@/components/public-chrome";
+import { PublicFooter, PublicHeader, publicWebsiteUrl } from "@/components/public-chrome";
 import { login, type AdminSession } from "@/lib/api";
 
 export function LoginScreen({ onSuccess, onError }: { onSuccess: (session: AdminSession) => void; onError: (message: string) => void }) {
@@ -41,13 +41,13 @@ export function LoginScreen({ onSuccess, onError }: { onSuccess: (session: Admin
         <section className="relative hidden overflow-hidden bg-[#0e1b33] text-white lg:flex lg:flex-col lg:justify-between lg:px-12 lg:py-12">
           <div className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-[#2f6bff]/30 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 -left-16 h-64 w-64 rounded-full bg-[#2f6bff]/20 blur-3xl" />
-          <div className="relative flex items-center gap-3">
-            <Image src="/mark.png" alt="BerogetAI" width={48} height={48} className="h-12 w-12 rounded-2xl" />
+          <a href={publicWebsiteUrl} className="relative flex w-fit items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-white/70" aria-label="Open the public website">
+            <Image src="/mark.png" alt="" width={48} height={48} className="h-12 w-12 rounded-2xl" />
             <div>
               <p className="text-lg font-extrabold tracking-tight">BerogetAI</p>
               <p className="text-[11px] font-bold tracking-[0.16em] text-[#9fb0d0]">SUPER ADMIN</p>
             </div>
-          </div>
+          </a>
           <div className="relative max-w-md">
             <h1 className="text-4xl font-extrabold tracking-tight">The whole desk, in one sign-in.</h1>
             <p className="mt-4 text-base font-semibold leading-7 text-[#c5d2ea]">Flights, hotels, every agent's customers, and the CIBIL reports they run.</p>
@@ -62,13 +62,13 @@ export function LoginScreen({ onSuccess, onError }: { onSuccess: (session: Admin
 
         <section className="flex items-center justify-center px-4 py-10">
           <div className="w-full max-w-[420px]">
-            <div className="mb-6 flex items-center gap-3 lg:hidden">
-              <Image src="/mark.png" alt="BerogetAI" width={44} height={44} className="h-11 w-11 rounded-2xl" />
+            <a href={publicWebsiteUrl} className="mb-6 flex w-fit items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#2f6bff] lg:hidden" aria-label="Open the public website">
+              <Image src="/mark.png" alt="" width={44} height={44} className="h-11 w-11 rounded-2xl" />
               <div>
                 <p className="text-base font-extrabold">BerogetAI</p>
                 <p className="text-[10px] font-bold tracking-[0.14em] text-[#8b95a7]">SUPER ADMIN</p>
               </div>
-            </div>
+            </a>
             <div className="rounded-[28px] border border-[#e6ebf5] bg-white p-6 shadow-[0_20px_50px_rgba(18,24,43,0.06)] sm:p-8">
               <h2 className="text-2xl font-extrabold tracking-tight">Welcome back</h2>
               <p className="mt-1 text-sm font-semibold text-[#5c677a]">Sign in with the super admin email and password.</p>

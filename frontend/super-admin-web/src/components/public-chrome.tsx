@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 
-const site = process.env.NEXT_PUBLIC_PUBLIC_SITE_URL ?? "http://localhost:3001";
+const configuredSite = process.env.NEXT_PUBLIC_PUBLIC_SITE_URL?.replace(/\/$/, "");
+export const publicWebsiteUrl =
+  configuredSite && !/localhost|127\.0\.0\.1/.test(configuredSite) ? configuredSite : "https://www.brogetai.com";
+const site = publicWebsiteUrl;
 
 const links = [
   { href: "/flights", label: "Flights" },
