@@ -312,7 +312,7 @@ class _Plane extends StatelessWidget {
       height: 52,
       alignment: Alignment.center,
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: const Icon(Icons.flight, color: dashBlue, size: 26),
+      child: const CibilBadge(size: 52),
     );
   }
 }

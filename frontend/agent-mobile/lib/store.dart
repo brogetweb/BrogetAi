@@ -157,6 +157,7 @@ class AgentStore extends ChangeNotifier {
 
   int _customerSeq = 1;
   int _loanSeq = 1043;
+  Future<void>? _deskRefresh;
 
   int get unread => notices.where((notice) => !notice.read).length;
 
@@ -259,8 +260,18 @@ class AgentStore extends ChangeNotifier {
     return loans.where((loan) => loan.customerId == customerId).toList();
   }
 
-  Future<void> refreshDesk() async {
-    if (accessToken.isEmpty) return;
+  Future<void> refreshDesk() {
+    if (accessToken.isEmpty) return Future.value();
+    final running = _deskRefresh;
+    if (running != null) return running;
+    final task = _loadDesk();
+    _deskRefresh = task;
+    return task.whenComplete(() {
+      if (identical(_deskRefresh, task)) _deskRefresh = null;
+    });
+  }
+
+  Future<void> _loadDesk() async {
     try {
       final rows = await listMyCustomers(accessToken);
       replaceCustomers(rows);

@@ -144,13 +144,7 @@ class _Top extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 34,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(color: dashBlue, borderRadius: BorderRadius.circular(10)),
-          child: const Icon(Icons.flight, color: Colors.white, size: 18),
-        ),
+        const CibilBadge(size: 34),
         const SizedBox(width: 8),
         const Expanded(
           child: Column(

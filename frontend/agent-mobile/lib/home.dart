@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import 'api.dart';
@@ -24,14 +22,15 @@ class HomeScreen extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(14, 6, 14, 16),
           children: [
             _TopBar(store: store, onMenu: nav.openMenu),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             _Greeting(store: store),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             _Hero(onCheck: () => nav.go(2)),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             const _SectionLabel(title: 'Desk today'),
             const SizedBox(height: 10),
             _StatGrid(
@@ -240,23 +239,14 @@ class _TopBar extends StatelessWidget {
       children: [
         _RoundButton(icon: Icons.menu_rounded, onTap: onMenu),
         const SizedBox(width: 12),
-        Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1E4ED8), Color(0xFF5B93FF)]),
-          ),
-          child: const Icon(Icons.flight, color: Colors.white, size: 18),
-        ),
+        const CibilBadge(size: 36),
         const SizedBox(width: 10),
         const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('BerogetAI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
-              Text('CREDIT DESK', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.9, color: Color(0xFF8B95A7))),
+              Text('CIBIL DESK', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.9, color: Color(0xFF8B95A7))),
             ],
           ),
         ),
@@ -319,8 +309,8 @@ class _Greeting extends StatelessWidget {
       children: [
         Text(hello, style: const TextStyle(color: Color(0xFF8B95A7), fontWeight: FontWeight.w700, fontSize: 13)),
         const SizedBox(height: 2),
-        Text(store.agentName, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.6, height: 1.1)),
-        const SizedBox(height: 10),
+        Text(store.agentName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.6, height: 1.1)),
+        const SizedBox(height: 6),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -365,158 +355,46 @@ class _Hero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1636B8), Color(0xFF2F6BFF), Color(0xFF6AA0FF)],
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        onTap: onCheck,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFD9E4FF)),
+          ),
+          child: Row(
+            children: [
+              const CibilBadge(size: 72),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('CIBIL check', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.3)),
+                    SizedBox(height: 3),
+                    Text('Open a saved customer and fetch the score.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 12, height: 1.3, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(color: dashBlue, shape: BoxShape.circle),
+                child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+              ),
+            ],
           ),
         ),
-        child: Stack(
-          children: [
-            const Positioned(right: -28, top: -36, child: _Glow(size: 140, color: Color(0x33FFFFFF))),
-            const Positioned(left: -20, bottom: -40, child: _Glow(size: 110, color: Color(0x22FFFFFF))),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 14, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0x33FFFFFF), borderRadius: BorderRadius.circular(999)),
-                    child: const Text('RUN CREDIT CHECKS', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.6)),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text('Check a CIBIL\nscore in seconds', style: TextStyle(color: Colors.white, fontSize: 26, height: 1.12, fontWeight: FontWeight.w800, letterSpacing: -0.6)),
-                  const SizedBox(height: 8),
-                  const Text('Pick a saved customer, confirm consent, and open the report on this desk.', style: TextStyle(color: Color(0xFFD6E4FF), fontSize: 13, height: 1.4)),
-                  const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Material(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          child: InkWell(
-                            onTap: onCheck,
-                            borderRadius: BorderRadius.circular(14),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.speed, size: 18, color: dashBlue),
-                                  SizedBox(width: 8),
-                                  Flexible(child: Text('Check CIBIL Score', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: dashBlue))),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const _SampleScoreCard(),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
-}
-
-class _Glow extends StatelessWidget {
-  const _Glow({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(width: size, height: size, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
-  }
-}
-
-class _SampleScoreCard extends StatelessWidget {
-  const _SampleScoreCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 108,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Color(0x332F6BFF), blurRadius: 16, offset: Offset(0, 6))],
-      ),
-      child: const Column(
-        children: [
-          Text('Sample', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF8B95A7), letterSpacing: 0.4)),
-          SizedBox(
-            width: 84,
-            height: 48,
-            child: CustomPaint(
-              painter: _DashGauge(),
-              child: Align(
-                alignment: Alignment(0, 0.85),
-                child: Text('782', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
-              ),
-            ),
-          ),
-          _GoodPill(),
-        ],
-      ),
-    );
-  }
-}
-
-class _GoodPill extends StatelessWidget {
-  const _GoodPill();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: const Color(0xFFE8F8EE), borderRadius: BorderRadius.circular(999)),
-      child: const Text('Good', style: TextStyle(color: Color(0xFF16A34A), fontSize: 10, fontWeight: FontWeight.w800)),
-    );
-  }
-}
-
-class _DashGauge extends CustomPainter {
-  const _DashGauge();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final diameter = size.width - 4;
-    final rect = Rect.fromLTWH((size.width - diameter) / 2, size.height - (diameter / 2) - 2, diameter, diameter);
-    final base = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFFE8EEF6);
-    canvas.drawArc(rect, math.pi, math.pi, false, base);
-    const colors = [Color(0xFFEF4444), Color(0xFFF59E0B), Color(0xFFFACC15), Color(0xFF22C55E)];
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.butt;
-    for (var i = 0; i < colors.length; i++) {
-      paint.color = colors[i];
-      canvas.drawArc(rect, math.pi + (math.pi / 4) * i, math.pi / 4 - 0.03, false, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _StatGrid extends StatelessWidget {

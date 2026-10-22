@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'store.dart';
@@ -10,6 +12,85 @@ const indigo = Color(0xFF4F46E5);
 const dashBlue = Color(0xFF2F6BFF);
 const dashNavy = Color(0xFF12182B);
 const dashWash = Color(0xFFF5F7FB);
+
+class CibilBadge extends StatelessWidget {
+  const CibilBadge({this.size = 40, super.key});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(size * 0.24),
+      child: Image.asset(
+        'assets/brand/mark.png',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        gaplessPlayback: true,
+      ),
+    );
+  }
+}
+
+class CibilGauge extends StatelessWidget {
+  const CibilGauge({required this.width, super.key});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: CustomPaint(
+        size: Size(width, width * 0.62),
+        painter: const CibilGaugePainter(),
+      ),
+    );
+  }
+}
+
+class CibilGaugePainter extends CustomPainter {
+  const CibilGaugePainter();
+
+  static const colors = [
+    Color(0xFFEF4444),
+    Color(0xFFF97316),
+    Color(0xFFEAB308),
+    Color(0xFF22C55E),
+    Color(0xFF15803D),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stroke = size.width * 0.16;
+    final diameter = size.width - stroke;
+    final rect = Rect.fromLTWH(stroke / 2, size.height - (diameter / 2) - 1, diameter, diameter);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.butt;
+    final sweep = math.pi / colors.length;
+    const gap = 0.05;
+    for (var i = 0; i < colors.length; i++) {
+      paint.color = colors[i];
+      canvas.drawArc(rect, math.pi - sweep * i, -(sweep - gap), false, paint);
+    }
+    final theta = math.pi * 0.28;
+    final cx = size.width / 2;
+    final cy = rect.center.dy;
+    final len = diameter * 0.34;
+    final needle = Paint()
+      ..color = dashNavy
+      ..strokeWidth = math.max(1.4, size.width * 0.055)
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(cx, cy), Offset(cx + math.cos(theta) * len, cy - math.sin(theta) * len), needle);
+    canvas.drawCircle(Offset(cx, cy), math.max(1.6, size.width * 0.07), Paint()..color = dashNavy);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
 
 class AgentScope extends InheritedNotifier<AgentStore> {
   const AgentScope({required AgentStore store, required super.child, super.key}) : super(notifier: store);

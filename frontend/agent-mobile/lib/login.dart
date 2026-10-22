@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import 'ui.dart';
@@ -85,11 +83,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     return Scaffold(
       backgroundColor: dashWash,
       body: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: EdgeInsets.zero,
         children: [
           const _Hero(),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             child: Column(
               children: [
                 FadeTransition(
@@ -129,229 +128,32 @@ class _Hero extends StatelessWidget {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
       child: Container(
+        width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1636B8), Color(0xFF2F6BFF), Color(0xFF6AA0FF)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0E1B4D), Color(0xFF2F6BFF)],
           ),
         ),
-        child: Stack(
-          children: [
-            const Positioned(right: -36, top: -28, child: _Glow(size: 160)),
-            const Positioned(left: -30, bottom: 20, child: _Glow(size: 120)),
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 12, 18, 22),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const _Brand(),
-                    const SizedBox(height: 22),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Expanded(child: _HeroCopy()),
-                        const SizedBox(width: 10),
-                        const _ScoreCard(),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Row(
-                      children: [
-                        _GlassChip(icon: Icons.people_alt_outlined, label: 'Customers'),
-                        SizedBox(width: 8),
-                        _GlassChip(icon: Icons.speed, label: 'CIBIL'),
-                        SizedBox(width: 8),
-                        _GlassChip(icon: Icons.badge_outlined, label: 'KYC'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Glow extends StatelessWidget {
-  const _Glow({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x22FFFFFF)),
-      ),
-    );
-  }
-}
-
-class _Brand extends StatelessWidget {
-  const _Brand();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-          child: const Icon(Icons.flight, color: dashBlue, size: 20),
-        ),
-        const SizedBox(width: 10),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('BerogetAI', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.4)),
-              Text('AGENT DESK', style: TextStyle(color: Color(0xFFD6E4FF), fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.9)),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(color: const Color(0x33FFFFFF), borderRadius: BorderRadius.circular(999)),
-          child: const Row(
-            children: [
-              Icon(Icons.verified, size: 14, color: Colors.white),
-              SizedBox(width: 4),
-              Text('Portal', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HeroCopy extends StatelessWidget {
-  const _HeroCopy();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Grow more,\ntogether.', style: TextStyle(color: Colors.white, fontSize: 30, height: 1.05, fontWeight: FontWeight.w800, letterSpacing: -0.8)),
-        SizedBox(height: 8),
-        Text('Check a score, keep the customer file, and finish KYC from this desk.', style: TextStyle(color: Color(0xFFD6E4FF), fontSize: 13, height: 1.35)),
-      ],
-    );
-  }
-}
-
-class _GlassChip extends StatelessWidget {
-  const _GlassChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0x24FFFFFF),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0x33FFFFFF)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white, size: 15),
-            const SizedBox(width: 6),
-            Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ScoreCard extends StatelessWidget {
-  const _ScoreCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 112,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Color(0x332F6BFF), blurRadius: 16, offset: Offset(0, 8))],
-      ),
-      child: const Column(
-        children: [
-          Text('Sample', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF8B95A7), letterSpacing: 0.4)),
-          SizedBox(
-            width: 88,
-            height: 50,
-            child: CustomPaint(
-              painter: _GaugePainter(),
-              child: Align(
-                alignment: Alignment(0, 0.85),
-                child: Text('782', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
-              ),
+        child: const SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 10, 20, 22),
+            child: Column(
+              children: [
+                CibilBadge(size: 92),
+                SizedBox(height: 12),
+                Text('BerogetAI', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.6)),
+                SizedBox(height: 4),
+                Text('CIBIL score desk for agents', style: TextStyle(color: Color(0xFFD6E4FF), fontSize: 13, fontWeight: FontWeight.w600)),
+              ],
             ),
           ),
-          _GoodPill(),
-        ],
+        ),
       ),
     );
   }
-}
-
-class _GoodPill extends StatelessWidget {
-  const _GoodPill();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: const Color(0xFFE8F8EE), borderRadius: BorderRadius.circular(999)),
-      child: const Text('Good', style: TextStyle(color: Color(0xFF16A34A), fontSize: 10, fontWeight: FontWeight.w800)),
-    );
-  }
-}
-
-class _GaugePainter extends CustomPainter {
-  const _GaugePainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final diameter = size.width - 4;
-    final rect = Rect.fromLTWH((size.width - diameter) / 2, size.height - (diameter / 2) - 2, diameter, diameter);
-    final base = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFFE8EEF6);
-    canvas.drawArc(rect, math.pi, math.pi, false, base);
-    const colors = [Color(0xFFEF4444), Color(0xFFF59E0B), Color(0xFFFACC15), Color(0xFF22C55E)];
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.butt;
-    for (var i = 0; i < colors.length; i++) {
-      paint.color = colors[i];
-      canvas.drawArc(rect, math.pi + (math.pi / 4) * i, math.pi / 4 - 0.03, false, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _LoginCard extends StatelessWidget {
@@ -392,7 +194,7 @@ class _LoginCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Welcome Back', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: dashNavy)),
+          const Text('Welcome Back', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: dashNavy)),
           const SizedBox(height: 4),
           const Text('Sign in with the email your branch gave you.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.3)),
           const SizedBox(height: 16),
@@ -534,7 +336,7 @@ class _FeatureRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),

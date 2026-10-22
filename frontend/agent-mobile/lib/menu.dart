@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'customers.dart';
@@ -17,7 +19,7 @@ class AgentMenu extends StatelessWidget {
     final store = AgentScope.of(context);
     final width = MediaQuery.sizeOf(context).width;
     return Drawer(
-      width: width > 520 ? 380 : width - 28,
+      width: width > 520 ? 320 : math.min(292, width * 0.78),
       backgroundColor: dashWash,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.horizontal(right: Radius.circular(28))),
       child: SafeArea(
@@ -25,50 +27,42 @@ class AgentMenu extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1E4ED8), Color(0xFF5B93FF)]),
-                    ),
-                    child: const Icon(Icons.flight, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('BerogetAI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: dashNavy, height: 1.1, letterSpacing: -0.3)),
-                        SizedBox(height: 2),
-                        Text('CREDIT DESK', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.9, color: Color(0xFF8B95A7))),
-                      ],
-                    ),
-                  ),
-                  Material(
-                    color: Colors.white,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: onClose,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0xFFEEF1F6))),
-                        child: const Icon(Icons.close_rounded, color: dashNavy, size: 18),
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0E1B4D), Color(0xFF2F6BFF)]),
+                ),
+                child: Row(
+                  children: [
+                    const CibilBadge(size: 58),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('BerogetAI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Colors.white, height: 1.1, letterSpacing: -0.3)),
+                          SizedBox(height: 3),
+                          Text('CIBIL DESK', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.9, color: Color(0xFFD6E4FF))),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                    Material(
+                      color: const Color(0x33FFFFFF),
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: onClose,
+                        child: const SizedBox(width: 34, height: 34, child: Icon(Icons.close_rounded, color: Colors.white, size: 18)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
               child: Material(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
@@ -76,7 +70,7 @@ class AgentMenu extends StatelessWidget {
                   onTap: () => onTab(3),
                   borderRadius: BorderRadius.circular(18),
                   child: Container(
-                    padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+                    padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
                     decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFEEF1F6))),
                     child: Row(
                       children: [
@@ -121,7 +115,7 @@ class AgentMenu extends StatelessWidget {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                 children: [
                   _Group(
                     title: 'Main',

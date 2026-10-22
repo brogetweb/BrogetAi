@@ -1,0 +1,15 @@
+[Unit]
+Description=Broget AI API
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/broget-ai/backend/api
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node dist/main.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
