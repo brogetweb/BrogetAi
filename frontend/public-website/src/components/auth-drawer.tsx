@@ -79,11 +79,11 @@ function AuthDrawer({ open, mode, onMode, onClose }: { open: boolean; mode: Mode
   }
 
   return (
-    <div className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
+    <div className={`fixed inset-0 z-[70] ${open ? "" : "invisible"}`} aria-hidden={open ? undefined : true} {...(open ? {} : { inert: true })}>
       <button type="button" aria-label="Close account" className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`} onClick={onClose} />
       <aside
         role="dialog"
-        aria-modal="true"
+        aria-modal={open || undefined}
         aria-label={mode === "login" ? "Log in" : "Register"}
         className={`absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${open ? "translate-x-0" : "translate-x-full"}`}
       >

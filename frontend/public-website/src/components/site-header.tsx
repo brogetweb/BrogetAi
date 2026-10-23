@@ -65,7 +65,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const tone = solid ? "dark" : "light";
 
   return (
-    <header className={`fixed inset-x-0 top-0 z-50 ${solid ? "border-b border-slate-200 bg-white/95 backdrop-blur-xl" : "bg-transparent"}`}>
+    <header className={`fixed inset-x-0 top-0 z-50 ${solid ? "border-b border-slate-200 bg-white" : "bg-transparent"}`}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-1 overflow-hidden" aria-hidden="true">
         {moving ? <div className="route-bar h-full bg-indigo-500" /> : null}
       </div>

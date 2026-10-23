@@ -2,10 +2,9 @@
 @import "tailwindcss";
 
 :root { color-scheme: light; }
-html { scroll-behavior: smooth; }
-body { margin: 0; font-family: "DM Sans", sans-serif; background: #f7f6f3; color: #12141a; }
+html { scroll-behavior: smooth; overflow-x: hidden; overflow-x: clip; max-width: 100%; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; overflow-x: hidden; overflow-x: clip; max-width: 100%; font-family: "DM Sans", sans-serif; background: #f7f6f3; color: #12141a; }
 @media (max-width: 767px) {
-  html, body { overflow-x: hidden; max-width: 100%; }
   img, video { max-width: 100%; }
 }
 a, button { transition: color .22s ease, background-color .22s ease, border-color .22s ease, box-shadow .22s ease, opacity .22s ease, transform .22s ease, filter .22s ease; }
@@ -21,7 +20,15 @@ button { font: inherit; }
 input[type="date"]::-webkit-calendar-picker-indicator { opacity: .55; cursor: pointer; }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise .45s ease both; }
-.hero-track { transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
+.hero-track { display: flex; width: 100%; transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
+.hero-track > article { flex: 0 0 100%; width: 100%; min-width: 0; }
+@keyframes faq-enter { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+.faq-enter { animation: faq-enter .65s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.faq-progress { transform-origin: left; animation: faq-progress 5s linear forwards; }
+@keyframes faq-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.faq-progress.is-paused { animation-play-state: paused; }
+@keyframes about-photo { from { opacity: 0; } to { opacity: 1; } }
+.about-photo { animation: about-photo .7s ease both; }
 .hero-photo { transform: scale(1.08); transition: transform 3.2s ease; }
 .hero-photo.is-live { transform: scale(1); }
 .hero-copy.is-live { animation: hero-in .7s cubic-bezier(0.22, 1, 0.36, 1) both; }
@@ -37,7 +44,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: .55; cursor: po
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .hero-track, .hero-photo, .hero-thumb, .desk-card, a, button, img { transition: none; }
-  .hero-copy.is-live, .hero-thumb:hover, .hero-thumb.is-selected, .desk-card:hover { animation: none; transform: none; }
+  .hero-copy.is-live, .hero-thumb:hover, .hero-thumb.is-selected, .desk-card:hover, .faq-enter, .faq-progress, .about-photo { animation: none; transform: none; }
   .route-bar { animation: none; transform: scaleX(1); }
   a:hover img, button:hover img { filter: none; }
 }

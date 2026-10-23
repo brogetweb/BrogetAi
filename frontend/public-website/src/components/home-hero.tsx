@@ -90,8 +90,8 @@ export function HomeHero() {
               <article
                 key={`${slide.label}-${slideIndex}`}
                 className="relative min-h-[26rem] w-full shrink-0 sm:min-h-[30rem]"
-                aria-hidden={!current}
-                inert={!current}
+                aria-hidden={current ? undefined : true}
+                {...(current ? {} : { inert: true })}
               >
                 <Image
                   src={slide.src}
