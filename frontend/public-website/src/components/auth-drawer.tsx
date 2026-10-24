@@ -117,7 +117,7 @@ function AuthDrawer({ open, mode, onMode, onClose }: { open: boolean; mode: Mode
             <form className="mt-8" onSubmit={submit} key={mode}>
               <h2 className="text-2xl font-semibold tracking-tight">{mode === "login" ? "Log in" : "Create an account"}</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                {mode === "login" ? "Use the email and password for your BerogetAI account." : "A name, an email, and a password are enough to start."}
+                {mode === "login" ? "Use the email and password for your Broget AI account." : "A name, an email, and a password are enough to start."}
               </p>
               {mode === "register" ? <Field label="Name" name="name" placeholder="Name" autoComplete="name" /> : null}
               <Field label="Email" name="email" type="email" placeholder="Email" autoComplete="email" />

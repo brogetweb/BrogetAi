@@ -9,6 +9,7 @@ import { CustomersService } from '../customers/customers.service';
 import { buildCreditReportPdf } from './credit-report.pdf';
 import { CreateCreditReportDto } from './dto/create-credit-report.dto';
 import { CreditReport, CreditReportDocument } from './schemas/credit-report.schema';
+import { WalletService } from '../wallet/wallet.service';
 
 const consentMessage = 'I agree to share my data for verification purposes';
 
@@ -19,6 +20,7 @@ export class CreditService {
     @InjectModel(Agent.name) private readonly agents: Model<AgentDocument>,
     private readonly config: ConfigService,
     private readonly customers: CustomersService,
+    private readonly wallet: WalletService,
   ) {}
 
   async create(user: AccessPayload, input: CreateCreditReportDto) {
@@ -27,6 +29,7 @@ export class CreditService {
     const registrationId = this.config.get<string>('AOPAY_REGISTRATION_ID')?.trim();
     const url = this.config.get<string>('AOPAY_CREDIT_REPORT_URL')?.trim();
     if (!registrationId || !url) throw new ServiceUnavailableException('Credit analytics is not configured.');
+    await this.wallet.chargeApiHit(agent);
 
     const payload = {
       FirstName: input.firstName,
@@ -59,10 +62,10 @@ export class CreditService {
       ok = response.ok;
     } catch {
       await this.customers.upsertFromCheck(this.customerFromCheck(agent, input, null, false));
-      throw new BadGatewayException('AO Pay could not be reached.');
+      throw new BadGatewayException('The credit report could not be reached.');
     }
 
-    const message = readMessage(provider) || (ok ? 'Credit analytics report ready.' : 'AO Pay could not prepare the report.');
+    const message = readMessage(provider) || (ok ? 'Credit report ready.' : 'The credit report could not be prepared.');
     const score = ok ? findScore(provider) : null;
     const saved = await this.reports.create({
       agentId: agent.code,
@@ -107,6 +110,19 @@ export class CreditService {
   async download(id: string) {
     const row = await this.reports.findById(id);
     if (!row) throw new NotFoundException('That credit report is not on this desk.');
+    return this.fileFor(row);
+  }
+
+  async downloadForAgent(user: AccessPayload, id: string) {
+    const agent = await this.agents.findById(user.sub);
+    if (!agent || agent.status !== 'active') throw new UnauthorizedException('Sign in again.');
+    if (!isValidObjectId(id)) throw new NotFoundException('That credit report is not on this desk.');
+    const row = await this.reports.findById(id);
+    if (!row || row.agentId !== agent.code) throw new NotFoundException('That credit report is not on this desk.');
+    return this.fileFor(row);
+  }
+
+  private async fileFor(row: CreditReportDocument) {
     const name = `${row.firstName} ${row.lastName}`.trim();
     const filename = `credit-report-${name.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'customer'}.pdf`;
     return { filename, body: await buildCreditReportPdf(row) };

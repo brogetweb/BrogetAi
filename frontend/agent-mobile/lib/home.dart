@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'api.dart';
+import 'cibil_fetch.dart';
 import 'customers.dart';
 import 'menu.dart';
 import 'store.dart';
 import 'ui.dart';
+import 'wallet.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,6 +30,8 @@ class HomeScreen extends StatelessWidget {
             _TopBar(store: store, onMenu: nav.openMenu),
             const SizedBox(height: 10),
             _Greeting(store: store),
+            const SizedBox(height: 10),
+            const WalletStrip(),
             const SizedBox(height: 10),
             _Hero(onCheck: () => nav.go(2)),
             const SizedBox(height: 12),
@@ -210,6 +214,7 @@ class _CheckRow extends StatelessWidget {
             ),
           ),
           Text(ready ? '${check.score}' : 'Failed', style: TextStyle(fontWeight: FontWeight.w800, color: ready ? const Color(0xFF16A34A) : const Color(0xFFDC2626))),
+          if (check.id.isNotEmpty) CreditReportActions(reportId: check.id, compact: true),
         ],
       ),
     );
@@ -245,7 +250,7 @@ class _TopBar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('BerogetAI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
+              Text('Broget AI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
               Text('CIBIL DESK', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.9, color: Color(0xFF8B95A7))),
             ],
           ),
@@ -781,7 +786,7 @@ class _SecureNote extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InfoPage(title: 'Secure & Authorized', body: 'The scores on this desk are sample figures. A live bureau check is not connected, and a PDF is not downloaded from here.'))),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InfoPage(title: 'Secure & Authorized', body: 'A finished credit check can be printed or downloaded as a PDF from Your checks, the customer file, or Reports.'))),
             icon: const Icon(Icons.arrow_forward_rounded, color: dashBlue, size: 20),
           ),
         ],

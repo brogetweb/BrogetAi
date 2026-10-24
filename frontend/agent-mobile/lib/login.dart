@@ -144,7 +144,7 @@ class _Hero extends StatelessWidget {
               children: [
                 CibilBadge(size: 92),
                 SizedBox(height: 12),
-                Text('BerogetAI', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.6)),
+                Text('Broget AI', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.6)),
                 SizedBox(height: 4),
                 Text('CIBIL score desk for agents', style: TextStyle(color: Color(0xFFD6E4FF), fontSize: 13, fontWeight: FontWeight.w600)),
               ],
@@ -202,7 +202,7 @@ class _LoginCard extends StatelessWidget {
           const SizedBox(height: 6),
           _Field(
             controller: email,
-            hint: 'name@beroget.ai',
+            hint: 'name@brogetai.com',
             icon: Icons.mail_outline,
             keyboard: TextInputType.emailAddress,
           ),
@@ -346,7 +346,8 @@ class _FeatureRow extends StatelessWidget {
         children: [
           _Feature(icon: Icons.groups_outlined, color: dashBlue, tint: Color(0xFFE8F0FF), label: 'Customer\nfiles'),
           _Feature(icon: Icons.speed, color: Color(0xFF16A34A), tint: Color(0xFFE8F8EE), label: 'CIBIL\nchecks'),
-          _Feature(icon: Icons.badge_outlined, color: Color(0xFFD97706), tint: Color(0xFFFFF6E8), label: 'KYC\ndocuments'),
+          _Feature(icon: Icons.picture_as_pdf_outlined, color: Color(0xFFD97706), tint: Color(0xFFFFF6E8), label: 'Print &\ndownload'),
+          // _Feature(icon: Icons.badge_outlined, color: Color(0xFFD97706), tint: Color(0xFFFFF6E8), label: 'KYC\ndocuments'),
         ],
       ),
     );

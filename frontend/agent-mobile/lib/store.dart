@@ -121,6 +121,28 @@ class DeskNotice {
   bool read;
 }
 
+enum WalletKind { topUp, usage, withdraw }
+
+enum WalletStatus { pending, success, failed }
+
+class WalletEntry {
+  WalletEntry({
+    required this.id,
+    required this.kind,
+    required this.amount,
+    required this.status,
+    required this.note,
+    DateTime? at,
+  }) : at = at ?? DateTime.now();
+
+  final String id;
+  final WalletKind kind;
+  final double amount;
+  WalletStatus status;
+  final String note;
+  final DateTime at;
+}
+
 class DeskToast {
   DeskToast({required this.id, required this.ok, required this.title, this.detail});
 
@@ -141,7 +163,7 @@ class AgentStore extends ChangeNotifier {
   String language = 'English';
   String themeLabel = 'Light';
   String agentCode = '';
-  final String company = 'BerogetAI';
+  final String company = 'Broget AI';
   String desk = '';
   String accessToken = '';
   String refreshToken = '';
@@ -154,12 +176,52 @@ class AgentStore extends ChangeNotifier {
   final loans = <LoanFile>[];
 
   final notices = <DeskNotice>[];
+  final wallet = <WalletEntry>[];
+  double balanceRupees = 0;
+  double chargeRupees = 61.36;
+  double feeRupees = 52;
+  double gstRupees = 9.36;
 
   int _customerSeq = 1;
   int _loanSeq = 1043;
   Future<void>? _deskRefresh;
 
   int get unread => notices.where((notice) => !notice.read).length;
+
+  double get walletBalance => balanceRupees;
+
+  bool get lowBalance => balanceRupees + 0.001 < chargeRupees;
+
+  double get walletAdded => wallet.where((entry) => entry.kind == WalletKind.topUp && entry.status == WalletStatus.success).fold(0, (sum, entry) => sum + entry.amount);
+
+  double get walletUsed => wallet.where((entry) => entry.kind != WalletKind.topUp && entry.status == WalletStatus.success).fold(0, (sum, entry) => sum + entry.amount);
+
+  WalletEntry? get lastWalletEntry => wallet.isEmpty ? null : wallet.first;
+
+  Future<void> loadWallet() async {
+    if (accessToken.isEmpty) return;
+    final view = await fetchWallet(accessToken);
+    balanceRupees = view.balance;
+    chargeRupees = view.charge;
+    feeRupees = view.fee;
+    gstRupees = view.gst;
+    wallet
+      ..clear()
+      ..addAll(view.entries.map((row) {
+        final kind = switch (row.kind) {
+          'usage' => WalletKind.usage,
+          'withdraw' => WalletKind.withdraw,
+          _ => WalletKind.topUp,
+        };
+        final status = switch (row.status) {
+          'success' => WalletStatus.success,
+          'failed' => WalletStatus.failed,
+          _ => WalletStatus.pending,
+        };
+        return WalletEntry(id: row.id, kind: kind, amount: row.amount, status: status, note: row.note, at: row.createdAt);
+      }));
+    notifyListeners();
+  }
 
   int get consentCount => customers.fold(0, (sum, customer) => sum + customer.consents.length);
 
@@ -218,6 +280,8 @@ class AgentStore extends ChangeNotifier {
     checks.clear();
     loans.clear();
     notices.clear();
+    wallet.clear();
+    balanceRupees = 0;
     showToast(true, 'Signed out');
     if (token.isNotEmpty) logoutAgent(token);
   }
@@ -280,6 +344,9 @@ class AgentStore extends ChangeNotifier {
     }
     try {
       await loadChecks();
+    } catch (_) {}
+    try {
+      await loadWallet();
     } catch (_) {}
   }
 

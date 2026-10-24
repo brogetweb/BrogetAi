@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -57,8 +58,9 @@ Future<AgentSession> loginAgent(String email, String password) async {
 }
 
 class CreditReportResult {
-  CreditReportResult({required this.name, required this.message, this.score});
+  CreditReportResult({required this.id, required this.name, required this.message, this.score});
 
+  final String id;
   final String name;
   final String message;
   final int? score;
@@ -66,7 +68,24 @@ class CreditReportResult {
   factory CreditReportResult.fromJson(Map<String, dynamic> json) {
     final raw = json['score'];
     final parsed = raw == null ? null : int.tryParse('$raw');
-    return CreditReportResult(name: '${json['name'] ?? ''}', message: '${json['message'] ?? ''}', score: parsed);
+    return CreditReportResult(id: '${json['id'] ?? ''}', name: '${json['name'] ?? ''}', message: '${json['message'] ?? ''}', score: parsed);
+  }
+}
+
+Future<({Uint8List bytes, String filename})> downloadCreditReportPdf({required String accessToken, required String id}) async {
+  try {
+    final response = await http.get(Uri.parse('${apiBase()}/credit-reports/mine/$id/download'), headers: {'Authorization': 'Bearer $accessToken'}).timeout(const Duration(seconds: 35));
+    if (response.statusCode >= 200 && response.statusCode < 300 && response.bodyBytes.isNotEmpty) {
+      final named = RegExp(r'filename="([^"]+)"').firstMatch(response.headers['content-disposition'] ?? '');
+      return (bytes: response.bodyBytes, filename: named?.group(1) ?? 'credit-report.pdf');
+    }
+    final json = response.body.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    final message = json['message'];
+    throw ApiException(message is String ? message : 'Could not download the report.');
+  } on ApiException {
+    rethrow;
+  } catch (_) {
+    throw ApiException('The API is not reachable.');
   }
 }
 
@@ -206,10 +225,106 @@ Future<void> submitKycDocument({
   }, accessToken: accessToken, timeout: const Duration(seconds: 30));
 }
 
+class WalletRow {
+  WalletRow({required this.id, required this.kind, required this.amount, required this.status, required this.note, required this.createdAt});
+
+  final String id;
+  final String kind;
+  final double amount;
+  final String status;
+  final String note;
+  final DateTime createdAt;
+}
+
+class WalletView {
+  WalletView({required this.balance, required this.added, required this.spent, required this.fee, required this.gst, required this.charge, required this.lowBalance, required this.entries});
+
+  final double balance;
+  final double added;
+  final double spent;
+  final double fee;
+  final double gst;
+  final double charge;
+  final bool lowBalance;
+  final List<WalletRow> entries;
+
+  factory WalletView.fromJson(Map<String, dynamic> json) {
+    final rows = json['entries'];
+    final entries = rows is List
+        ? rows.whereType<Map>().map((row) {
+            final item = Map<String, dynamic>.from(row);
+            return WalletRow(
+              id: '${item['id'] ?? ''}',
+              kind: '${item['kind'] ?? ''}',
+              amount: double.tryParse('${item['amount'] ?? 0}') ?? 0,
+              status: '${item['status'] ?? ''}',
+              note: '${item['note'] ?? ''}',
+              createdAt: DateTime.tryParse('${item['createdAt'] ?? ''}')?.toLocal() ?? DateTime.now(),
+            );
+          }).toList()
+        : <WalletRow>[];
+    return WalletView(
+      balance: double.tryParse('${json['balance'] ?? 0}') ?? 0,
+      added: double.tryParse('${json['added'] ?? 0}') ?? 0,
+      spent: double.tryParse('${json['spent'] ?? 0}') ?? 0,
+      fee: double.tryParse('${json['fee'] ?? 52}') ?? 52,
+      gst: double.tryParse('${json['gst'] ?? 9.36}') ?? 9.36,
+      charge: double.tryParse('${json['charge'] ?? 61.36}') ?? 61.36,
+      lowBalance: json['lowBalance'] == true,
+      entries: entries,
+    );
+  }
+}
+
+Future<WalletView> fetchWallet(String accessToken) async {
+  final body = await _postGet('/wallet', accessToken);
+  return WalletView.fromJson(body);
+}
+
+Future<String> createWalletTopup({required String accessToken, required double amount, required String mobile}) async {
+  final body = await _post('/wallet/topups', {'amount': amount, 'mobile': mobile}, accessToken: accessToken, timeout: const Duration(seconds: 35));
+  final url = '${body['paymentUrl'] ?? ''}';
+  if (url.isEmpty) throw ApiException('Broget Pay did not return a payment link.');
+  return url;
+}
+
+Future<void> createWalletPayout({
+  required String accessToken,
+  required double amount,
+  required String mobile,
+  required String holderName,
+  required String bankName,
+  required String accountNumber,
+  required String ifsc,
+}) async {
+  await _post('/wallet/payouts', {
+    'amount': amount,
+    'mobile': mobile,
+    'holderName': holderName,
+    'bankName': bankName,
+    'accountNumber': accountNumber,
+    'ifsc': ifsc,
+  }, accessToken: accessToken, timeout: const Duration(seconds: 35));
+}
+
 Future<void> logoutAgent(String refreshToken) async {
   try {
     await _post('/auth/logout', {'refreshToken': refreshToken});
   } catch (_) {}
+}
+
+Future<Map<String, dynamic>> _postGet(String path, String accessToken) async {
+  try {
+    final response = await http.get(Uri.parse('${apiBase()}$path'), headers: {'Authorization': 'Bearer $accessToken'}).timeout(const Duration(seconds: 8));
+    final json = response.body.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    if (response.statusCode >= 200 && response.statusCode < 300) return json;
+    final message = json['message'];
+    throw ApiException(message is String ? message : 'Could not load the wallet.');
+  } on ApiException {
+    rethrow;
+  } catch (_) {
+    throw ApiException('The API is not reachable.');
+  }
 }
 
 Future<List<Map<String, dynamic>>> _get(String path, String accessToken, {String failure = 'Could not load your customers.'}) async {

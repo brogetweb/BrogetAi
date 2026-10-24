@@ -5,7 +5,7 @@ const sections = [
     id: "policy",
     title: "This policy",
     clauses: [
-      "This policy explains what the public BerogetAI website keeps when you search, hold a trip, open an account, or write to the trip desk.",
+      "This policy explains what the public Broget AI website keeps when you search, hold a trip, open an account, or write to the trip desk.",
       "It covers this website only. It does not cover a credit check or a savings payment, because those flows are not open here.",
       "Read it with the Terms and conditions. Both pages apply to the same website.",
     ],
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy policy"
-      lede="This policy sets out what BerogetAI keeps, what it does not collect, and who can see a note you send."
+      lede="This policy sets out what Broget AI keeps, what it does not collect, and who can see a note you send."
       related={{ href: "/terms", label: "Terms and conditions" }}
       sections={sections}
     />

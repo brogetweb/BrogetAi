@@ -1,5 +1,5 @@
 name: beroget_agent
-description: "BerogetAI agent desk for customers, consent, and loan files."
+description: "Broget AI agent desk for customers, consent, and loan files."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   file_picker: ^8.1.7
   http: ^1.5.0
+  url_launcher: ^6.3.1
+  printing: ^5.14.2
 
 dev_dependencies:
   flutter_test:

@@ -10,9 +10,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const found = findService(slug);
-  if (!found) return { title: "BerogetAI" };
+  if (!found) return { title: "Broget AI" };
   return {
-    title: `${found.item.label} — BerogetAI`,
+    title: `${found.item.label} — Broget AI`,
     description: `${found.item.text} Coming soon.`,
   };
 }

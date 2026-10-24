@@ -22,6 +22,16 @@ export class CreditController {
     return this.credit.mine(user);
   }
 
+  @Get('mine/:id/download')
+  @UseGuards(AgentTokenGuard)
+  async downloadMine(@CurrentUser() user: AccessPayload, @Param('id') id: string) {
+    const file = await this.credit.downloadForAgent(user, id);
+    return new StreamableFile(file.body, {
+      type: 'application/pdf',
+      disposition: `attachment; filename="${file.filename}"`,
+    });
+  }
+
   @Get()
   @UseGuards(AccessTokenGuard)
   list() {

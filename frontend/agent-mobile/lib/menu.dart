@@ -2,10 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'cibil_fetch.dart';
 import 'customers.dart';
-import 'kyc_documents.dart';
+// KYC is paused.
+// import 'kyc_documents.dart';
 import 'support_pages.dart';
 import 'ui.dart';
+import 'wallet.dart';
 
 class AgentMenu extends StatelessWidget {
   const AgentMenu({required this.index, required this.onTab, required this.onClose, super.key});
@@ -42,7 +45,7 @@ class AgentMenu extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('BerogetAI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Colors.white, height: 1.1, letterSpacing: -0.3)),
+                          Text('Broget AI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Colors.white, height: 1.1, letterSpacing: -0.3)),
                           SizedBox(height: 3),
                           Text('CIBIL DESK', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.9, color: Color(0xFFD6E4FF))),
                         ],
@@ -129,8 +132,9 @@ class AgentMenu extends StatelessWidget {
                   _Group(
                     title: 'Manage',
                     children: [
+                      _Item(icon: Icons.account_balance_wallet_outlined, label: 'Wallet', onTap: () => _push(context, const WalletPage())),
                       _Item(icon: Icons.person_outline, label: 'My Profile', selected: index == 3, onTap: () => onTab(3)),
-                      _Item(icon: Icons.badge_outlined, label: 'KYC & Documents', onTap: () => _push(context, const KycDocumentsPage())),
+                      // _Item(icon: Icons.badge_outlined, label: 'KYC & Documents', onTap: () => _push(context, const KycDocumentsPage())),
                     ],
                   ),
                   _Group(
@@ -139,7 +143,7 @@ class AgentMenu extends StatelessWidget {
                       _Item(icon: Icons.headset_mic_outlined, label: 'Help & Support', onTap: () => _push(context, const HelpSupportPage())),
                       _Item(icon: Icons.article_outlined, label: 'Terms & Conditions', onTap: () => _push(context, const TermsPage())),
                       _Item(icon: Icons.shield_outlined, label: 'Privacy Policy', onTap: () => _push(context, const PrivacyPage())),
-                      _Item(icon: Icons.info_outline, label: 'About BerogetAI', onTap: () => _push(context, const AboutPage())),
+                      _Item(icon: Icons.info_outline, label: 'About Broget AI', onTap: () => _push(context, const AboutPage())),
                     ],
                   ),
                 ],
@@ -268,7 +272,7 @@ class ReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = AgentScope.of(context);
-    final rows = store.customers.where((customer) => customer.sampleScore != null).toList();
+    final rows = store.checks.where((check) => check.id.isNotEmpty).toList();
     return ColoredBox(
       color: dashWash,
       child: SafeArea(
@@ -278,28 +282,30 @@ class ReportsScreen extends StatelessWidget {
           children: [
             const Text('Reports', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.6, color: dashNavy)),
             const SizedBox(height: 6),
-            const Text('Sample figures already on this device. Nothing here was pulled from a bureau, and nothing downloads.', style: TextStyle(color: Color(0xFF5C677A), height: 1.4)),
+            const Text('Print or download any credit check you already ran.', style: TextStyle(color: Color(0xFF5C677A), height: 1.4)),
             const SizedBox(height: 16),
-            for (final customer in rows)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: SoftCard(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w800, color: dashNavy)),
-                          const SizedBox(height: 2),
-                          Text(customer.city, style: const TextStyle(color: muted, fontSize: 12)),
-                        ]),
-                      ),
-                      Text('${customer.sampleScore}', style: const TextStyle(fontWeight: FontWeight.w800, color: dashNavy)),
-                      const SizedBox(width: 8),
-                      const StatusChip(label: 'Sample', color: Color(0xFF16A34A)),
-                    ],
+            if (rows.isEmpty)
+              const Text('No credit checks yet.', style: TextStyle(color: muted, fontWeight: FontWeight.w700))
+            else
+              for (final check in rows)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SoftCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: Text(check.name, style: const TextStyle(fontWeight: FontWeight.w800, color: dashNavy))),
+                            Text(check.score == null ? check.status : '${check.score}', style: const TextStyle(fontWeight: FontWeight.w800, color: dashNavy)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        CreditReportActions(reportId: check.id),
+                      ],
+                    ),
                   ),
                 ),
-              ),
           ],
         ),
       ),

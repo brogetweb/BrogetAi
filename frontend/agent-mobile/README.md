@@ -1,4 +1,4 @@
-# BerogetAI Agent
+# Broget AI Agent
 
 Android and iOS desk for agents. Sign in, keep customers, record consent, save document labels, and track loan files.
 

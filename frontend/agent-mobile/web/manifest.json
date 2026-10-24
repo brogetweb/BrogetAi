@@ -1,11 +1,11 @@
 {
-    "name": "BerogetAI Agent",
-    "short_name": "BerogetAI",
+    "name": "Broget AI",
+    "short_name": "Broget AI",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F4F7FC",
     "theme_color": "#2F6BFF",
-    "description": "BerogetAI agent desk for customers, consent, and loan files.",
+    "description": "Broget AI agent desk for customers, consent, and loan files.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

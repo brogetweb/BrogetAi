@@ -3,7 +3,8 @@ import { AgentsDesk } from "@/components/agents-desk";
 import { BookingDesk } from "@/components/booking-desk";
 import { CibilList } from "@/components/cibil-list";
 import { CustomerList } from "@/components/customer-list";
-import { KycDesk } from "@/components/kyc-desk";
+// KYC is paused.
+// import { KycDesk } from "@/components/kyc-desk";
 import { SectionView } from "@/components/section-view";
 import { TravelUsers } from "@/components/travel-users";
 import { findSection, sections } from "@/lib/desk";
@@ -25,9 +26,9 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
         {section.slug === "customers" ? <CustomerList /> : null}
         {section.slug === "cibil" ? <CibilList /> : null}
         {section.slug === "agents" ? <AgentsDesk /> : null}
-        {section.slug === "kyc" ? <KycDesk /> : null}
+        {/* {section.slug === "kyc" ? <KycDesk /> : null} */}
         {section.slug === "users" ? <TravelUsers /> : null}
-        {section.slug === "flights" || section.slug === "hotels" || section.slug === "customers" || section.slug === "cibil" || section.slug === "agents" || section.slug === "kyc" || section.slug === "users" ? null : <SectionView section={section} />}
+        {section.slug === "flights" || section.slug === "hotels" || section.slug === "customers" || section.slug === "cibil" || section.slug === "agents" || section.slug === "users" ? null : <SectionView section={section} />}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import 'add_customer.dart';
 import 'cibil_fetch.dart';
 import 'store.dart';
 import 'ui.dart';
+import 'wallet.dart';
 
 enum _Panel { none, customer }
 
@@ -43,6 +44,11 @@ class _CibilScreenState extends State<CibilScreen> {
       });
       return;
     }
+    final store = AgentScope.of(context);
+    if (store.lowBalance) {
+      setState(() => error = 'Low balance. Add ${inr(store.chargeRupees)} before this credit check.');
+      return;
+    }
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => CibilFetchPage(id: person.id)));
   }
 
@@ -68,7 +74,11 @@ class _CibilScreenState extends State<CibilScreen> {
             const SizedBox(height: 16),
             const Text('Check CIBIL Report', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: dashNavy)),
             const SizedBox(height: 4),
-            const Text('AO Pay prepares the credit analytics report from the customer’s name, mobile, date of birth, email, and PAN. Consent and the OTP are required.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
+            const Text('The credit report uses the customer’s name, mobile, date of birth, email, and PAN. Consent and the OTP are required. The ₹61.36 fee is taken from the Broget Pay wallet.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
+            if (store.lowBalance) ...[
+              const SizedBox(height: 12),
+              const LowBalanceBanner(),
+            ],
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -208,7 +218,7 @@ class _Bar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('BerogetAI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, height: 1.05)),
+              Text('Broget AI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, height: 1.05)),
               Text('CREDIT INSIGHTS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, letterSpacing: 0.7, color: Color(0xFF8B95A7))),
             ],
           ),

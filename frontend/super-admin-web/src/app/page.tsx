@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { AgentCount, CreditCount, CustomerCount } from "@/components/agent-count";
+import { AgentCount, CreditCount, CustomerCount, HouseWalletCard } from "@/components/agent-count";
 import { DataTable } from "@/components/data-table";
 import { flights, hotels } from "@/lib/desk";
 
@@ -31,6 +31,8 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
+
+      <HouseWalletCard />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {stats.map((stat) => (

@@ -10,21 +10,22 @@ import { KycService } from './kyc.service';
 export class KycController {
   constructor(private readonly kyc: KycService) {}
 
-  @Post()
-  @UseGuards(AgentTokenGuard)
-  create(@CurrentUser() user: AccessPayload, @Body() body: CreateKycDocumentDto) {
-    return this.kyc.create(user, body);
-  }
-
-  @Get()
-  @UseGuards(AccessTokenGuard)
-  list() {
-    return this.kyc.list();
-  }
-
-  @Delete(':id')
-  @UseGuards(AccessTokenGuard)
-  remove(@Param('id') id: string) {
-    return this.kyc.remove(id);
-  }
+  // KYC routes are paused. The module is also not imported in AppModule.
+  // @Post()
+  // @UseGuards(AgentTokenGuard)
+  // create(@CurrentUser() user: AccessPayload, @Body() body: CreateKycDocumentDto) {
+  //   return this.kyc.create(user, body);
+  // }
+  //
+  // @Get()
+  // @UseGuards(AccessTokenGuard)
+  // list() {
+  //   return this.kyc.list();
+  // }
+  //
+  // @Delete(':id')
+  // @UseGuards(AccessTokenGuard)
+  // remove(@Param('id') id: string) {
+  //   return this.kyc.remove(id);
+  // }
 }

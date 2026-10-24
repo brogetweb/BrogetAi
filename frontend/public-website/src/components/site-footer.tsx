@@ -65,7 +65,7 @@ export function SiteFooter() {
       </div>
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-5 text-center text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:text-left lg:px-8">
-          <span>© {new Date().getFullYear()} BerogetAI</span>
+          <span>© {new Date().getFullYear()} Broget AI</span>
           <span>Questions about a hold go to the trip desk.</span>
           <span className="flex gap-4">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>

@@ -10,12 +10,12 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const BerogetAgentApp());
-    expect(find.text('BerogetAI'), findsWidgets);
+    expect(find.text('Broget AI'), findsWidgets);
     await tester.pump(const Duration(milliseconds: 1500));
     await tester.pumpAndSettle();
     expect(find.text('Welcome Back'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField).at(0), 'priya@beroget.ai');
+    await tester.enterText(find.byType(TextField).at(0), 'priya@brogetai.com');
     await tester.enterText(find.byType(TextField).at(1), 'short');
     await tester.tap(find.text('Login'));
     await tester.pump();
@@ -33,7 +33,7 @@ void main() {
       ..agentName = 'Md Gafru'
       ..agentCode = 'BG9604'
       ..agentPhone = '9876543210'
-      ..agentEmail = 'agent@beroget.ai'
+      ..agentEmail = 'agent@brogetai.com'
       ..desk = 'Sangli';
     await tester.pumpWidget(AgentScope(
       store: store,

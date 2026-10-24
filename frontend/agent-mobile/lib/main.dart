@@ -54,7 +54,7 @@ class _BerogetAgentAppState extends State<BerogetAgentApp> {
     return AgentScope(
       store: store,
       child: MaterialApp(
-        title: 'BerogetAI Agent',
+        title: 'Broget AI',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,

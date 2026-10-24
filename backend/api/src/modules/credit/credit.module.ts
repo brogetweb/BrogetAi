@@ -6,11 +6,13 @@ import { CustomersModule } from '../customers/customers.module';
 import { CreditController } from './credit.controller';
 import { CreditService } from './credit.service';
 import { CreditReport, CreditReportSchema } from './schemas/credit-report.schema';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
     AuthModule,
     CustomersModule,
+    WalletModule,
     MongooseModule.forFeature([
       { name: CreditReport.name, schema: CreditReportSchema },
       { name: Agent.name, schema: AgentSchema },

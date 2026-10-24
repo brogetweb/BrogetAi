@@ -112,7 +112,7 @@ class _AddCustomerPageState extends State<AddCustomerPage> {
         children: [
           const Text('Credit analytics details', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.4, color: dashNavy)),
           const SizedBox(height: 6),
-          const Text('AO Pay needs only these details. Consent and the OTP come on the next step.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
+          const Text('Only these details are needed. Consent and the OTP come on the next step.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),

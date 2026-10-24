@@ -60,7 +60,7 @@ export function LoginScreen({ onSuccess, onError }: { onSuccess: (session: Admin
                 autoComplete="username"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="admin@beroget.ai"
+                placeholder="admin@brogetai.com"
                 className="mt-2 w-full border-b border-slate-300 bg-transparent px-0 py-3 font-semibold outline-none transition placeholder:text-slate-400 focus:border-[#1d4ed8]"
               />
             </label>

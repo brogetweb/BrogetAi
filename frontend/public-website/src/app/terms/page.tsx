@@ -5,7 +5,7 @@ const sections = [
     id: "agreement",
     title: "These terms",
     clauses: [
-      "These terms apply when you browse BerogetAI, search a fare or a stay, hold a trip, open an account, or write to the trip desk.",
+      "These terms apply when you browse Broget AI, search a fare or a stay, hold a trip, open an account, or write to the trip desk.",
       "They describe how the public website works today. A photo, a sample fare, or a city idea is not a confirmed ticket or a hotel voucher.",
       "Read them with the Privacy policy. Both pages apply to the same website.",
     ],
@@ -14,7 +14,7 @@ const sections = [
     id: "service",
     title: "The service",
     clauses: [
-      "BerogetAI is a booking desk for flights and hotel stays. You can compare options and hold one while you decide.",
+      "Broget AI is a booking desk for flights and hotel stays. You can compare options and hold one while you decide.",
       "Credit score and SIP are marked coming soon. Those pages do not run a credit check and do not take a savings payment.",
       "Airline and hotel connections, when they are used, run from the server. Provider credentials are not placed in the browser.",
     ],
@@ -86,7 +86,7 @@ export default function TermsPage() {
   return (
     <LegalPage
       title="Terms and conditions"
-      lede="These terms set out how you search, compare, hold, and ask about a trip on BerogetAI."
+      lede="These terms set out how you search, compare, hold, and ask about a trip on Broget AI."
       related={{ href: "/privacy", label: "Privacy policy" }}
       sections={sections}
     />

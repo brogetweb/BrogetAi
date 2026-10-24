@@ -43,7 +43,7 @@ export function AccountScreen({ mode }: { mode: "login" | "register" }) {
                 <li>Credit score and SIP stay on this account.</li>
               </ul>
             </div>
-            <p className="mt-10 text-sm text-white/50">BerogetAI</p>
+            <p className="mt-10 text-sm text-white/50">Broget AI</p>
           </aside>
 
           <div className="p-6 sm:p-10">
@@ -70,7 +70,7 @@ export function AccountScreen({ mode }: { mode: "login" | "register" }) {
               <form className="mt-8" onSubmit={submit}>
                 <h2 className="text-2xl font-semibold tracking-tight">{mode === "login" ? "Log in" : "Create an account"}</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {mode === "login" ? "Use the email and password for your BerogetAI account." : "A name, an email, and a password are enough to start."}
+                  {mode === "login" ? "Use the email and password for your Broget AI account." : "A name, an email, and a password are enough to start."}
                 </p>
 
                 {mode === "register" ? <Field label="Full name" name="name" autoComplete="name" /> : null}

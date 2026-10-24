@@ -136,7 +136,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <a href={publicWebsiteUrl} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-white/70" aria-label="Open the public website">
               <Image src="/mark.png" alt="" width={40} height={40} className="h-10 w-10 rounded-2xl" />
               <div className="min-w-0">
-                <p className="text-[15px] font-extrabold tracking-tight">BerogetAI</p>
+                <p className="text-[15px] font-extrabold tracking-tight">Broget AI</p>
                 <p className="text-[10px] font-bold tracking-[0.12em] text-[#9fb0d0]">SUPER ADMIN</p>
               </div>
             </a>
@@ -211,7 +211,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
               {noticesOpen ? (
                 <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-[#e6ebf5] bg-white p-2 shadow-xl">
                   <p className="px-2 py-1.5 text-xs font-extrabold tracking-[0.12em] text-[#8b95a7]">NOTIFICATIONS</p>
-                  <p className="px-2 py-3 text-sm font-semibold text-[#5c677a]">New customers and KYC uploads show on their lists.</p>
+                  <p className="px-2 py-3 text-sm font-semibold text-[#5c677a]">New customers show on their list.</p>
+                  {/* <p className="px-2 py-3 text-sm font-semibold text-[#5c677a]">New customers and KYC uploads show on their lists.</p> */}
                 </div>
               ) : null}
             </div>
@@ -337,7 +338,7 @@ function CustomerFile({ customer }: { customer: DeskCustomer }) {
     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
       <p className="text-sm font-semibold leading-6 text-[#5c677a]">Added by {agentLabel(customer.agentId)} on {customer.added}. The agent enters this file and runs the CIBIL check. PAN and Aadhaar stay masked here.</p>
       <div className="flex flex-wrap gap-2">
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#12182b]">KYC {customer.kyc}</span>
+        {/* <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#12182b]">KYC {customer.kyc}</span> */}
         <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#12182b]">CIBIL {customer.score === "—" ? customer.cibil : `${customer.score} · ${customer.cibil}`}</span>
       </div>
       {groups.map((group) => (

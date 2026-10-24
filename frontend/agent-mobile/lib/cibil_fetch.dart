@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 
 import 'api.dart';
 import 'store.dart';
@@ -25,6 +26,7 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
   Customer? customer;
   int? score;
   String message = '';
+  String reportId = '';
 
   @override
   void initState() {
@@ -60,7 +62,11 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
     }
     final names = person.name.trim().split(RegExp(r'\s+'));
     if (names.length < 2) {
-      store.showToast(false, 'Name needs two parts', 'AO Pay needs a first name and a last name.');
+      store.showToast(false, 'Name needs two parts', 'The credit report needs a first name and a last name.');
+      return;
+    }
+    if (store.lowBalance) {
+      store.showToast(false, 'Low balance', 'Add ${inr(store.chargeRupees)} before this credit check.');
       return;
     }
     setState(() => loading = true);
@@ -86,15 +92,19 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
         loading = false;
         score = report.score;
         message = report.message;
+        reportId = report.id;
         customer = person;
       });
       store.showToast(true, 'Report ready', report.score == null ? report.message : '${person.name} · ${report.score}');
       store.loadChecks();
+      store.loadWallet();
     } on ApiException catch (error) {
       store.clearChecking(person);
       if (!mounted) return;
       setState(() => loading = false);
-      store.showToast(false, 'Report was not ready', error.message);
+      final low = error.message.toLowerCase().contains('low balance');
+      store.showToast(false, low ? 'Low balance' : 'Report was not ready', error.message);
+      if (low) store.loadWallet();
     }
   }
 
@@ -118,7 +128,7 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
           else if (loading)
             _Fetching(name: person.name)
           else if (message.isNotEmpty)
-            _Result(customer: person, score: score, message: message)
+            _Result(customer: person, score: score, message: message, reportId: reportId)
           else
             _ConsentForm(
               customer: person,
@@ -157,7 +167,7 @@ class _Fetching extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 3, color: dashBlue),
           ),
           const SizedBox(height: 18),
-          const Text('Requesting the AO Pay report', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: dashNavy)),
+          const Text('Requesting the credit report', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: dashNavy)),
           const SizedBox(height: 6),
           Text(name, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5C677A), fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
@@ -198,7 +208,7 @@ class _ConsentForm extends StatelessWidget {
             children: [
               Text(customer.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: dashNavy)),
               const SizedBox(height: 8),
-              const Text('AO Pay Credit Analytics uses these saved details.', style: TextStyle(color: Color(0xFF5C677A), fontSize: 13, height: 1.35)),
+              const Text('These saved details are sent for the credit report.', style: TextStyle(color: Color(0xFF5C677A), fontSize: 13, height: 1.35)),
               const SizedBox(height: 10),
               _Line(label: 'Mobile', value: customer.phone.isEmpty ? 'Missing' : '+91 ${phoneLabel(customer.phone)}'),
               _Line(label: 'Date of birth', value: customer.dob == null ? 'Missing' : _iso(customer.dob!)),
@@ -265,16 +275,25 @@ class _ConsentForm extends StatelessWidget {
   }
 }
 
-class _Result extends StatelessWidget {
-  const _Result({required this.customer, required this.score, required this.message});
+class _Result extends StatefulWidget {
+  const _Result({required this.customer, required this.score, required this.message, required this.reportId});
 
   final Customer customer;
   final int? score;
   final String message;
+  final String reportId;
 
   @override
+  State<_Result> createState() => _ResultState();
+}
+
+class _ResultState extends State<_Result> {
+  @override
   Widget build(BuildContext context) {
-    final band = score == null ? null : _band(score!);
+    final score = widget.score;
+    final customer = widget.customer;
+    final message = widget.message;
+    final band = score == null ? null : _band(score);
     return Column(
       children: [
         Container(
@@ -296,7 +315,7 @@ class _Result extends StatelessWidget {
                   width: 180,
                   height: 108,
                   child: CustomPaint(
-                    painter: _Gauge(score: score!, color: band.$2),
+                    painter: _Gauge(score: score, color: band.$2),
                     child: Align(
                       alignment: const Alignment(0, 0.72),
                       child: Text('$score', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -1)),
@@ -328,12 +347,16 @@ class _Result extends StatelessWidget {
               const Align(alignment: Alignment.centerLeft, child: Text('Score summary', style: TextStyle(fontWeight: FontWeight.w800, color: dashNavy))),
               const SizedBox(height: 6),
               if (band != null) _Line(label: 'Range', value: band.$3),
-              if (message.isNotEmpty) _Line(label: 'AO Pay', value: message),
+              if (message.isNotEmpty) _Line(label: 'Report', value: message),
               _Line(label: 'Fetched', value: customer.noted == null ? 'Just now' : prettyDate(customer.noted!)),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        if (widget.reportId.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          CreditReportActions(reportId: widget.reportId),
+        ],
+        const SizedBox(height: 12),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
           style: FilledButton.styleFrom(
@@ -344,6 +367,97 @@ class _Result extends StatelessWidget {
             textStyle: const TextStyle(fontWeight: FontWeight.w800),
           ),
           child: const Text('Done'),
+        ),
+      ],
+    );
+  }
+}
+
+class CreditReportActions extends StatefulWidget {
+  const CreditReportActions({required this.reportId, this.compact = false, super.key});
+
+  final String reportId;
+  final bool compact;
+
+  @override
+  State<CreditReportActions> createState() => _CreditReportActionsState();
+}
+
+class _CreditReportActionsState extends State<CreditReportActions> {
+  String? busy;
+
+  Future<void> open(bool print) async {
+    if (widget.reportId.isEmpty || busy != null) return;
+    final store = AgentScope.of(context);
+    setState(() => busy = print ? 'print' : 'download');
+    try {
+      final file = await downloadCreditReportPdf(accessToken: store.accessToken, id: widget.reportId);
+      if (print) {
+        await Printing.layoutPdf(name: file.filename, onLayout: (_) async => file.bytes);
+      } else {
+        await Printing.sharePdf(bytes: file.bytes, filename: file.filename);
+      }
+    } on ApiException catch (error) {
+      store.showToast(false, print ? 'Print' : 'Download', error.message);
+    } finally {
+      if (mounted) setState(() => busy = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.compact) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Print PDF',
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            onPressed: busy == null ? () => open(true) : null,
+            icon: Icon(busy == 'print' ? Icons.hourglass_top_rounded : Icons.print_outlined, color: dashBlue, size: 20),
+          ),
+          IconButton(
+            tooltip: 'Download PDF',
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            onPressed: busy == null ? () => open(false) : null,
+            icon: Icon(busy == 'download' ? Icons.hourglass_top_rounded : Icons.download_outlined, color: dashBlue, size: 20),
+          ),
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: busy == null ? () => open(true) : null,
+            icon: const Icon(Icons.print_outlined),
+            label: Text(busy == 'print' ? 'Printing…' : 'Print PDF'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: dashBlue,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: busy == null ? () => open(false) : null,
+            icon: const Icon(Icons.download_outlined),
+            label: Text(busy == 'download' ? 'Saving…' : 'Download PDF'),
+            style: FilledButton.styleFrom(
+              backgroundColor: dashBlue,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
         ),
       ],
     );

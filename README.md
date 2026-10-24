@@ -1,4 +1,4 @@
-# BerogetAI Monorepo Starter
+# Broget AI Monorepo Starter
 
 ## Structure
 - `frontend/public-website`: Next.js + TypeScript + Tailwind. Flights and hotels active; CIBIL and SIP show Coming Soon.
@@ -14,4 +14,4 @@
 This is a high-level scaffold, not a complete production implementation. Configure credentials, providers, tests, deployment and compliance before launch.
 
 ## Public website UI refresh
-The public website now has a responsive branded landing-page scaffold with a custom BerogetAI mark, navigation, flight search panel, service cards, destination imagery slots, CTA sections and a detailed footer. Add approved optimized images under `frontend/public-website/public/images/` before deployment.
+The public website now has a responsive branded landing-page scaffold with a custom Broget AI mark, navigation, flight search panel, service cards, destination imagery slots, CTA sections and a detailed footer. Add approved optimized images under `frontend/public-website/public/images/` before deployment.

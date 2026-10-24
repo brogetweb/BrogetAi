@@ -23,7 +23,7 @@ class SplashScreen extends StatelessWidget {
               Spacer(),
               CibilBadge(size: 132),
               SizedBox(height: 18),
-              Text('BerogetAI', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.8)),
+              Text('Broget AI', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.8)),
               SizedBox(height: 6),
               Text('CIBIL SCORE DESK', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.6, color: Color(0xFFD6E4FF))),
               Spacer(),

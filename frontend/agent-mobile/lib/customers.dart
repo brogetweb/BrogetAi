@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'add_customer.dart';
+import 'api.dart';
 import 'loans.dart';
+import 'cibil_fetch.dart';
 import 'store.dart';
 import 'ui.dart';
 
@@ -203,7 +205,7 @@ class _ListBar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('BerogetAI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, height: 1.05)),
+              Text('Broget AI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, height: 1.05)),
               Text('CREDIT INSIGHTS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, letterSpacing: 0.7, color: Color(0xFF8B95A7))),
             ],
           ),
@@ -427,6 +429,16 @@ String _listDate(DateTime value) {
   return '$day ${months[value.month - 1]} ${value.year}';
 }
 
+AgentCreditCheck? _reportFor(AgentStore store, Customer customer) {
+  final mobile = customer.phone.replaceAll(RegExp(r'\D'), '');
+  if (mobile.isEmpty) return null;
+  for (final check in store.checks) {
+    if (check.id.isEmpty) continue;
+    if (check.mobile.replaceAll(RegExp(r'\D'), '') == mobile) return check;
+  }
+  return null;
+}
+
 class CustomerPage extends StatelessWidget {
   const CustomerPage({required this.id, super.key});
 
@@ -451,21 +463,26 @@ class CustomerPage extends StatelessWidget {
               Text(customer.city, style: const TextStyle(color: muted)),
               const SizedBox(height: 4),
               Text(phoneLabel(customer.phone), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: ink)),
-              const SizedBox(height: 12),
-              StatusChip(label: 'KYC ${customer.kyc.label}', color: kycColor(customer.kyc)),
+              // KYC is paused.
+              // const SizedBox(height: 12),
+              // StatusChip(label: 'KYC ${customer.kyc.label}', color: kycColor(customer.kyc)),
               if (customer.sampleScore != null) ...[
                 const SizedBox(height: 12),
                 Text('CIBIL ${customer.sampleScore}', style: const TextStyle(fontWeight: FontWeight.w800, color: ink)),
               ],
-              if (customer.kyc == KycStatus.pending) ...[
+              if (_reportFor(store, customer) != null) ...[
                 const SizedBox(height: 12),
-                Text(
-                  customer.documents.isEmpty ? 'Add a document copy before you send KYC for review.' : 'The copy is on this device. Sending it marks the file in review. It does not verify the customer.',
-                  style: const TextStyle(color: muted, height: 1.4),
-                ),
-                const SizedBox(height: 12),
-                DeskButton(label: 'Send KYC for review', onPressed: customer.documents.isEmpty ? null : () => store.sendKycForReview(customer)),
+                CreditReportActions(reportId: _reportFor(store, customer)!.id),
               ],
+              // if (customer.kyc == KycStatus.pending) ...[
+              //   const SizedBox(height: 12),
+              //   Text(
+              //     customer.documents.isEmpty ? 'Add a document copy before you send KYC for review.' : 'The copy is on this device. Sending it marks the file in review. It does not verify the customer.',
+              //     style: const TextStyle(color: muted, height: 1.4),
+              //   ),
+              //   const SizedBox(height: 12),
+              //   DeskButton(label: 'Send KYC for review', onPressed: customer.documents.isEmpty ? null : () => store.sendKycForReview(customer)),
+              // ],
             ]),
           ),
           if (customer.pan.isNotEmpty || customer.email.isNotEmpty || customer.address.isNotEmpty) ...[
@@ -506,23 +523,24 @@ class CustomerPage extends StatelessWidget {
               ),
           const SizedBox(height: 8),
           OutlinedButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ConsentPage(id: customer.id))), child: const Text('Record consent')),
-          const SizedBox(height: 18),
-          sectionTitle('Documents'),
-          const Text('Copies stay on this device. They are not uploaded.', style: TextStyle(color: muted, height: 1.4)),
-          const SizedBox(height: 8),
-          if (customer.documents.isEmpty)
-            const Text('No copies saved.', style: TextStyle(color: muted))
-          else
-            for (final document in customer.documents)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: SoftCard(child: Row(children: [
-                  Expanded(child: Text(document.name, style: const TextStyle(fontWeight: FontWeight.w700, color: ink))),
-                  Text(document.kind, style: const TextStyle(color: muted)),
-                ])),
-              ),
-          const SizedBox(height: 8),
-          OutlinedButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DocumentPage(id: customer.id))), child: const Text('Save a copy')),
+          // KYC documents are paused.
+          // const SizedBox(height: 18),
+          // sectionTitle('Documents'),
+          // const Text('Copies stay on this device. They are not uploaded.', style: TextStyle(color: muted, height: 1.4)),
+          // const SizedBox(height: 8),
+          // if (customer.documents.isEmpty)
+          //   const Text('No copies saved.', style: TextStyle(color: muted))
+          // else
+          //   for (final document in customer.documents)
+          //     Padding(
+          //       padding: const EdgeInsets.only(bottom: 8),
+          //       child: SoftCard(child: Row(children: [
+          //         Expanded(child: Text(document.name, style: const TextStyle(fontWeight: FontWeight.w700, color: ink))),
+          //         Text(document.kind, style: const TextStyle(color: muted)),
+          //       ])),
+          //     ),
+          // const SizedBox(height: 8),
+          // OutlinedButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DocumentPage(id: customer.id))), child: const Text('Save a copy')),
           const SizedBox(height: 18),
           sectionTitle('Loan files'),
           if (files.isEmpty)

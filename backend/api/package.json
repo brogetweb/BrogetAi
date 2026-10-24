@@ -5,7 +5,7 @@
   "engines": {
     "node": ">=22"
   },
-  "description": "BerogetAI API. MongoDB for data, Cloudinary for images and private documents.",
+  "description": "Broget AI API. MongoDB for data, Cloudinary for images and private documents.",
   "scripts": {
     "build": "nest build",
     "start": "nest start",

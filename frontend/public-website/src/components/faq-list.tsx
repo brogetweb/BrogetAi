@@ -13,7 +13,7 @@ const items = [
   },
   {
     q: "Where do my travel details go?",
-    a: "Provider access stays on the server. The website only sends your search to the BerogetAI API, and it never holds airline or hotel secrets in the browser.",
+    a: "Provider access stays on the server. The website only sends your search to the Broget AI API, and it never holds airline or hotel secrets in the browser.",
   },
 ];
 

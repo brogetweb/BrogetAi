@@ -4,10 +4,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AgentsModule } from './modules/agents/agents.module';
 import { CreditModule } from './modules/credit/credit.module';
 import { CustomersModule } from './modules/customers/customers.module';
-import { KycModule } from './modules/kyc/kyc.module';
+// KYC is paused. Restore this import when document checks are needed again.
+// import { KycModule } from './modules/kyc/kyc.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { MediaModule } from './modules/media/media.module';
+import { WalletModule } from './modules/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -26,7 +28,8 @@ import { MediaModule } from './modules/media/media.module';
     AgentsModule,
     CreditModule,
     CustomersModule,
-    KycModule,
+    // KycModule,
+    WalletModule,
   ],
 })
 export class AppModule {}

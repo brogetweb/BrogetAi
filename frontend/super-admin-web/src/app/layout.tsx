@@ -4,7 +4,7 @@ import { AdminShell } from "@/components/admin-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BerogetAI Super Admin",
+  title: "Broget AI Super Admin",
   description: "Admin desk for travel bookings, agents, loans, and settings.",
 };
 

@@ -160,6 +160,12 @@ export type CreditReportRow = {
   createdAt: string;
 };
 
+export async function houseWallet() {
+  const response = await authorized("/wallet/house");
+  if (!response.ok) throw new Error(await readError(response, "Could not load the Broget wallet."));
+  return (await response.json()) as { balance: number; charge: number };
+}
+
 export async function listCreditReports() {
   const response = await authorized("/credit-reports");
   if (!response.ok) throw new Error(await readError(response, "Could not load credit reports."));

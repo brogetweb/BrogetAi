@@ -6,6 +6,6 @@ MongoDB holds application data. Cloudinary holds images and private documents. C
 
 Super admin sign-in is `POST /api/v1/auth/login`. The API returns a short-lived access token and a refresh token. Refresh tokens are stored hashed in Mongo and rotated on `POST /api/v1/auth/refresh`. `POST /api/v1/auth/logout` revokes the refresh token. `GET /api/v1/auth/me` requires `Authorization: Bearer <access token>`.
 
-On first boot, if `SUPER_ADMIN_EMAIL` is not already in Mongo, that account is created from `SUPER_ADMIN_PASSWORD`. Change that password before any shared deploy. The local seed is `admin@beroget.ai` / `Desk@1024`.
+On first boot, if `SUPER_ADMIN_EMAIL` is not already in Mongo, that account is created from `SUPER_ADMIN_PASSWORD`. Change that password before any shared deploy. The local seed is `admin@brogetai.com` / `Desk@1024`.
 
 Feature modules still to add: agents, customers, consent, kyc, documents, loans, credit-checks, travel/flights, travel/hotels, bookings, payments, notifications, settings, audit.

@@ -6,7 +6,7 @@ const group = menuGroups.find((entry) => entry.id === "banking");
 const item = group?.items.find((entry) => entry.href === "/cibil");
 
 export const metadata: Metadata = {
-  title: "CIBIL — BerogetAI",
+  title: "CIBIL — Broget AI",
   description: "Access CIBIL credit reports instantly. Coming soon.",
 };
 

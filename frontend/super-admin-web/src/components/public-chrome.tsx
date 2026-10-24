@@ -151,7 +151,7 @@ export function PublicFooter() {
       </div>
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-5 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <span>© 2026 BerogetAI</span>
+          <span>© 2026 Broget AI</span>
           <span>Questions about a hold go to the trip desk.</span>
           <span className="flex gap-4">
             <a href={`${site}/privacy`} className="hover:text-white">Privacy</a>

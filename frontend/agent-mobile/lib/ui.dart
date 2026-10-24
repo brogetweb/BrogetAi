@@ -164,7 +164,7 @@ class BrandLockup extends StatelessWidget {
         const SizedBox(width: 10),
         Text.rich(
           TextSpan(children: [
-            TextSpan(text: 'Beroget', style: TextStyle(color: title, fontWeight: FontWeight.w800, fontSize: 20, letterSpacing: -0.6)),
+            TextSpan(text: 'Broget', style: TextStyle(color: title, fontWeight: FontWeight.w800, fontSize: 20, letterSpacing: -0.6)),
             TextSpan(text: 'AI', style: TextStyle(color: light ? const Color(0xFFC7D2FE) : indigo, fontWeight: FontWeight.w800, fontSize: 20, letterSpacing: -0.6)),
           ]),
         ),
@@ -269,19 +269,21 @@ class DeskButton extends StatelessWidget {
   }
 }
 
-String inr(int value) {
-  final digits = value.abs().toString();
-  if (digits.length <= 3) return '₹$digits';
-  final head = digits.substring(0, digits.length - 3);
-  final tail = digits.substring(digits.length - 3);
+String inr(num value) {
+  final negative = value < 0;
+  final fixed = value.abs().toStringAsFixed(2);
+  final whole = fixed.split('.').first;
+  final frac = fixed.substring(fixed.indexOf('.'));
+  if (whole.length <= 3) return '${negative ? '-' : ''}₹$whole$frac';
+  final tail = whole.substring(whole.length - 3);
+  var head = whole.substring(0, whole.length - 3);
   final groups = <String>[];
-  var rest = head;
-  while (rest.length > 2) {
-    groups.insert(0, rest.substring(rest.length - 2));
-    rest = rest.substring(0, rest.length - 2);
+  while (head.length > 2) {
+    groups.insert(0, head.substring(head.length - 2));
+    head = head.substring(0, head.length - 2);
   }
-  if (rest.isNotEmpty) groups.insert(0, rest);
-  return '₹${groups.join(',')},$tail';
+  if (head.isNotEmpty) groups.insert(0, head);
+  return '${negative ? '-' : ''}₹${groups.join(',')},$tail$frac';
 }
 
 String stamp(DateTime value) {

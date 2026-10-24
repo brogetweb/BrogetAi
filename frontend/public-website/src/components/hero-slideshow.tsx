@@ -64,7 +64,7 @@ export function HeroSlideshow() {
   }, [index]);
 
   return (
-    <section className="relative h-[460px] overflow-hidden sm:h-[560px]" aria-roledescription="carousel" aria-label="BerogetAI services">
+    <section className="relative h-[460px] overflow-hidden sm:h-[560px]" aria-roledescription="carousel" aria-label="Broget AI services">
       <div
         className="hero-track flex h-full"
         style={{ transform: `translateX(-${index * 100}%)`, transition: animate ? undefined : "none" }}

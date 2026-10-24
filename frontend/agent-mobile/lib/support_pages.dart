@@ -12,9 +12,9 @@ class HelpSupportPage extends StatelessWidget {
       children: const [
         _Intro(icon: Icons.headset_mic_outlined, wash: Color(0xFFEAF1FF), color: dashBlue, title: 'How can we help?', body: 'Answers for the desk tools you use every day. Records stay on this device.'),
         SizedBox(height: 14),
-        _Faq(question: 'How do I add a customer?', answer: 'Enter the first name, last name, mobile, date of birth, email, and PAN. Those are the details AO Pay uses for the credit analytics report.'),
-        _Faq(question: 'How do I check a credit analytics report?', answer: 'Open CIBIL Check, select the customer, confirm consent, enter the OTP, then get the report.'),
-        _Faq(question: 'Where do KYC documents go?', answer: 'KYC & Documents keeps Aadhaar, PAN, selfie, and address proof on this device. Submit for Verification moves the file to step 2.'),
+        _Faq(question: 'How do I add a customer?', answer: 'Enter the first name, last name, mobile, date of birth, email, and PAN. Those details are used for the credit report. The fee comes out of the Broget Pay wallet.'),
+        _Faq(question: 'How do I check a credit analytics report?', answer: 'Open CIBIL Check, select the customer, confirm consent, enter the OTP, then print or download the PDF.'),
+        // _Faq(question: 'Where do KYC documents go?', answer: 'KYC & Documents keeps Aadhaar, PAN, selfie, and address proof on this device. Submit for Verification moves the file to step 2.'),
         _Faq(question: 'How do I update my profile?', answer: 'Open Profile and tap Edit Profile. You can change your name, mobile number, and email. Agent ID and company stay fixed.'),
         SizedBox(height: 8),
         _ContactCard(),
@@ -31,9 +31,10 @@ class TermsPage extends StatelessWidget {
     return const _SupportFrame(
       title: 'Terms & Conditions',
       children: [
-        _Intro(icon: Icons.article_outlined, wash: Color(0xFFFFF6E5), color: Color(0xFFD97706), title: 'Desk terms', body: 'These terms describe how the BerogetAI agent desk works on this device.'),
+        _Intro(icon: Icons.article_outlined, wash: Color(0xFFFFF6E5), color: Color(0xFFD97706), title: 'Desk terms', body: 'These terms describe how the Broget AI agent desk works on this device.'),
         SizedBox(height: 14),
-        _Clause(index: '01', title: 'The desk', body: 'The app is a working desk for customers, KYC, and CIBIL checks. It does not approve a loan or complete a payment.'),
+        _Clause(index: '01', title: 'The desk', body: 'The app is a working desk for customers and CIBIL checks. It does not approve a loan or complete a payment.'),
+        // _Clause(index: '01', title: 'The desk', body: 'The app is a working desk for customers, KYC, and CIBIL checks. It does not approve a loan or complete a payment.'),
         _Clause(index: '02', title: 'Customer records', body: 'Names, contact details, and identity fields you enter stay on this device until the app restarts. You are responsible for what you type.'),
         _Clause(index: '03', title: 'Credit checks', body: 'A check runs only after you add a customer or select one on CIBIL Check. The score shown is the one saved for that customer on this desk.'),
         _Clause(index: '04', title: 'Your account', body: 'Keep your password private. Signing out ends the session on this device. Profile edits stay until the app restarts.'),
@@ -50,11 +51,13 @@ class PrivacyPage extends StatelessWidget {
     return const _SupportFrame(
       title: 'Privacy Policy',
       children: [
-        _Intro(icon: Icons.shield_outlined, wash: Color(0xFFE8F8EE), color: Color(0xFF16A34A), title: 'Your data on this desk', body: 'BerogetAI keeps the agent desk private. Here is what stays on the phone, and what is masked.'),
+        _Intro(icon: Icons.shield_outlined, wash: Color(0xFFE8F8EE), color: Color(0xFF16A34A), title: 'Your data on this desk', body: 'Broget AI keeps the agent desk private. Here is what stays on the phone, and what is masked.'),
         SizedBox(height: 14),
-        _Clause(index: '01', title: 'What is stored', body: 'Customer profiles, consents, KYC labels, and score results stay in the app session on this device.'),
+        _Clause(index: '01', title: 'What is stored', body: 'Customer profiles, consents, and score results stay in the app session on this device.'),
+        // _Clause(index: '01', title: 'What is stored', body: 'Customer profiles, consents, KYC labels, and score results stay in the app session on this device.'),
         _Clause(index: '02', title: 'PAN and Aadhaar', body: 'You enter them on the add-customer form so a check can run. Outside that form they are masked on the customer file and on the score screen.'),
-        _Clause(index: '03', title: 'Documents', body: 'KYC previews are shown in the app. A file is not sent to a server from this build.'),
+        _Clause(index: '03', title: 'Reports', body: 'A ready credit report can be printed or downloaded as a PDF from the check screen.'),
+        // _Clause(index: '03', title: 'Documents', body: 'KYC previews are shown in the app. A file is not sent to a server from this build.'),
         _Clause(index: '04', title: 'How long it stays', body: 'Records remain until you restart the app. Signing out ends the session. It does not upload the desk somewhere else.'),
       ],
     );
@@ -67,13 +70,14 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const _SupportFrame(
-      title: 'About BerogetAI',
+      title: 'About Broget AI',
       children: [
         _AboutHero(),
         SizedBox(height: 14),
         _Feature(icon: Icons.person_add_alt_1, wash: Color(0xFFEAF1FF), color: dashBlue, title: 'Customers', body: 'Add a customer in five steps and keep the file on your desk.'),
         _Feature(icon: Icons.speed, wash: Color(0xFFE8F8EE), color: Color(0xFF16A34A), title: 'CIBIL Check', body: 'Pick a saved customer and fetch the report from their profile.'),
-        _Feature(icon: Icons.badge_outlined, wash: Color(0xFFFFF6E5), color: Color(0xFFD97706), title: 'KYC', body: 'Aadhaar, PAN, selfie, and address proof, then submit for verification.'),
+        _Feature(icon: Icons.picture_as_pdf_outlined, wash: Color(0xFFFFF6E5), color: Color(0xFFD97706), title: 'PDF', body: 'Print or download the credit report as soon as the check is ready.'),
+        // _Feature(icon: Icons.badge_outlined, wash: Color(0xFFFFF6E5), color: Color(0xFFD97706), title: 'KYC', body: 'Aadhaar, PAN, selfie, and address proof, then submit for verification.'),
         _Feature(icon: Icons.verified_user_outlined, wash: Color(0xFFF3E8FF), color: Color(0xFF7C3AED), title: 'On this device', body: 'The desk does not approve a loan or complete a payment from here.'),
       ],
     );
@@ -208,7 +212,7 @@ class _ContactCard extends StatelessWidget {
         children: [
           Text('Contact', style: TextStyle(fontWeight: FontWeight.w800, color: dashNavy)),
           SizedBox(height: 10),
-          _ContactRow(icon: Icons.mail_outline, label: 'Email', value: 'support@beroget.ai'),
+          _ContactRow(icon: Icons.mail_outline, label: 'Email', value: 'support@brogetai.com'),
           SizedBox(height: 8),
           _ContactRow(icon: Icons.schedule, label: 'Hours', value: 'Mon–Sat, 10:00–18:00'),
         ],
@@ -290,10 +294,11 @@ class _AboutHero extends StatelessWidget {
         children: [
           _Plane(),
           SizedBox(height: 10),
-          Text('BerogetAI', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
+          Text('Broget AI', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
           Text('CREDIT INSIGHTS', style: TextStyle(color: Color(0xFFD6E4FF), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1)),
           SizedBox(height: 8),
-          Text('Agent desk for customers, KYC, and CIBIL checks.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFD6E4FF), height: 1.35)),
+          Text('Agent desk for customers and CIBIL checks.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFD6E4FF), height: 1.35)),
+          // Text('Agent desk for customers, KYC, and CIBIL checks.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFD6E4FF), height: 1.35)),
           SizedBox(height: 10),
           _VersionPill(),
         ],

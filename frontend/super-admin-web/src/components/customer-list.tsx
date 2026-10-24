@@ -69,7 +69,7 @@ export function CustomerList() {
             <table className="w-full min-w-[1080px] border-separate border-spacing-0 text-left text-sm">
               <thead className="bg-[#f8fafc] text-[11px] font-extrabold tracking-wide text-[#8b95a7]">
                 <tr>
-                  {["Name", "Agent", "Mobile", "Email", "PAN", "Score", "KYC", "Added", ""].map((column) => (
+                  {["Name", "Agent", "Mobile", "Email", "PAN", "Score", "Added", ""].map((column) => (
                     <th key={column || "view"} className="border-b border-[#eef1f6] px-4 py-3 font-extrabold whitespace-nowrap">{column}</th>
                   ))}
                 </tr>
@@ -92,9 +92,11 @@ export function CustomerList() {
                       <p className="text-lg font-extrabold tracking-tight text-[#12182b]">{customer.score ?? "—"}</p>
                       <p className="text-xs font-extrabold text-[#16a34a]">{customer.score == null ? customer.cibil : scoreBand(String(customer.score))}</p>
                     </td>
+                    {/* KYC is paused.
                     <td className="border-b border-[#f4f7fc] px-4 py-3.5">
                       <span className="rounded-full bg-[#fff6e5] px-2.5 py-1 text-xs font-extrabold text-[#d97706]">{customer.kyc}</span>
                     </td>
+                    */}
                     <td className="border-b border-[#f4f7fc] px-4 py-3.5 font-semibold whitespace-nowrap text-[#3d4658]">{whenLabel(customer.createdAt)}</td>
                     <td className="border-b border-[#f4f7fc] px-4 py-3.5 text-right">
                       <div className="flex justify-end gap-2">
@@ -132,7 +134,7 @@ export function CustomerList() {
               <Item label="PAN" value={open.pan} />
               <Item label="Score" value={open.score == null ? "—" : `${open.score} · ${scoreBand(String(open.score))}`} />
               <Item label="Credit check" value={open.cibil} />
-              <Item label="KYC" value={open.kyc} />
+              {/* <Item label="KYC" value={open.kyc} /> */}
               <Item label="Added" value={whenLabel(open.createdAt)} />
             </dl>
             <button type="button" onClick={() => setPendingDelete(open)} className="mt-6 w-full rounded-xl border border-[#fecaca] py-3 text-sm font-extrabold text-[#dc2626]">

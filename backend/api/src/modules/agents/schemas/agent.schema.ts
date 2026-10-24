@@ -23,6 +23,12 @@ export class Agent {
 
   @Prop({ required: true, enum: ['active', 'inactive'], default: 'active' })
   status: 'active' | 'inactive';
+
+  @Prop({ default: 0 })
+  walletBalancePaise: number;
+
+  @Prop({ default: false })
+  testCreditApplied?: boolean;
 }
 
 export type AgentDocument = HydratedDocument<Agent>;
