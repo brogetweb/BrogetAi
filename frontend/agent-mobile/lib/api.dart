@@ -281,11 +281,19 @@ Future<WalletView> fetchWallet(String accessToken) async {
   return WalletView.fromJson(body);
 }
 
-Future<String> createWalletTopup({required String accessToken, required double amount, required String mobile}) async {
+class WalletPayLink {
+  const WalletPayLink({required this.paymentUrl, this.upiUrl = '', this.checkoutUrl = ''});
+
+  final String paymentUrl;
+  final String upiUrl;
+  final String checkoutUrl;
+}
+
+Future<WalletPayLink> createWalletTopup({required String accessToken, required double amount, required String mobile}) async {
   final body = await _post('/wallet/topups', {'amount': amount, 'mobile': mobile}, accessToken: accessToken, timeout: const Duration(seconds: 35));
   final url = '${body['paymentUrl'] ?? ''}';
   if (url.isEmpty) throw ApiException('Broget Pay did not return a payment link.');
-  return url;
+  return WalletPayLink(paymentUrl: url, upiUrl: '${body['upiUrl'] ?? ''}', checkoutUrl: '${body['checkoutUrl'] ?? ''}');
 }
 
 Future<void> createWalletPayout({

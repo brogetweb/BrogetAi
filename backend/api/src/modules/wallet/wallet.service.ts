@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { BadGatewayException, HttpException, HttpStatus, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { BadGatewayException, HttpException, HttpStatus, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -141,14 +141,39 @@ export class WalletService {
       await this.entries.updateOne({ requestId }, { status: 'failed', note: 'Broget Pay did not return a payment link.' });
       throw new BadGatewayException('Broget Pay did not return a payment link.');
     }
-    return { requestId, paymentUrl, status: 'pending' };
+    const upiUrl = await this.readUpiLink(paymentUrl);
+    return {
+      requestId,
+      paymentUrl: `${this.publicUrl()}/api/v1/wallet/payin/open/${requestId}`,
+      checkoutUrl: paymentUrl,
+      upiUrl,
+      status: 'pending',
+    };
+  }
+
+  async payinOpenPage(requestId: string) {
+    if (!/^ORD[A-Za-z0-9]+$/.test(requestId)) throw new NotFoundException();
+    const entry = await this.entries.findOne({ requestId, kind: 'topup' });
+    if (!entry) throw new NotFoundException();
+    const checkout = `${this.gatewayOrigin()}/payment/${requestId}`;
+    const upiUrl = await this.readUpiLink(checkout);
+    const amount = paiseToRupees(entry.amountPaise).toFixed(2);
+    const pay = upiUrl
+      ? `<a class="pay" href="${escapeAttr(androidUpiIntent(upiUrl))}">Pay ₹${amount} with UPI</a><p class="hint">PhonePe, GPay, or Paytm should open. If they do not, <a href="${escapeAttr(upiUrl)}">tap here</a>. Finish the payment within 5 minutes.</p>`
+      : '<p class="hint">The UPI app link is not ready. Use the QR page instead.</p>';
+    return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pay with UPI</title><style>body{font-family:sans-serif;margin:0;background:#f6f8fb;color:#172033}main{max-width:420px;margin:0 auto;padding:28px 20px}h1{font-size:22px;margin:0 0 8px}.pay{display:block;text-align:center;background:#0356e8;color:#fff;text-decoration:none;font-weight:800;border-radius:14px;padding:16px;margin:18px 0}.qr{color:#0356e8;font-weight:700}.hint{color:#64748b;line-height:1.45;font-size:14px}</style></head><body><main><h1>Pay ₹${amount}</h1><p class="hint">Broget Pay only records the payment after the UPI app confirms it. Until then the order stays pending and this wallet does not increase.</p>${pay}<p><a class="qr" href="${escapeAttr(checkout)}">Show QR instead</a></p></main></body></html>`;
   }
 
   async payinWebhook(input: PayinWebhookDto) {
-    const entry = await this.entries.findOne({ requestId: input.order_id, kind: 'topup' });
+    const orderId = String(input?.order_id || '');
+    if (!orderId) return { received: true };
+    const entry = await this.entries.findOne({ requestId: orderId, kind: 'topup' });
     if (!entry || entry.status === 'success') return { received: true };
-    const success = input.status === true && (input.status_text ?? '').toUpperCase() === 'SUCCESS';
-    const paid = rupeesToPaise(Number(input.amount ?? 0));
+    const text = String(input.status_text ?? '').toUpperCase();
+    const rawStatus = input.status as unknown;
+    const failed = rawStatus === false || rawStatus === 0 || rawStatus === '0' || rawStatus === 'false' || text === 'FAILED';
+    const success = !failed && (rawStatus === true || rawStatus === 1 || rawStatus === '1' || rawStatus === 'true' || text === 'SUCCESS');
+    const paid = input.amount == null || input.amount === '' ? entry.amountPaise : rupeesToPaise(Number(input.amount));
     if (!success || paid !== entry.amountPaise) {
       await this.entries.updateOne({ _id: entry._id, status: 'pending' }, { status: 'failed', note: success ? 'Amount did not match the wallet request.' : 'Broget Pay marked the payment failed.' });
       return { received: true };
@@ -211,6 +236,27 @@ export class WalletService {
     return { received: true };
   }
 
+  private gatewayOrigin() {
+    const base = this.config.get<string>('BROGETPAY_BASE_URL') || 'https://gateway.brogetpay.com/api';
+    return new URL(base).origin;
+  }
+
+  private async readUpiLink(paymentUrl: string) {
+    try {
+      const response = await fetch(paymentUrl, {
+        headers: { Accept: 'text/html', 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(8000),
+      });
+      const html = await response.text();
+      const match = html.match(/const upiUrl = "([^"]+)"/);
+      if (!match) return '';
+      const link = decodeJsString(match[1]);
+      return link.startsWith('upi://pay?') ? link : '';
+    } catch {
+      return '';
+    }
+  }
+
   private apiKey() {
     const key = this.config.get<string>('BROGETPAY_API_KEY')?.trim();
     if (!key) throw new ServiceUnavailableException('Broget Pay is not configured.');
@@ -267,6 +313,19 @@ export class WalletService {
       createdAt: (row as WalletEntryDocument & { createdAt?: Date }).createdAt ?? new Date(),
     };
   }
+}
+
+function decodeJsString(value: string) {
+  return value.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16))).replace(/\\\//g, '/');
+}
+
+function androidUpiIntent(upiUrl: string) {
+  const query = upiUrl.replace(/^upi:\/\/pay\?/i, '');
+  return `intent://pay?${query}#Intent;scheme=upi;end`;
+}
+
+function escapeAttr(value: string) {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
 function readPaymentUrl(payload: Record<string, unknown>) {

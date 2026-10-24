@@ -41,22 +41,23 @@ export class CreatePayoutDto {
 
 export class PayinWebhookDto {
   @IsOptional()
-  @IsBoolean()
-  status?: boolean;
+  @Allow()
+  status?: boolean | string | number;
 
-  @IsString()
-  order_id: string;
+  @IsOptional()
+  @Allow()
+  order_id?: string;
 
   @IsOptional()
   @Allow()
   amount?: string | number;
 
   @IsOptional()
-  @IsString()
+  @Allow()
   utr?: string;
 
   @IsOptional()
-  @IsString()
+  @Allow()
   status_text?: string;
 }
 

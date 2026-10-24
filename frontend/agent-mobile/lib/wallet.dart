@@ -199,14 +199,9 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
       error = null;
     });
     try {
-      final url = await createWalletTopup(accessToken: store.accessToken, amount: parsed, mobile: phone);
-      final opened = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      final link = await createWalletTopup(accessToken: store.accessToken, amount: parsed, mobile: phone);
       if (!mounted) return;
-      if (!opened) {
-        setState(() => error = 'The Broget Pay page could not be opened.');
-        return;
-      }
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PayinWaitingPage()));
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PayinWaitingPage(amount: parsed, paymentUrl: link.paymentUrl, upiUrl: link.upiUrl, checkoutUrl: link.checkoutUrl)));
     } on ApiException catch (caught) {
       if (mounted) setState(() => error = caught.message);
     } finally {
@@ -277,7 +272,7 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: dashBlue, minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
             onPressed: sending ? null : next,
-            child: const Text('Proceed to pay', style: TextStyle(fontWeight: FontWeight.w800)),
+            child: Text(sending ? 'Opening payment…' : 'Proceed to pay', style: const TextStyle(fontWeight: FontWeight.w800)),
           ),
         ],
       ),
@@ -286,7 +281,12 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
 }
 
 class PayinWaitingPage extends StatefulWidget {
-  const PayinWaitingPage({super.key});
+  const PayinWaitingPage({super.key, required this.amount, required this.paymentUrl, this.upiUrl = '', this.checkoutUrl = ''});
+
+  final double amount;
+  final String paymentUrl;
+  final String upiUrl;
+  final String checkoutUrl;
 
   @override
   State<PayinWaitingPage> createState() => _PayinWaitingPageState();
@@ -294,6 +294,45 @@ class PayinWaitingPage extends StatefulWidget {
 
 class _PayinWaitingPageState extends State<PayinWaitingPage> {
   var refreshing = false;
+  var opening = false;
+  String? openError;
+  var started = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (started) return;
+      started = true;
+      openPay();
+    });
+  }
+
+  Future<bool> openLink(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme) return false;
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> openPay() async {
+    setState(() {
+      opening = true;
+      openError = null;
+    });
+    var opened = false;
+    if (widget.upiUrl.startsWith('upi:')) opened = await openLink(widget.upiUrl);
+    if (!opened && widget.paymentUrl.isNotEmpty) opened = await openLink(widget.paymentUrl);
+    if (!opened && widget.checkoutUrl.isNotEmpty) opened = await openLink(widget.checkoutUrl);
+    if (!mounted) return;
+    setState(() {
+      opening = false;
+      openError = opened ? null : 'The UPI app did not open. Tap Pay with UPI again.';
+    });
+  }
 
   Future<void> refresh() async {
     setState(() => refreshing = true);
@@ -316,16 +355,26 @@ class _PayinWaitingPageState extends State<PayinWaitingPage> {
         children: [
           const Icon(Icons.account_balance_wallet_outlined, color: dashBlue, size: 42),
           const SizedBox(height: 10),
-          const Text('Finish the payment in Broget Pay', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: dashNavy)),
+          Text('Pay ${inr(widget.amount)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: dashNavy)),
           const SizedBox(height: 12),
-          const _Step(done: true, label: 'Payment page opened'),
-          const _Step(done: false, label: 'Pay by UPI, QR, net banking, or card'),
+          const _Step(done: true, label: 'Payment request created'),
+          const _Step(done: false, label: 'Confirm it in PhonePe, GPay, or Paytm'),
           const _Step(done: false, label: 'Wallet updates when Broget Pay confirms'),
           const SizedBox(height: 12),
-          const Text('Come back here after payment and refresh. The balance changes only when Broget Pay sends a success callback.', style: TextStyle(color: Color(0xFF64748B), height: 1.45)),
+          const Text('The order stays pending until the UPI app payment succeeds. Then come back and refresh.', style: TextStyle(color: Color(0xFF64748B), height: 1.45)),
+          if (openError != null) ...[
+            const SizedBox(height: 12),
+            Text(openError!, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700)),
+          ],
           const SizedBox(height: 18),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: dashBlue, minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+            onPressed: opening ? null : openPay,
+            child: Text(opening ? 'Opening UPI…' : 'Pay with UPI', style: const TextStyle(fontWeight: FontWeight.w800)),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
             onPressed: refreshing ? null : refresh,
             child: Text(refreshing ? 'Checking…' : 'Refresh wallet', style: const TextStyle(fontWeight: FontWeight.w800)),
           ),
