@@ -45,11 +45,12 @@
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW"/>
+            <category android:name="android.intent.category.BROWSABLE"/>
             <data android:scheme="https"/>
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="upi"/>
+            <data android:scheme="upi" android:host="pay"/>
         </intent>
         <package android:name="com.google.android.apps.nbu.paisa.user"/>
         <package android:name="com.phonepe.app"/>

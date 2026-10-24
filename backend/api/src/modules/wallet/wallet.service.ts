@@ -251,7 +251,7 @@ export class WalletService {
       const match = html.match(/const upiUrl = "([^"]+)"/);
       if (!match) return '';
       const link = decodeJsString(match[1]);
-      return link.startsWith('upi://pay?') ? link : '';
+      return link.startsWith('upi://pay?') ? encodeUpiLink(link) : '';
     } catch {
       return '';
     }
@@ -317,6 +317,23 @@ export class WalletService {
 
 function decodeJsString(value: string) {
   return value.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16))).replace(/\\\//g, '/');
+}
+
+function encodeUpiLink(upiUrl: string) {
+  const mark = upiUrl.indexOf('?');
+  if (mark < 0) return upiUrl;
+  const query = upiUrl
+    .slice(mark + 1)
+    .split('&')
+    .filter(Boolean)
+    .map((part) => {
+      const eq = part.indexOf('=');
+      const key = eq >= 0 ? part.slice(0, eq) : part;
+      const value = eq >= 0 ? part.slice(eq + 1) : '';
+      return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+    })
+    .join('&');
+  return `${upiUrl.slice(0, mark)}?${query}`;
 }
 
 function androidUpiIntent(upiUrl: string) {

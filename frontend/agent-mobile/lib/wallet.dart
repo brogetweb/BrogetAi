@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import 'api.dart';
+import 'pay_launch.dart' if (dart.library.html) 'pay_launch_web.dart';
 import 'store.dart';
 import 'ui.dart';
 
@@ -292,45 +293,84 @@ class PayinWaitingPage extends StatefulWidget {
   State<PayinWaitingPage> createState() => _PayinWaitingPageState();
 }
 
+Uri? _paymentUri(String url) {
+  final value = url.trim();
+  if (value.isEmpty) return null;
+  try {
+    return _paymentUriParsed(value);
+  } catch (_) {
+    return Uri.tryParse(value);
+  }
+}
+
+Uri? _paymentUriParsed(String value) {
+  if (value.startsWith('upi:')) {
+    final query = value.contains('?') ? value.substring(value.indexOf('?') + 1) : '';
+    final params = <String, String>{};
+    for (final part in query.split('&')) {
+      if (part.isEmpty) continue;
+      final eq = part.indexOf('=');
+      final key = Uri.decodeQueryComponent(eq >= 0 ? part.substring(0, eq) : part);
+      final raw = eq >= 0 ? part.substring(eq + 1) : '';
+      params[key] = Uri.decodeQueryComponent(raw.replaceAll('+', '%20'));
+    }
+    return Uri(scheme: 'upi', host: 'pay', queryParameters: params);
+  }
+  return Uri.tryParse(value);
+}
+
 class _PayinWaitingPageState extends State<PayinWaitingPage> {
   var refreshing = false;
   var opening = false;
   String? openError;
   var started = false;
+  WebViewController? web;
+
+  Uri? _pageUri() {
+    if (widget.checkoutUrl.startsWith('https://')) return Uri.tryParse(widget.checkoutUrl);
+    if (widget.paymentUrl.startsWith('https://')) return Uri.tryParse(widget.paymentUrl);
+    return null;
+  }
 
   @override
   void initState() {
     super.initState();
+    final page = _pageUri();
+    if (page != null) {
+      web = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setNavigationDelegate(NavigationDelegate(
+          onNavigationRequest: (request) {
+            final target = _paymentUri(request.url);
+            if (request.url.startsWith('upi:') || request.url.startsWith('intent:')) {
+              if (target != null) launchPayment(target);
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+        ))
+        ..loadRequest(page);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (started) return;
-      started = true;
-      openPay();
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        if (!mounted || started) return;
+        started = true;
+        openPay();
+      });
     });
   }
 
-  Future<bool> openLink(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null || !uri.hasScheme) return false;
-    try {
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<void> openPay() async {
+  Future<void> openPay({bool fromUser = false}) async {
     setState(() {
       opening = true;
-      openError = null;
+      if (fromUser) openError = null;
     });
-    var opened = false;
-    if (widget.upiUrl.startsWith('upi:')) opened = await openLink(widget.upiUrl);
-    if (!opened && widget.paymentUrl.isNotEmpty) opened = await openLink(widget.paymentUrl);
-    if (!opened && widget.checkoutUrl.isNotEmpty) opened = await openLink(widget.checkoutUrl);
+    final uri = _paymentUri(widget.upiUrl);
+    final opened = uri == null ? false : await launchPayment(uri);
     if (!mounted) return;
     setState(() {
       opening = false;
-      openError = opened ? null : 'The UPI app did not open. Tap Pay with UPI again.';
+      openError = opened || !fromUser ? null : 'PhonePe, GPay, or Paytm did not open. Use the payment page below.';
     });
   }
 
@@ -347,36 +387,34 @@ class _PayinWaitingPageState extends State<PayinWaitingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final page = web;
     return Scaffold(
       backgroundColor: dashWash,
-      appBar: AppBar(backgroundColor: dashWash, elevation: 0, foregroundColor: dashNavy, title: const Text('Broget Pay', style: TextStyle(fontWeight: FontWeight.w800))),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      appBar: AppBar(backgroundColor: dashWash, elevation: 0, foregroundColor: dashNavy, title: Text('Pay ${inr(widget.amount)}', style: const TextStyle(fontWeight: FontWeight.w800))),
+      body: Column(
         children: [
-          const Icon(Icons.account_balance_wallet_outlined, color: dashBlue, size: 42),
-          const SizedBox(height: 10),
-          Text('Pay ${inr(widget.amount)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: dashNavy)),
-          const SizedBox(height: 12),
-          const _Step(done: true, label: 'Payment request created'),
-          const _Step(done: false, label: 'Confirm it in PhonePe, GPay, or Paytm'),
-          const _Step(done: false, label: 'Wallet updates when Broget Pay confirms'),
-          const SizedBox(height: 12),
-          const Text('The order stays pending until the UPI app payment succeeds. Then come back and refresh.', style: TextStyle(color: Color(0xFF64748B), height: 1.45)),
-          if (openError != null) ...[
-            const SizedBox(height: 12),
-            Text(openError!, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700)),
-          ],
-          const SizedBox(height: 18),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: dashBlue, minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-            onPressed: opening ? null : openPay,
-            child: Text(opening ? 'Opening UPI…' : 'Pay with UPI', style: const TextStyle(fontWeight: FontWeight.w800)),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-            onPressed: refreshing ? null : refresh,
-            child: Text(refreshing ? 'Checking…' : 'Refresh wallet', style: const TextStyle(fontWeight: FontWeight.w800)),
+          if (page != null) Expanded(child: WebViewWidget(controller: page)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              children: [
+                if (openError != null) ...[
+                  Text(openError!, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 10),
+                ],
+                FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: dashBlue, minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  onPressed: opening ? null : () => openPay(fromUser: true),
+                  child: Text(opening ? 'Opening UPI…' : 'Pay with UPI', style: const TextStyle(fontWeight: FontWeight.w800)),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  onPressed: refreshing ? null : refresh,
+                  child: Text(refreshing ? 'Checking…' : 'Refresh wallet', style: const TextStyle(fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -700,27 +738,6 @@ class _EntryTile extends StatelessWidget {
               Text(status, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Step extends StatelessWidget {
-  const _Step({required this.done, required this.label});
-
-  final bool done;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Icon(done ? Icons.check_circle : Icons.radio_button_unchecked, color: done ? const Color(0xFF16A34A) : const Color(0xFFB0B8C6), size: 20),
-          const SizedBox(width: 10),
-          Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700, color: dashNavy))),
         ],
       ),
     );
