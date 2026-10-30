@@ -6,8 +6,8 @@ export class Session {
   @Prop({ required: true, type: Types.ObjectId, index: true })
   userId: Types.ObjectId;
 
-  @Prop({ enum: ['super_admin', 'agent'], default: 'super_admin' })
-  role?: 'super_admin' | 'agent';
+  @Prop({ enum: ['super_admin', 'agent', 'traveller'], default: 'super_admin' })
+  role?: 'super_admin' | 'agent' | 'traveller';
 
   @Prop({ required: true })
   refreshTokenHash: string;

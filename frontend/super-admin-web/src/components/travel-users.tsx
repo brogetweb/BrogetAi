@@ -1,51 +1,85 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { travelUsers, type TravelUser } from "@/lib/desk";
-
-const months: Record<string, string> = {
-  Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
-  Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
-};
-
-function isoDate(label: string) {
-  const [day, month, year] = label.split(" ");
-  const mm = months[month];
-  if (!day || !mm || !year) return "";
-  return `${year}-${mm}-${day.padStart(2, "0")}`;
-}
+import { useEffect, useMemo, useState } from "react";
+import { useDesk } from "@/components/admin-shell";
+import { listTravelUsers, setTravelUserStatus, type TravelUserRow } from "@/lib/api";
 
 function prettyDate(iso: string) {
-  const [year, month, day] = iso.split("-");
-  const name = Object.entries(months).find(([, value]) => value === month)?.[0];
-  if (!year || !name || !day) return iso;
-  return `${Number(day)} ${name} ${year}`;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function dayKey(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const y = date.getFullYear();
+  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  const d = `${date.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export function TravelUsers() {
-  const [statusOf, setStatusOf] = useState<Record<string, TravelUser["status"]>>({});
+  const { notify } = useDesk();
+  const [users, setUsers] = useState<TravelUserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [date, setDate] = useState("");
-  const users = travelUsers.map((user) => ({ ...user, status: statusOf[user.id] ?? user.status }));
+
+  useEffect(() => {
+    let active = true;
+    listTravelUsers()
+      .then((rows) => {
+        if (active) setUsers(rows);
+      })
+      .catch((caught) => {
+        if (!active) return;
+        const message = caught instanceof Error ? caught.message : "Could not load travel users.";
+        setError(message);
+        notify("bad", "Could not load travel users", message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [notify]);
+
   const shown = useMemo(() => {
     if (!date) return users;
-    return users.filter((user) => isoDate(user.joined) === date);
+    return users.filter((user) => dayKey(user.createdAt) === date);
   }, [date, users]);
   const activeCount = shown.filter((user) => user.status === "active").length;
   const inactiveCount = shown.length - activeCount;
 
-  function toggleBlock(user: TravelUser) {
+  async function toggleBlock(user: TravelUserRow) {
     const next = user.status === "active" ? "inactive" : "active";
-    setStatusOf((current) => ({ ...current, [user.id]: next }));
-    setNotice(next === "inactive" ? `${user.name} is inactive. This stays on this screen until the API is connected.` : `${user.name} is active again.`);
+    try {
+      const saved = await setTravelUserStatus(user.id, next);
+      setUsers((current) => current.map((row) => (row.id === saved.id ? saved : row)));
+      setNotice(next === "inactive" ? `${saved.name} is blocked from booking.` : `${saved.name} is active again.`);
+      notify(next === "inactive" ? "bad" : "ok", next === "inactive" ? "User blocked" : "User active", saved.name);
+    } catch (caught) {
+      notify("bad", "Could not update user", caught instanceof Error ? caught.message : "Try again.");
+    }
+  }
+
+  if (loading) {
+    return <p className="rounded-2xl border border-[#eef1f6] bg-white px-4 py-12 text-center text-sm font-semibold text-[#8b95a7]">Loading travel users…</p>;
+  }
+
+  if (error && users.length === 0) {
+    return <p className="rounded-2xl border border-[#ffe4e6] bg-[#fff1f2] px-4 py-12 text-center text-sm font-semibold text-[#dc2626]">{error}</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Total users" value={shown.length} hint={date ? prettyDate(date) : "All sample dates"} className="bg-white" />
+        <Stat label="Total users" value={shown.length} hint={date ? prettyDate(date) : "From Book by Broget AI"} className="bg-white" />
         <Stat label="Active users" value={activeCount} hint="Can book travel" className="bg-[#e8f8ee]" />
-        <Stat label="Inactive users" value={inactiveCount} hint="Blocked from the site" className="bg-[#fff1f2]" />
+        <Stat label="Inactive users" value={inactiveCount} hint="Blocked from booking" className="bg-[#fff1f2]" />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e6ebf5] bg-white px-4 py-3">
@@ -71,14 +105,16 @@ export function TravelUsers() {
       {notice ? <p className="rounded-xl bg-[#e8f8ee] px-4 py-2.5 text-sm font-bold text-[#16a34a]">{notice}</p> : null}
 
       {shown.length === 0 ? (
-        <p className="rounded-2xl border border-[#eef1f6] bg-white px-4 py-12 text-center text-sm font-semibold text-[#8b95a7]">No accounts created on that date.</p>
+        <p className="rounded-2xl border border-[#eef1f6] bg-white px-4 py-12 text-center text-sm font-semibold text-[#8b95a7]">
+          {users.length === 0 ? "No Book app accounts yet. Create a profile in the mobile app." : "No accounts created on that date."}
+        </p>
       ) : (
         <section className="overflow-hidden rounded-2xl border border-[#eef1f6] bg-white">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
+            <table className="w-full min-w-[860px] text-left text-sm">
               <thead className="bg-[#f8fafc] text-[11px] font-extrabold tracking-wide text-[#8b95a7]">
                 <tr>
-                  {["User", "City", "Bookings", "Joined", "Status", ""].map((column) => (
+                  {["User", "Mobile", "City", "Joined", "Status", ""].map((column) => (
                     <th key={column || "action"} className="px-4 py-3 font-extrabold">{column}</th>
                   ))}
                 </tr>
@@ -89,7 +125,7 @@ export function TravelUsers() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#eaf1ff] text-sm font-extrabold text-[#2f6bff]">
-                          {user.name.slice(0, 1)}
+                          {user.name.slice(0, 1).toUpperCase()}
                         </span>
                         <span>
                           <p className="font-extrabold text-[#12182b]">{user.name}</p>
@@ -97,9 +133,9 @@ export function TravelUsers() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-[#3d4658]">{user.city}</td>
-                    <td className="px-4 py-3 font-extrabold text-[#12182b]">{user.bookings}</td>
-                    <td className="px-4 py-3 font-semibold text-[#3d4658]">{user.joined}</td>
+                    <td className="px-4 py-3 font-semibold text-[#3d4658]">{user.phone || "—"}</td>
+                    <td className="px-4 py-3 font-semibold text-[#3d4658]">{user.city || "—"}</td>
+                    <td className="px-4 py-3 font-semibold text-[#3d4658]">{prettyDate(user.createdAt)}</td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${user.status === "active" ? "bg-[#e8f8ee] text-[#16a34a]" : "bg-[#fff1f2] text-[#dc2626]"}`}>
                         {user.status === "active" ? "Active" : "Inactive"}

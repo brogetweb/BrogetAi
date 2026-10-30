@@ -32,6 +32,12 @@ export class CreditController {
     });
   }
 
+  @Delete('mine/:id')
+  @UseGuards(AgentTokenGuard)
+  removeMine(@CurrentUser() user: AccessPayload, @Param('id') id: string) {
+    return this.credit.removeForAgent(user, id);
+  }
+
   @Get()
   @UseGuards(AccessTokenGuard)
   list() {

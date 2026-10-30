@@ -70,7 +70,7 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const _SupportFrame(
-      title: 'About Broget AI',
+      title: 'About CIBIL Broget AI',
       children: [
         _AboutHero(),
         SizedBox(height: 14),
@@ -294,7 +294,7 @@ class _AboutHero extends StatelessWidget {
         children: [
           _Plane(),
           SizedBox(height: 10),
-          Text('Broget AI', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
+          Text('CIBIL Broget AI', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
           Text('CREDIT INSIGHTS', style: TextStyle(color: Color(0xFFD6E4FF), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1)),
           SizedBox(height: 8),
           Text('Agent desk for customers and CIBIL checks.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFD6E4FF), height: 1.35)),

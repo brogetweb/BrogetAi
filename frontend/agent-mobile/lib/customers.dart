@@ -205,7 +205,7 @@ class _ListBar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Broget AI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, height: 1.05)),
+              Text('CIBIL Broget AI', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: dashNavy, height: 1.05)),
               Text('CREDIT INSIGHTS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, letterSpacing: 0.7, color: Color(0xFF8B95A7))),
             ],
           ),
@@ -375,10 +375,36 @@ class _PersonCard extends StatelessWidget {
               PopupMenuButton<String>(
                 padding: EdgeInsets.zero,
                 color: Colors.white,
-                onSelected: (value) {
-                  if (value == 'open') Navigator.of(context).push(MaterialPageRoute(builder: (_) => CustomerPage(id: customer.id)));
+                onSelected: (value) async {
+                  if (value == 'open') {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => CustomerPage(id: customer.id)));
+                    return;
+                  }
+                  if (value != 'delete') return;
+                  final store = AgentScope.of(context);
+                  final ok = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Delete this customer?', style: TextStyle(fontWeight: FontWeight.w800)),
+                      content: Text('${customer.name} and their credit checks on your desk will be removed.'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w800))),
+                      ],
+                    ),
+                  );
+                  if (ok != true || !context.mounted) return;
+                  try {
+                    await store.deleteCustomer(customer);
+                    store.showToast(true, 'Deleted', '${customer.name} is gone from your list.');
+                  } on ApiException catch (error) {
+                    store.showToast(false, 'Delete', error.message);
+                  }
                 },
-                itemBuilder: (context) => const [PopupMenuItem(value: 'open', child: Text('View profile'))],
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: 'open', child: Text('View profile')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete customer', style: TextStyle(color: Color(0xFFDC2626)))),
+                ],
                 icon: const Icon(Icons.more_vert, color: Color(0xFF8B95A7), size: 18),
               ),
             ],
@@ -454,7 +480,40 @@ class CustomerPage extends StatelessWidget {
     final files = store.loansFor(customer.id);
     return Scaffold(
       backgroundColor: paper,
-      appBar: AppBar(backgroundColor: paper, elevation: 0, foregroundColor: ink, title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w800))),
+      appBar: AppBar(
+        backgroundColor: paper,
+        elevation: 0,
+        foregroundColor: ink,
+        title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w800)),
+        actions: [
+          IconButton(
+            tooltip: 'Delete customer',
+            onPressed: () async {
+              final ok = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Delete this customer?', style: TextStyle(fontWeight: FontWeight.w800)),
+                  content: Text('${customer.name} and their credit checks on your desk will be removed.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w800))),
+                  ],
+                ),
+              );
+              if (ok != true || !context.mounted) return;
+              try {
+                await store.deleteCustomer(customer);
+                if (!context.mounted) return;
+                store.showToast(true, 'Deleted', '${customer.name} is gone from your list.');
+                Navigator.of(context).pop();
+              } on ApiException catch (error) {
+                store.showToast(false, 'Delete', error.message);
+              }
+            },
+            icon: const Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [

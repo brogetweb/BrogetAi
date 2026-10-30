@@ -163,7 +163,7 @@ class AgentStore extends ChangeNotifier {
   String language = 'English';
   String themeLabel = 'Light';
   String agentCode = '';
-  final String company = 'Broget AI';
+  final String company = 'CIBIL Broget AI';
   String desk = '';
   String accessToken = '';
   String refreshToken = '';
@@ -417,6 +417,16 @@ class AgentStore extends ChangeNotifier {
     notices.insert(0, DeskNotice(title: 'Customer added', body: '${customer.name} is on your desk.'));
     notifyListeners();
     return customer;
+  }
+
+  Future<void> deleteCustomer(Customer customer) async {
+    if (accessToken.isEmpty) throw ApiException('Sign in again.');
+    await deleteMyCustomer(accessToken: accessToken, id: customer.id);
+    final mobile = customer.phone.replaceAll(RegExp(r'\D'), '');
+    customers.removeWhere((row) => row.id == customer.id);
+    checks.removeWhere((check) => check.mobile.replaceAll(RegExp(r'\D'), '') == mobile && mobile.isNotEmpty);
+    notices.insert(0, DeskNotice(title: 'Customer deleted', body: '${customer.name} is off your desk.'));
+    notifyListeners();
   }
 
   void markChecking(Customer customer) {

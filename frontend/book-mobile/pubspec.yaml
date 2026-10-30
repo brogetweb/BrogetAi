@@ -1,0 +1,27 @@
+name: broget_book
+description: "Book by Broget AI — flights, buses, and hotels."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  google_fonts: ^9.0.0
+  http: ^1.6.0
+  shared_preferences: ^2.5.6
+  path_provider: ^2.1.6
+  open_filex: ^5.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

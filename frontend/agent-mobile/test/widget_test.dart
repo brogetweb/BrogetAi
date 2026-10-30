@@ -10,7 +10,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const BerogetAgentApp());
-    expect(find.text('Broget AI'), findsWidgets);
+    expect(find.text('CIBIL Broget AI'), findsWidgets);
     await tester.pump(const Duration(milliseconds: 1500));
     await tester.pumpAndSettle();
     expect(find.text('Welcome Back'), findsOneWidget);

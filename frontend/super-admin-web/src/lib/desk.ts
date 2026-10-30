@@ -53,7 +53,7 @@ export const sections: Section[] = [
     label: "Active users",
     group: "Travel",
     title: "Active users",
-    blurb: "Accounts created on the public website for travel and booking. These rows are samples until the API is connected.",
+    blurb: "Accounts created in Book by Broget AI (mobile). Live from MongoDB book_travellers.",
     columns: ["Name", "Email", "City", "Bookings", "Status"],
     rows: [],
   },

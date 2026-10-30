@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import 'api.dart';
 import 'pay_launch.dart' if (dart.library.html) 'pay_launch_web.dart';
@@ -321,56 +321,24 @@ Uri? _paymentUriParsed(String value) {
 
 class _PayinWaitingPageState extends State<PayinWaitingPage> {
   var refreshing = false;
-  var opening = false;
+  String? opening;
   String? openError;
-  var started = false;
-  WebViewController? web;
 
-  Uri? _pageUri() {
-    if (widget.checkoutUrl.startsWith('https://')) return Uri.tryParse(widget.checkoutUrl);
-    if (widget.paymentUrl.startsWith('https://')) return Uri.tryParse(widget.paymentUrl);
-    return null;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    final page = _pageUri();
-    if (page != null) {
-      web = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setNavigationDelegate(NavigationDelegate(
-          onNavigationRequest: (request) {
-            final target = _paymentUri(request.url);
-            if (request.url.startsWith('upi:') || request.url.startsWith('intent:')) {
-              if (target != null) launchPayment(target);
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-        ))
-        ..loadRequest(page);
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future<void>.delayed(const Duration(milliseconds: 400), () {
-        if (!mounted || started) return;
-        started = true;
-        openPay();
-      });
-    });
-  }
-
-  Future<void> openPay({bool fromUser = false}) async {
-    setState(() {
-      opening = true;
-      if (fromUser) openError = null;
-    });
+  Future<void> choose(String label, String? package) async {
     final uri = _paymentUri(widget.upiUrl);
-    final opened = uri == null ? false : await launchPayment(uri);
+    if (uri == null) {
+      setState(() => openError = 'The QR is not ready yet. Start the payment again.');
+      return;
+    }
+    setState(() {
+      opening = label;
+      openError = null;
+    });
+    final opened = await launchPayment(uri, package: package);
     if (!mounted) return;
     setState(() {
-      opening = false;
-      openError = opened || !fromUser ? null : 'PhonePe, GPay, or Paytm did not open. Use the payment page below.';
+      opening = null;
+      openError = opened ? null : 'No UPI app is installed on this device. Scan the QR with another phone.';
     });
   }
 
@@ -387,36 +355,99 @@ class _PayinWaitingPageState extends State<PayinWaitingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final page = web;
+    final qr = _paymentUri(widget.upiUrl)?.toString();
     return Scaffold(
       backgroundColor: dashWash,
-      appBar: AppBar(backgroundColor: dashWash, elevation: 0, foregroundColor: dashNavy, title: Text('Pay ${inr(widget.amount)}', style: const TextStyle(fontWeight: FontWeight.w800))),
-      body: Column(
+      appBar: AppBar(backgroundColor: dashWash, elevation: 0, foregroundColor: dashNavy, title: const Text('Pay', style: TextStyle(fontWeight: FontWeight.w800))),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          if (page != null) Expanded(child: WebViewWidget(controller: page)),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          Container(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: const Color(0xFFE6EAF0))),
             child: Column(
               children: [
-                if (openError != null) ...[
-                  Text(openError!, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 10),
-                ],
-                FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: dashBlue, minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                  onPressed: opening ? null : () => openPay(fromUser: true),
-                  child: Text(opening ? 'Opening UPI…' : 'Pay with UPI', style: const TextStyle(fontWeight: FontWeight.w800)),
-                ),
+                const Text('AMOUNT', style: TextStyle(color: Color(0xFF8B95A7), fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 0.6)),
+                const SizedBox(height: 4),
+                Text(inr(widget.amount), style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800, color: dashNavy)),
+                const SizedBox(height: 4),
+                const Text('Complete this within 5 minutes', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                const SizedBox(height: 16),
+                if (qr != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFE6EAF0))),
+                    child: QrImageView(data: qr, size: 210, backgroundColor: Colors.white, eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: dashNavy), dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: dashNavy)),
+                  )
+                else
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 28), child: Text('QR is not ready. Start the payment again.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700))),
                 const SizedBox(height: 10),
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                  onPressed: refreshing ? null : refresh,
-                  child: Text(refreshing ? 'Checking…' : 'Refresh wallet', style: const TextStyle(fontWeight: FontWeight.w800)),
-                ),
+                const Text('Scan with any UPI app', style: TextStyle(color: dashNavy, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
+          const SizedBox(height: 18),
+          const Text('Choose an app', style: TextStyle(fontWeight: FontWeight.w800, color: dashNavy, fontSize: 16)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _UpiChoice(label: 'PhonePe', mark: 'Pe', color: const Color(0xFF5F259F), busy: opening != null, onTap: () => choose('PhonePe', 'com.phonepe.app')),
+              const SizedBox(width: 8),
+              _UpiChoice(label: 'GPay', mark: 'G', color: const Color(0xFF1A73E8), busy: opening != null, onTap: () => choose('GPay', 'com.google.android.apps.nbu.paisa.user')),
+              const SizedBox(width: 8),
+              _UpiChoice(label: 'Paytm', mark: 'P', color: const Color(0xFF002970), busy: opening != null, onTap: () => choose('Paytm', 'net.one97.paytm')),
+              const SizedBox(width: 8),
+              _UpiChoice(label: 'Other', mark: '+', color: dashNavy, busy: opening != null, onTap: () => choose('Another UPI app', null)),
+            ],
+          ),
+          if (openError != null) ...[
+            const SizedBox(height: 12),
+            Text(openError!, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700)),
+          ],
+          const SizedBox(height: 16),
+          const Text('After the UPI payment succeeds, come back and refresh. The wallet updates when Broget Pay confirms it.', style: TextStyle(color: Color(0xFF64748B), height: 1.4)),
+          const SizedBox(height: 14),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: dashBlue, minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+            onPressed: refreshing ? null : refresh,
+            child: Text(refreshing ? 'Checking…' : 'Refresh wallet', style: const TextStyle(fontWeight: FontWeight.w800)),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _UpiChoice extends StatelessWidget {
+  const _UpiChoice({required this.label, required this.mark, required this.color, required this.busy, required this.onTap});
+
+  final String label;
+  final String mark;
+  final Color color;
+  final bool busy;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: busy ? null : onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE6EAF0))),
+            child: Column(
+              children: [
+                CircleAvatar(backgroundColor: color, radius: 20, child: Text(mark, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13))),
+                const SizedBox(height: 8),
+                Text(label, style: const TextStyle(fontWeight: FontWeight.w800, color: dashNavy, fontSize: 11)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

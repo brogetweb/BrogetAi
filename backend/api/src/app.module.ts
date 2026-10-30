@@ -7,6 +7,8 @@ import { CustomersModule } from './modules/customers/customers.module';
 // KYC is paused. Restore this import when document checks are needed again.
 // import { KycModule } from './modules/kyc/kyc.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BookModule } from './modules/book/book.module';
+import { FlightsModule } from './modules/flights/flights.module';
 import { HealthModule } from './modules/health/health.module';
 import { MediaModule } from './modules/media/media.module';
 import { WalletModule } from './modules/wallet/wallet.module';
@@ -30,6 +32,8 @@ import { WalletModule } from './modules/wallet/wallet.module';
     CustomersModule,
     // KycModule,
     WalletModule,
+    BookModule,
+    FlightsModule,
   ],
 })
 export class AppModule {}

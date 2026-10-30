@@ -107,6 +107,16 @@ export class CreditService {
     return { id: row.id, customer };
   }
 
+  async removeForAgent(user: AccessPayload, id: string) {
+    const agent = await this.agents.findById(user.sub);
+    if (!agent || agent.status !== 'active') throw new UnauthorizedException('Sign in again.');
+    if (!isValidObjectId(id)) throw new NotFoundException('That credit report is not on this desk.');
+    const row = await this.reports.findOneAndDelete({ _id: id, agentId: agent.code });
+    if (!row) throw new NotFoundException('That credit report is not on this desk.');
+    const customer = await this.customers.refreshAfterReportRemoved(row.agentId, row.mobile);
+    return { id: row.id, customer };
+  }
+
   async download(id: string) {
     const row = await this.reports.findById(id);
     if (!row) throw new NotFoundException('That credit report is not on this desk.');

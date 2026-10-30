@@ -37,9 +37,17 @@ export class WalletController {
     return this.wallet.createPayout(user.sub, body);
   }
 
-  @Get('payin/webhook')
   @Post('payin/webhook')
-  payinWebhook(@Req() req: Request) {
+  payinWebhookPost(@Req() req: Request) {
+    return this.handlePayinWebhook(req);
+  }
+
+  @Get('payin/webhook')
+  payinWebhookGet(@Req() req: Request) {
+    return this.handlePayinWebhook(req);
+  }
+
+  private handlePayinWebhook(req: Request) {
     const source = (req.method === 'GET' ? req.query : req.body) as Record<string, unknown>;
     const input: PayinWebhookDto = {
       status: source?.status as PayinWebhookDto['status'],

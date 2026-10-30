@@ -45,7 +45,7 @@ class AgentMenu extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Broget AI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Colors.white, height: 1.1, letterSpacing: -0.3)),
+                          Text('CIBIL Broget AI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white, height: 1.1, letterSpacing: -0.3)),
                           SizedBox(height: 3),
                           Text('CIBIL DESK', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.9, color: Color(0xFFD6E4FF))),
                         ],
@@ -143,7 +143,7 @@ class AgentMenu extends StatelessWidget {
                       _Item(icon: Icons.headset_mic_outlined, label: 'Help & Support', onTap: () => _push(context, const HelpSupportPage())),
                       _Item(icon: Icons.article_outlined, label: 'Terms & Conditions', onTap: () => _push(context, const TermsPage())),
                       _Item(icon: Icons.shield_outlined, label: 'Privacy Policy', onTap: () => _push(context, const PrivacyPage())),
-                      _Item(icon: Icons.info_outline, label: 'About Broget AI', onTap: () => _push(context, const AboutPage())),
+                      _Item(icon: Icons.info_outline, label: 'About CIBIL Broget AI', onTap: () => _push(context, const AboutPage())),
                     ],
                   ),
                 ],
@@ -282,7 +282,7 @@ class ReportsScreen extends StatelessWidget {
           children: [
             const Text('Reports', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.6, color: dashNavy)),
             const SizedBox(height: 6),
-            const Text('Print or download any credit check you already ran.', style: TextStyle(color: Color(0xFF5C677A), height: 1.4)),
+            const Text('Print, download, or delete any credit check you already ran.', style: TextStyle(color: Color(0xFF5C677A), height: 1.4)),
             const SizedBox(height: 16),
             if (rows.isEmpty)
               const Text('No credit checks yet.', style: TextStyle(color: muted, fontWeight: FontWeight.w700))

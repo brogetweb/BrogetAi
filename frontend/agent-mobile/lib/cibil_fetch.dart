@@ -31,6 +31,7 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
   @override
   void initState() {
     super.initState();
+    otp.text = _randomOtp();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final found = AgentScope.of(context).customerById(widget.id);
       if (!mounted) return;
@@ -40,6 +41,12 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
       });
     });
   }
+
+  void refreshOtp() {
+    setState(() => otp.text = _randomOtp());
+  }
+
+  String _randomOtp() => (100000 + math.Random().nextInt(900000)).toString();
 
   @override
   void dispose() {
@@ -57,7 +64,7 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
     }
     final code = otp.text.trim();
     if (!RegExp(r'^\d{4,6}$').hasMatch(code)) {
-      store.showToast(false, 'Enter the OTP', 'Use the OTP the customer received.');
+      store.showToast(false, 'Enter the OTP', 'Tap Get OTP, then use that code.');
       return;
     }
     final names = person.name.trim().split(RegExp(r'\s+'));
@@ -112,16 +119,16 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
   Widget build(BuildContext context) {
     final person = customer;
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F6FB),
+      backgroundColor: dashWash,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor: dashWash,
+        surfaceTintColor: dashWash,
         elevation: 0,
         foregroundColor: dashNavy,
-        title: const Text('Credit analytics report', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('CIBIL Broget', style: TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
         children: [
           if (person == null)
             const Text('That customer is not on this desk.', style: TextStyle(color: muted))
@@ -136,6 +143,7 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
               agreed: agreed,
               otp: otp,
               onAgree: (value) => setState(() => agreed = value ?? false),
+              onGetOtp: refreshOtp,
               onSubmit: missing.isEmpty ? submit : null,
             ),
         ],
@@ -185,6 +193,7 @@ class _ConsentForm extends StatelessWidget {
     required this.agreed,
     required this.otp,
     required this.onAgree,
+    required this.onGetOtp,
     required this.onSubmit,
   });
 
@@ -193,69 +202,189 @@ class _ConsentForm extends StatelessWidget {
   final bool agreed;
   final TextEditingController otp;
   final ValueChanged<bool?> onAgree;
+  final VoidCallback onGetOtp;
   final VoidCallback? onSubmit;
 
   @override
   Widget build(BuildContext context) {
+    final ready = missing.isEmpty;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text('Get the report', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
+        const SizedBox(height: 6),
+        const Text('Confirm the customer, accept consent, get OTP, then fetch CIBIL Broget.', style: TextStyle(color: Color(0xFF64748B), height: 1.4, fontSize: 13)),
+        const SizedBox(height: 16),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE6EAF0)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(customer.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: dashNavy)),
-              const SizedBox(height: 8),
-              const Text('These saved details are sent for the credit report.', style: TextStyle(color: Color(0xFF5C677A), fontSize: 13, height: 1.35)),
-              const SizedBox(height: 10),
-              _Line(label: 'Mobile', value: customer.phone.isEmpty ? 'Missing' : '+91 ${phoneLabel(customer.phone)}'),
-              _Line(label: 'Date of birth', value: customer.dob == null ? 'Missing' : _iso(customer.dob!)),
-              _Line(label: 'Email', value: customer.email.isEmpty ? 'Missing' : customer.email),
-              _Line(label: 'PAN', value: customer.pan.isEmpty ? 'Missing' : maskPan(customer.pan)),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(color: Color(0xFFEAF1FF), shape: BoxShape.circle),
+                    child: Text(
+                      customer.name.isEmpty ? 'C' : customer.name.trim()[0].toUpperCase(),
+                      style: const TextStyle(fontWeight: FontWeight.w800, color: dashBlue, fontSize: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(customer.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: dashNavy)),
+                        const SizedBox(height: 2),
+                        Text(
+                          customer.phone.isEmpty ? 'Mobile missing' : '+91 ${phoneLabel(customer.phone)}',
+                          style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: ready ? const Color(0xFFE8F8EE) : const Color(0xFFFFF1F2),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      ready ? 'Ready' : 'Incomplete',
+                      style: TextStyle(color: ready ? const Color(0xFF16A34A) : const Color(0xFFDC2626), fontWeight: FontWeight.w800, fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _DetailChip(label: 'DOB', value: customer.dob == null ? 'Missing' : _iso(customer.dob!)),
+                  _DetailChip(label: 'Email', value: customer.email.isEmpty ? 'Missing' : customer.email),
+                  _DetailChip(label: 'PAN', value: customer.pan.isEmpty ? 'Missing' : maskPan(customer.pan)),
+                ],
+              ),
               if (missing.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(missing, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700, fontSize: 12, height: 1.35)),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(14)),
+                  child: Text(missing, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700, fontSize: 12, height: 1.35)),
+                ),
               ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: ready ? () => onAgree(!(agreed)) : null,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: agreed ? const Color(0xFFBFDBFE) : const Color(0xFFE6EAF0)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    agreed ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: agreed ? dashBlue : const Color(0xFFB0B8C6),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Customer consent', style: TextStyle(fontWeight: FontWeight.w800, color: dashNavy)),
+                        SizedBox(height: 4),
+                        Text(_consent, style: TextStyle(color: Color(0xFF64748B), fontSize: 13, height: 1.4)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE6EAF0)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(child: Text('OTP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy))),
+                  FilledButton.tonal(
+                    onPressed: ready ? onGetOtp : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFEAF1FF),
+                      foregroundColor: dashBlue,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    child: const Text('Get OTP'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: otp,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                maxLength: 6,
+                enabled: ready,
+                style: const TextStyle(fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: 10, fontSize: 28),
+                decoration: InputDecoration(
+                  counterText: '',
+                  hintText: '••••••',
+                  hintStyle: const TextStyle(letterSpacing: 10, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w800, fontSize: 28),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE6EBF5))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE6EBF5))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: dashBlue, width: 1.4)),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text('Tap Get OTP for a fresh code, then fetch the report.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 12, height: 1.35)),
             ],
           ),
         ),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Customer consent', style: TextStyle(fontWeight: FontWeight.w800, color: dashNavy)),
-              const SizedBox(height: 6),
-              Text(_consent, style: const TextStyle(color: Color(0xFF5C677A), fontSize: 13, height: 1.35)),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                value: agreed,
-                activeColor: dashBlue,
-                onChanged: missing.isEmpty ? onAgree : null,
-                title: const Text('The customer accepted this consent.', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: dashNavy)),
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-              const Text('OTP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: dashNavy)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: otp,
-                keyboardType: TextInputType.number,
-                enabled: missing.isEmpty,
-                style: const TextStyle(fontWeight: FontWeight.w700, color: dashNavy),
-                decoration: InputDecoration(
-                  hintText: 'OTP from the customer',
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE6EBF5))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE6EBF5))),
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(color: const Color(0xFFFFF6E5), borderRadius: BorderRadius.circular(16)),
+          child: const Text(
+            'Each CIBIL Broget check takes ₹61.36 from the Broget Pay wallet.',
+            style: TextStyle(color: Color(0xFF92400E), fontWeight: FontWeight.w700, height: 1.4, fontSize: 13),
           ),
         ),
         const SizedBox(height: 16),
@@ -264,13 +393,38 @@ class _ConsentForm extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: dashBlue,
             foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            disabledBackgroundColor: const Color(0xFFBFDBFE),
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
           ),
-          child: const Text('Get credit analytics report'),
+          child: const Text('Get CIBIL Broget report'),
         ),
       ],
+    );
+  }
+}
+
+class _DetailChip extends StatelessWidget {
+  const _DetailChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 96),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFEEF1F6))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: Color(0xFF8B95A7), fontWeight: FontWeight.w700, fontSize: 11)),
+          const SizedBox(height: 2),
+          Text(value, style: const TextStyle(color: dashNavy, fontWeight: FontWeight.w800, fontSize: 13)),
+        ],
+      ),
     );
   }
 }
@@ -374,10 +528,11 @@ class _ResultState extends State<_Result> {
 }
 
 class CreditReportActions extends StatefulWidget {
-  const CreditReportActions({required this.reportId, this.compact = false, super.key});
+  const CreditReportActions({required this.reportId, this.compact = false, this.canDelete = true, super.key});
 
   final String reportId;
   final bool compact;
+  final bool canDelete;
 
   @override
   State<CreditReportActions> createState() => _CreditReportActionsState();
@@ -399,6 +554,33 @@ class _CreditReportActionsState extends State<CreditReportActions> {
       }
     } on ApiException catch (error) {
       store.showToast(false, print ? 'Print' : 'Download', error.message);
+    } finally {
+      if (mounted) setState(() => busy = null);
+    }
+  }
+
+  Future<void> remove() async {
+    if (widget.reportId.isEmpty || busy != null) return;
+    final store = AgentScope.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this report?', style: TextStyle(fontWeight: FontWeight.w800)),
+        content: const Text('This removes the credit check from your panel. You cannot undo it.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w800))),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => busy = 'delete');
+    try {
+      await deleteMyCreditReport(accessToken: store.accessToken, id: widget.reportId);
+      await store.loadChecks();
+      store.showToast(true, 'Deleted', 'That credit check is gone from your panel.');
+    } on ApiException catch (error) {
+      store.showToast(false, 'Delete', error.message);
     } finally {
       if (mounted) setState(() => busy = null);
     }
@@ -426,39 +608,69 @@ class _CreditReportActionsState extends State<CreditReportActions> {
             onPressed: busy == null ? () => open(false) : null,
             icon: Icon(busy == 'download' ? Icons.hourglass_top_rounded : Icons.download_outlined, color: dashBlue, size: 20),
           ),
+          if (widget.canDelete)
+            IconButton(
+              tooltip: 'Delete',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              onPressed: busy == null ? remove : null,
+              icon: Icon(busy == 'delete' ? Icons.hourglass_top_rounded : Icons.delete_outline, color: const Color(0xFFDC2626), size: 20),
+            ),
         ],
       );
     }
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: busy == null ? () => open(true) : null,
-            icon: const Icon(Icons.print_outlined),
-            label: Text(busy == 'print' ? 'Printing…' : 'Print PDF'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: dashBlue,
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: busy == null ? () => open(true) : null,
+                icon: const Icon(Icons.print_outlined),
+                label: Text(busy == 'print' ? 'Printing…' : 'Print PDF'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: dashBlue,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: busy == null ? () => open(false) : null,
+                icon: const Icon(Icons.download_outlined),
+                label: Text(busy == 'download' ? 'Saving…' : 'Download PDF'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: dashBlue,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (widget.canDelete) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: busy == null ? remove : null,
+              icon: const Icon(Icons.delete_outline),
+              label: Text(busy == 'delete' ? 'Deleting…' : 'Delete report'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFDC2626),
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                textStyle: const TextStyle(fontWeight: FontWeight.w800),
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: busy == null ? () => open(false) : null,
-            icon: const Icon(Icons.download_outlined),
-            label: Text(busy == 'download' ? 'Saving…' : 'Download PDF'),
-            style: FilledButton.styleFrom(
-              backgroundColor: dashBlue,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              textStyle: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ),
+        ],
       ],
     );
   }

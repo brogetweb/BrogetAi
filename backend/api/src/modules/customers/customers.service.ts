@@ -65,6 +65,14 @@ export class CustomersService {
     return { id: row.code };
   }
 
+  async removeForAgent(user: AccessPayload, code: string) {
+    const agent = await this.agentFor(user);
+    const row = await this.customers.findOneAndDelete({ code: code.toUpperCase(), agentId: agent.code });
+    if (!row) throw new NotFoundException('That customer was not found.');
+    await this.reports.deleteMany({ agentId: row.agentId, mobile: row.mobile });
+    return { id: row.code };
+  }
+
   async refreshAfterReportRemoved(agentId: string, mobile: string) {
     const customer = await this.customers.findOne({ agentId, mobile });
     if (!customer) return null;

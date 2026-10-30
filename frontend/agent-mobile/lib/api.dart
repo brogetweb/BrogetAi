@@ -72,6 +72,10 @@ class CreditReportResult {
   }
 }
 
+Future<void> deleteMyCreditReport({required String accessToken, required String id}) async {
+  await _delete('/credit-reports/mine/$id', accessToken: accessToken);
+}
+
 Future<({Uint8List bytes, String filename})> downloadCreditReportPdf({required String accessToken, required String id}) async {
   try {
     final response = await http.get(Uri.parse('${apiBase()}/credit-reports/mine/$id/download'), headers: {'Authorization': 'Bearer $accessToken'}).timeout(const Duration(seconds: 35));
@@ -182,6 +186,10 @@ Future<SavedCustomer> createCustomer({
 Future<List<SavedCustomer>> listMyCustomers(String accessToken) async {
   final rows = await _get('/customers/mine', accessToken);
   return rows.map(SavedCustomer.fromJson).toList();
+}
+
+Future<void> deleteMyCustomer({required String accessToken, required String id}) async {
+  await _delete('/customers/mine/$id', accessToken: accessToken);
 }
 
 class AgentCreditCheck {
@@ -362,6 +370,20 @@ Future<Map<String, dynamic>> _post(String path, Map<String, dynamic> payload, {S
     final message = json['message'];
     final detail = message is List ? message.join(' ') : message is String ? message : 'Could not sign in.';
     throw ApiException(detail);
+  } on ApiException {
+    rethrow;
+  } catch (_) {
+    throw ApiException('The API is not reachable.');
+  }
+}
+
+Future<void> _delete(String path, {required String accessToken, Duration timeout = const Duration(seconds: 15)}) async {
+  try {
+    final response = await http.delete(Uri.parse('${apiBase()}$path'), headers: {'Authorization': 'Bearer $accessToken'}).timeout(timeout);
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final json = response.body.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    final message = json['message'];
+    throw ApiException(message is String ? message : 'Could not delete that report.');
   } on ApiException {
     rethrow;
   } catch (_) {

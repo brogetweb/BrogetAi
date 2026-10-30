@@ -118,6 +118,33 @@ async function authorized(path: string, init: RequestInit = {}) {
   return response;
 }
 
+export type TravelUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  gender: string;
+  status: "active" | "inactive";
+  bookings: number;
+  createdAt: string;
+};
+
+export async function listTravelUsers() {
+  const response = await authorized("/book/travellers");
+  if (!response.ok) throw new Error(await readError(response, "Could not load travel users."));
+  return (await response.json()) as TravelUserRow[];
+}
+
+export async function setTravelUserStatus(id: string, status: TravelUserRow["status"]) {
+  const response = await authorized(`/book/travellers/${encodeURIComponent(id)}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) throw new Error(await readError(response, "Could not update the user."));
+  return (await response.json()) as TravelUserRow;
+}
+
 export async function listAgents() {
   const response = await authorized("/agents");
   if (!response.ok) throw new Error(await readError(response, "Could not load agents."));

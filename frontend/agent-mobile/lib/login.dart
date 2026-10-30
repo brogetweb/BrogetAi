@@ -144,7 +144,7 @@ class _Hero extends StatelessWidget {
               children: [
                 CibilBadge(size: 92),
                 SizedBox(height: 12),
-                Text('Broget AI', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.6)),
+                Text('CIBIL Broget AI', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.6)),
                 SizedBox(height: 4),
                 Text('CIBIL score desk for agents', style: TextStyle(color: Color(0xFFD6E4FF), fontSize: 13, fontWeight: FontWeight.w600)),
               ],

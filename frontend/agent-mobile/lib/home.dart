@@ -250,7 +250,7 @@ class _TopBar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Broget AI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
+              Text('CIBIL Broget AI', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
               Text('CIBIL DESK', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.9, color: Color(0xFF8B95A7))),
             ],
           ),

@@ -22,6 +22,12 @@ export class CustomersController {
     return this.customers.mine(user);
   }
 
+  @Delete('mine/:id')
+  @UseGuards(AgentTokenGuard)
+  removeMine(@CurrentUser() user: AccessPayload, @Param('id') id: string) {
+    return this.customers.removeForAgent(user, id);
+  }
+
   @Get()
   @UseGuards(AccessTokenGuard)
   list() {

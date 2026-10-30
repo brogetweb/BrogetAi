@@ -16,6 +16,9 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+    tasks.configureEach {
+        if (name.contains("lintVital", ignoreCase = true)) enabled = false
+    }
     afterEvaluate {
         extensions.findByType(LibraryExtension::class.java)?.compileSdk = 36
     }

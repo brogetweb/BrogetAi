@@ -74,7 +74,7 @@ class _CibilScreenState extends State<CibilScreen> {
             const SizedBox(height: 16),
             const Text('Check CIBIL Report', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: dashNavy)),
             const SizedBox(height: 4),
-            const Text('The credit report uses the customer’s name, mobile, date of birth, email, and PAN. Consent and the OTP are required. The ₹61.36 fee is taken from the Broget Pay wallet.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
+            const Text('CIBIL Broget uses the customer’s name, mobile, date of birth, email, and PAN. Consent and OTP are required. The ₹61.36 fee is taken from the Broget Pay wallet.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
             if (store.lowBalance) ...[
               const SizedBox(height: 12),
               const LowBalanceBanner(),
@@ -218,7 +218,7 @@ class _Bar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Broget AI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy, height: 1.05)),
+              Text('CIBIL Broget AI', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: dashNavy, height: 1.05)),
               Text('CREDIT INSIGHTS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, letterSpacing: 0.7, color: Color(0xFF8B95A7))),
             ],
           ),

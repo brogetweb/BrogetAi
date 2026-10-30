@@ -19,7 +19,7 @@ export function buildCreditReportPdf(row: CreditReportDocument): Promise<Buffer>
     const doc = new PDFDocument({
       size: 'A4',
       margin: 0,
-      info: { Title: `Broget CIBIL - ${name}`, Author: 'Broget AI' },
+      info: { Title: `CIBIL Broget - ${name}`, Author: 'Broget AI' },
     });
     const chunks: Buffer[] = [];
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -32,13 +32,13 @@ export function buildCreditReportPdf(row: CreditReportDocument): Promise<Buffer>
     drawCibilMark(doc, left, 28, 46);
     const brandX = left + 58;
     doc.fillColor(navy).font('Helvetica-Bold').fontSize(16).text('Broget AI', brandX, 32, { lineBreak: false });
-    doc.fillColor(blue).font('Helvetica-Bold').fontSize(12).text('Broget CIBIL', brandX, 54, { lineBreak: false });
+    doc.fillColor(blue).font('Helvetica-Bold').fontSize(12).text('CIBIL Broget', brandX, 54, { lineBreak: false });
     doc.fillColor(navy).font('Helvetica').fontSize(10).text(checked, left, 36, { width, align: 'right' });
     doc.fillColor(muted).fontSize(9).text('Credit report', left, 52, { width, align: 'right' });
 
     doc.moveTo(left, 96).lineTo(left + width, 96).lineWidth(1).strokeColor(line).stroke();
 
-    doc.fillColor(navy).font('Helvetica').fontSize(12).text('Broget CIBIL, prepared by Broget AI.', left, 112, { width });
+    doc.fillColor(navy).font('Helvetica').fontSize(12).text('CIBIL Broget, prepared by Broget AI.', left, 112, { width });
 
     const ratio = score == null ? 0 : Math.min(1, Math.max(0, (score - 300) / 600));
     const gaugeX = pageWidth / 2;
