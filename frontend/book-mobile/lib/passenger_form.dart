@@ -150,6 +150,7 @@ class _PassengerFormPageState extends State<PassengerFormPage> {
           base: widget.base,
           taxes: widget.taxes,
           total: widget.total,
+          sector: international ? 'international' : 'domestic',
           passengers: List<Passenger>.from(passengers),
         ),
       ),

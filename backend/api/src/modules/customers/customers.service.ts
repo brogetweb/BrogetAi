@@ -5,6 +5,7 @@ import { Agent, AgentDocument } from '../agents/schemas/agent.schema';
 import { AccessPayload } from '../auth/auth.types';
 import { CreditReport, CreditReportDocument } from '../credit/schemas/credit-report.schema';
 import { CreateCustomerDto } from './dto/create-customer.dto';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { Customer, CustomerDocument } from './schemas/customer.schema';
 
 type CheckedCustomer = {
@@ -71,6 +72,26 @@ export class CustomersService {
     if (!row) throw new NotFoundException('That customer was not found.');
     await this.reports.deleteMany({ agentId: row.agentId, mobile: row.mobile });
     return { id: row.code };
+  }
+
+  async updateForAgent(user: AccessPayload, code: string, input: UpdateCustomerDto) {
+    const agent = await this.agentFor(user);
+    const row = await this.customers.findOne({ code: code.toUpperCase(), agentId: agent.code });
+    if (!row) throw new NotFoundException('That customer was not found.');
+
+    if (input.mobile && input.mobile !== row.mobile) {
+      const taken = await this.customers.findOne({ agentId: agent.code, mobile: input.mobile, _id: { $ne: row._id } });
+      if (taken) throw new ConflictException('That mobile is already on your desk.');
+      await this.reports.updateMany({ agentId: row.agentId, mobile: row.mobile }, { $set: { mobile: input.mobile } });
+      row.mobile = input.mobile;
+    }
+    if (input.firstName) row.firstName = input.firstName;
+    if (input.lastName) row.lastName = input.lastName;
+    if (input.email) row.email = input.email;
+    if (input.pan) row.pan = input.pan;
+    if (input.dateOfBirth) row.dateOfBirth = input.dateOfBirth;
+    await row.save();
+    return this.present(row, true);
   }
 
   async refreshAfterReportRemoved(agentId: string, mobile: string) {

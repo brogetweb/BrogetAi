@@ -429,6 +429,35 @@ class AgentStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateCustomerDetails({
+    required Customer customer,
+    required String firstName,
+    required String lastName,
+    required String mobile,
+    required DateTime dob,
+    required String email,
+    required String pan,
+  }) async {
+    if (accessToken.isEmpty) throw ApiException('Sign in again.');
+    final saved = await updateCustomer(
+      accessToken: accessToken,
+      id: customer.id,
+      firstName: firstName,
+      lastName: lastName,
+      mobile: mobile,
+      dateOfBirth: '${dob.year.toString().padLeft(4, '0')}-${dob.month.toString().padLeft(2, '0')}-${dob.day.toString().padLeft(2, '0')}',
+      email: email,
+      pan: pan,
+    );
+    customer.name = saved.name;
+    customer.phone = saved.mobile;
+    customer.email = saved.email;
+    customer.pan = saved.pan;
+    customer.dob = dob;
+    notices.insert(0, DeskNotice(title: 'Customer updated', body: '${customer.name} details saved.'));
+    notifyListeners();
+  }
+
   void markChecking(Customer customer) {
     customer.cibil = CibilState.checking;
     notifyListeners();

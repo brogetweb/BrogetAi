@@ -41,8 +41,8 @@ class _FlightResultsPageState extends State<FlightResultsPage> {
     });
     try {
       final data = await BookApi.instance.searchFlights(
-        origin: widget.from,
-        destination: widget.to,
+        origin: codeOf(widget.from),
+        destination: codeOf(widget.to),
         travelDateIso: toIsoDate(widget.date),
         adults: widget.travellers,
         cabin: cabinCode(widget.cabin),
@@ -97,13 +97,13 @@ class _FlightResultsPageState extends State<FlightResultsPage> {
         children: [
           if (loading) const LinearProgressIndicator(minHeight: 2, color: bookBlueBright),
           Padding(
-            padding: EdgeInsets.fromLTRB(layout.pagePad, 10, layout.pagePad, 4),
+            padding: EdgeInsets.fromLTRB(layout.pagePad, 6, layout.pagePad, 2),
             child: Row(
               children: [
                 Flexible(
                   child: Text(
                     '${visible.length} flights',
-                    style: GoogleFonts.poppins(fontSize: layout.isCompact ? 12 : 12.5, fontWeight: FontWeight.w700, color: bookNavy),
+                    style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w700, color: bookNavy),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -169,7 +169,7 @@ class _FilterPill extends StatelessWidget {
       borderRadius: BorderRadius.circular(999),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: selected ? bookSoftBlue : Colors.white,
           borderRadius: BorderRadius.circular(999),
@@ -177,7 +177,7 @@ class _FilterPill extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? bookBlueBright : bookNavy),
+          style: GoogleFonts.poppins(fontSize: 10.5, fontWeight: FontWeight.w700, color: selected ? bookBlueBright : bookNavy),
         ),
       ),
     );
@@ -194,63 +194,63 @@ class _FlightRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onSelect,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Ink(
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: bookLine),
           ),
           child: Column(
             children: [
               Row(
                 children: [
-                  AirlineLogo(code: flight.logoCode, name: flight.airline, size: 40),
-                  const SizedBox(width: 10),
+                  AirlineLogo(code: flight.logoCode, name: flight.airline, size: 34),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(flight.airline, style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 13.5, color: bookNavy)),
-                        Text(flight.code, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 11, color: bookMuted)),
+                        Text(flight.airline, style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 12.5, color: bookNavy, height: 1.15)),
+                        Text(flight.code, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 10.5, color: bookMuted, height: 1.15)),
                       ],
                     ),
                   ),
-                  Text(inr(flight.price), style: GoogleFonts.poppins(fontWeight: FontWeight.w800, color: bookBlueBright, fontSize: 16)),
+                  Text(inr(flight.price), style: GoogleFonts.poppins(fontWeight: FontWeight.w800, color: bookBlueBright, fontSize: 14.5)),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   _Time(time: flight.depart, code: flight.fromCode),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Column(
                         children: [
                           Text(
                             flight.duration,
-                            style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: bookMuted),
+                            style: GoogleFonts.poppins(fontSize: 9.5, fontWeight: FontWeight.w600, color: bookMuted),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Stack(
                             alignment: Alignment.center,
                             children: [
                               Container(height: 1.2, color: const Color(0xFFD7E0EE)),
                               Container(
-                                padding: const EdgeInsets.all(2),
+                                padding: const EdgeInsets.all(1),
                                 color: Colors.white,
-                                child: const Icon(Icons.flight_rounded, size: 14, color: bookBlueBright),
+                                child: const Icon(Icons.flight_rounded, size: 13, color: bookBlueBright),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
                             flight.stops == 0 ? 'Non-stop' : '${flight.stops} stop',
-                            style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: bookMuted),
+                            style: GoogleFonts.poppins(fontSize: 9.5, fontWeight: FontWeight.w600, color: bookMuted),
                           ),
                         ],
                       ),
@@ -259,12 +259,12 @@ class _FlightRow extends StatelessWidget {
                   _Time(time: flight.arrive, code: flight.toCode, end: true),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6),
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
                   'Select  ›',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 12.5, color: bookBlueBright),
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 11.5, color: bookBlueBright),
                 ),
               ),
             ],

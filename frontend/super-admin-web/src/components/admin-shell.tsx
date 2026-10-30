@@ -25,10 +25,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false);
   const [query, setQuery] = useState("");
   const [noticesOpen, setNoticesOpen] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    const current = sections.find((section) => path === `/${section.slug}`);
-    return current && current.group !== "Agents" ? { [current.group]: true } : {};
-  });
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [admin, setAdmin] = useState<AdminAccount | null>(null);
   const [toast, setToast] = useState<{ id: number; tone: "ok" | "bad"; title: string; detail?: string } | null>(null);
@@ -147,27 +143,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <nav className="desk-nav min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4">
             <SideLink href="/" icon="home" label="Home" active={path === "/"} onPick={() => setMenu(false)} />
             {groups.map((group) => {
-              const collapsible = group !== "Agents";
-              const open = !collapsible || Boolean(openGroups[group]);
               const items = sections.filter((section) => section.group === group);
               return (
                 <div key={group} className="mt-5">
-                  {collapsible ? (
-                    <button
-                      type="button"
-                      aria-expanded={open}
-                      onClick={() => setOpenGroups((current) => ({ ...current, [group]: !current[group] }))}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-[11px] font-extrabold tracking-[0.14em] text-[#7f93b8] hover:bg-white/10"
-                    >
-                      {group}
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true">
-                        <path d="M6 9l6 6 6-6" />
-                      </svg>
-                    </button>
-                  ) : (
-                    <p className="px-3 pb-2 text-[11px] font-extrabold tracking-[0.14em] text-[#7f93b8]">{group}</p>
-                  )}
-                  <div className="overflow-hidden transition-[max-height] duration-200 ease-out" style={{ maxHeight: open ? 320 : 0 }}>
+                  <p className="px-3 pb-2 text-[11px] font-extrabold tracking-[0.14em] text-[#7f93b8]">{group}</p>
+                  <div>
                     {items.map((section) => (
                       <SideLink key={section.slug} href={`/${section.slug}`} icon={section.slug} label={section.label} active={path === `/${section.slug}`} onPick={() => setMenu(false)} />
                     ))}

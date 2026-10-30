@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -9,11 +10,19 @@ import 'package:path_provider/path_provider.dart';
 import 'booking_store.dart';
 import 'profile_store.dart';
 
+/// Live EC2 API (HTTP). Cleartext is allowed in AndroidManifest for device installs.
+const _prodBookApiBase = 'http://3.7.65.46/api/v1';
+
 String bookApiBase() {
   const fromEnv = String.fromEnvironment('BOOK_API_BASE');
   if (fromEnv.isNotEmpty) return fromEnv.replaceAll(RegExp(r'/$'), '');
-  if (Platform.isAndroid) return 'http://10.0.2.2:3000/api/v1';
-  return 'http://127.0.0.1:3000/api/v1';
+  return _prodBookApiBase;
+}
+
+String digitsPhone(String raw) {
+  final digits = raw.replaceAll(RegExp(r'\D'), '');
+  if (digits.length >= 10) return digits.substring(digits.length - 10);
+  return digits;
 }
 
 class BookApiException implements Exception {
@@ -27,6 +36,8 @@ class BookApi {
   BookApi._();
   static final BookApi instance = BookApi._();
 
+  static const _timeout = Duration(seconds: 25);
+
   Uri _uri(String path) => Uri.parse('${bookApiBase()}$path');
 
   Map<String, String> _headers({bool auth = false}) {
@@ -34,6 +45,22 @@ class BookApi {
     final token = ProfileStore.instance.accessToken;
     if (auth && token != null && token.isNotEmpty) headers['Authorization'] = 'Bearer $token';
     return headers;
+  }
+
+  Future<http.Response> _post(String path, {required Object body, bool auth = false}) async {
+    try {
+      return await http
+          .post(_uri(path), headers: _headers(auth: auth), body: jsonEncode(body))
+          .timeout(_timeout);
+    } on TimeoutException {
+      throw BookApiException('Server timed out. Check internet and try again.');
+    } on SocketException catch (e) {
+      throw BookApiException('Cannot reach server (${bookApiBase()}). ${e.message}');
+    } on HandshakeException {
+      throw BookApiException('Secure connection failed. Try again on Wi‑Fi/mobile data.');
+    } on http.ClientException catch (e) {
+      throw BookApiException('Network error: ${e.message}');
+    }
   }
 
   Future<Map<String, dynamic>> register({
@@ -44,27 +71,69 @@ class BookApi {
     String city = '',
     String gender = 'Male',
   }) async {
-    final res = await http.post(
-      _uri('/book/auth/register'),
-      headers: _headers(),
-      body: jsonEncode({
+    final res = await _post(
+      '/book/auth/register',
+      body: {
         'fullName': fullName,
         'email': email,
-        'phone': phone,
+        'phone': digitsPhone(phone),
         'password': password,
         'city': city,
         'gender': gender,
-      }),
+      },
     );
     return _decode(res);
   }
 
   Future<Map<String, dynamic>> login({required String emailOrPhone, required String password}) async {
-    final res = await http.post(
-      _uri('/book/auth/login'),
-      headers: _headers(),
-      body: jsonEncode({'emailOrPhone': emailOrPhone, 'password': password}),
+    final key = emailOrPhone.trim();
+    final normalized = RegExp(r'^\d').hasMatch(key) ? digitsPhone(key) : key;
+    final res = await _post(
+      '/book/auth/login',
+      body: {'emailOrPhone': normalized, 'password': password},
     );
+    return _decode(res);
+  }
+
+  Future<Map<String, dynamic>> quoteFlight({required double netFare, required String sector}) async {
+    final res = await _post('/book/flights/quote', body: {'netFare': netFare, 'sector': sector});
+    return _decode(res);
+  }
+
+  Future<Map<String, dynamic>> createFlightCheckout({
+    required double netFare,
+    required String sector,
+    required Map<String, dynamic> flight,
+    required List<Map<String, dynamic>> passengers,
+    String? payMobile,
+  }) async {
+    final res = await _post(
+      '/book/flights/checkout',
+      auth: true,
+      body: {
+        'netFare': netFare,
+        'sector': sector,
+        'flight': flight,
+        'passengers': passengers,
+        if (payMobile != null && payMobile.isNotEmpty) 'payMobile': digitsPhone(payMobile),
+      },
+    );
+    return _decode(res);
+  }
+
+  Future<Map<String, dynamic>> flightOrderStatus(String requestId) async {
+    try {
+      final res = await http.get(_uri('/book/flights/orders/$requestId'), headers: _headers(auth: true)).timeout(_timeout);
+      return _decode(res);
+    } on TimeoutException {
+      throw BookApiException('Could not check payment status.');
+    } on SocketException catch (e) {
+      throw BookApiException('Cannot reach server. ${e.message}');
+    }
+  }
+
+  Future<Map<String, dynamic>> confirmDemoFlightPay(String requestId) async {
+    final res = await _post('/book/flights/orders/$requestId/demo-pay', auth: true, body: {});
     return _decode(res);
   }
 
@@ -77,43 +146,52 @@ class BookApi {
     bool guest = false,
   }) async {
     final path = guest || !ProfileStore.instance.hasToken ? '/book/flights/search/guest' : '/book/flights/search';
-    final res = await http.post(
-      _uri(path),
-      headers: _headers(auth: !guest && ProfileStore.instance.hasToken),
-      body: jsonEncode({
+    final res = await _post(
+      path,
+      auth: !guest && ProfileStore.instance.hasToken,
+      body: {
         'origin': origin,
         'destination': destination,
         'travelDate': travelDateIso,
         'adults': adults,
         'cabin': cabin,
         'bookingType': 0,
-      }),
+      },
     );
     return _decode(res);
   }
 
   Future<({Uint8List bytes, String filename, String pnr})> downloadTicketPdf(BookBooking booking) async {
-    final res = await http.post(
-      _uri('/book/flights/ticket-pdf'),
-      headers: _headers(),
-      body: jsonEncode({
-        'bookingId': booking.id,
-        'pnr': booking.pnr,
-        'airline': booking.airline,
-        'flightCode': booking.flightCode,
-        'fromCode': booking.fromCode,
-        'toCode': booking.toCode,
-        'date': booking.date,
-        'depart': booking.depart,
-        'arrive': booking.arrive,
-        'duration': booking.duration,
-        'travellerName': booking.travellerName,
-        'email': booking.email,
-        'phone': booking.phone,
-        'total': booking.total,
-        'cabin': booking.cabin,
-      }),
-    );
+    late final http.Response res;
+    try {
+      res = await http
+          .post(
+            _uri('/book/flights/ticket-pdf'),
+            headers: _headers(),
+            body: jsonEncode({
+              'bookingId': booking.id,
+              'pnr': booking.pnr,
+              'airline': booking.airline,
+              'flightCode': booking.flightCode,
+              'fromCode': booking.fromCode,
+              'toCode': booking.toCode,
+              'date': booking.date,
+              'depart': booking.depart,
+              'arrive': booking.arrive,
+              'duration': booking.duration,
+              'travellerName': booking.travellerName,
+              'email': booking.email,
+              'phone': booking.phone,
+              'total': booking.total,
+              'cabin': booking.cabin,
+            }),
+          )
+          .timeout(_timeout);
+    } on TimeoutException {
+      throw BookApiException('Ticket download timed out.');
+    } on SocketException catch (e) {
+      throw BookApiException('Cannot reach server for ticket PDF. ${e.message}');
+    }
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw BookApiException('Could not download ticket PDF (${res.statusCode}).');
     }
@@ -138,7 +216,11 @@ class BookApi {
     Map<String, dynamic> body = {};
     try {
       final parsed = jsonDecode(res.body);
-      if (parsed is Map<String, dynamic>) body = parsed;
+      if (parsed is Map<String, dynamic>) {
+        body = parsed;
+      } else if (parsed is Map) {
+        body = Map<String, dynamic>.from(parsed);
+      }
     } catch (_) {
       body = {'message': res.body};
     }
@@ -153,7 +235,7 @@ class BookApi {
       }
       throw BookApiException(first.toString());
     }
-    throw BookApiException('Request failed (${res.statusCode}). Check API is running at ${bookApiBase()}.');
+    throw BookApiException('Request failed (${res.statusCode}) at ${bookApiBase()}.');
   }
 }
 

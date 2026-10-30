@@ -3,6 +3,7 @@ import { AgentsDesk } from "@/components/agents-desk";
 import { BookingDesk } from "@/components/booking-desk";
 import { CibilList } from "@/components/cibil-list";
 import { CustomerList } from "@/components/customer-list";
+import { FlightOrders } from "@/components/flight-orders";
 // KYC is paused.
 // import { KycDesk } from "@/components/kyc-desk";
 import { SectionView } from "@/components/section-view";
@@ -22,7 +23,8 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
       <h1 className="text-2xl font-extrabold tracking-tight">{section.title}</h1>
       <p className="mt-1 max-w-2xl text-sm font-semibold leading-6 text-[#5c677a]">{section.blurb}</p>
       <div className="mt-5">
-        {section.slug === "flights" || section.slug === "hotels" ? <BookingDesk columns={section.columns} rows={section.rows} /> : null}
+        {section.slug === "flights" ? <FlightOrders /> : null}
+        {section.slug === "hotels" ? <BookingDesk columns={section.columns} rows={section.rows} /> : null}
         {section.slug === "customers" ? <CustomerList /> : null}
         {section.slug === "cibil" ? <CibilList /> : null}
         {section.slug === "agents" ? <AgentsDesk /> : null}

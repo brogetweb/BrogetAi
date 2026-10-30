@@ -277,34 +277,34 @@ class _ComingSoonPage extends StatelessWidget {
       appBar: AppBar(title: Text(title)),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 84,
-                height: 84,
-                decoration: BoxDecoration(color: wash, borderRadius: BorderRadius.circular(26)),
-                child: Icon(icon, color: color, size: 40),
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(color: wash, borderRadius: BorderRadius.circular(18)),
+                child: Icon(icon, color: color, size: 30),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               Text(
                 'Coming Soon',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 22, color: bookNavy),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 18, color: bookNavy),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 13.5, color: bookMuted, height: 1.45),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 12.5, color: bookMuted, height: 1.35),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 14),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: bookBlueBright,
                   side: const BorderSide(color: Color(0xFFB7D0FF)),
-                  minimumSize: const Size(180, 46),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  minimumSize: const Size(160, 42),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
                 ),
                 onPressed: BookShell.openHome,
                 child: Text('Back to Home', style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
@@ -339,49 +339,57 @@ class _ProfileTab extends StatelessWidget {
             title: const Text('Profile'),
           ),
           body: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Spacer(),
                 Center(
-                  child: Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFFEAF1FF), Color(0xFFD6E4FF)]),
-                      borderRadius: BorderRadius.circular(28),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.asset(
+                      'assets/images/app_icon.png',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFFEAF1FF), Color(0xFFD6E4FF)]),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: const Icon(Icons.person_outline_rounded, color: bookBlueBright, size: 32),
+                      ),
                     ),
-                    child: const Icon(Icons.person_outline_rounded, color: bookBlueBright, size: 42),
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 12),
                 Text(
                   'Welcome traveller',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 20, color: bookNavy),
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 17, color: bookNavy),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
                   'Login or create a profile to book tickets. Find My Bookings in the menu.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: bookMuted, fontWeight: FontWeight.w500, height: 1.45, fontSize: 13.5),
+                  style: GoogleFonts.poppins(color: bookMuted, fontWeight: FontWeight.w500, height: 1.35, fontSize: 12.5),
                 ),
-                const Spacer(),
+                const SizedBox(height: 18),
                 PrimaryCta(
                   label: 'Sign In',
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage())),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
+                    minimumSize: const Size.fromHeight(44),
                     foregroundColor: bookNavy,
                     side: const BorderSide(color: bookLine),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateProfilePage())),
-                  child: Text('Create Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 14)),
+                  child: Text('Create Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 13.5)),
                 ),
               ],
             ),

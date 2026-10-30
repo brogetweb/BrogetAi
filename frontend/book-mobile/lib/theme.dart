@@ -31,8 +31,8 @@ ThemeData bookTheme() {
     useMaterial3: true,
     fontFamily: poppins.fontFamily,
     scaffoldBackgroundColor: bookWash,
-    visualDensity: VisualDensity.standard,
-    materialTapTargetSize: MaterialTapTargetSize.padded,
+    visualDensity: VisualDensity.compact,
+    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     colorScheme: ColorScheme.fromSeed(seedColor: bookBlue, brightness: Brightness.light).copyWith(
       primary: bookBlueBright,
       secondary: bookOrange,
@@ -64,9 +64,9 @@ ThemeData bookTheme() {
         foregroundColor: Colors.white,
         elevation: 0,
         shadowColor: const Color(0x440066FF),
-        minimumSize: const Size.fromHeight(50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 15),
+        minimumSize: const Size.fromHeight(44),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 14),
       ),
     ),
     textButtonTheme: TextButtonThemeData(

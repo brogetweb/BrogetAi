@@ -192,6 +192,27 @@ Future<void> deleteMyCustomer({required String accessToken, required String id})
   await _delete('/customers/mine/$id', accessToken: accessToken);
 }
 
+Future<SavedCustomer> updateCustomer({
+  required String accessToken,
+  required String id,
+  required String firstName,
+  required String lastName,
+  required String mobile,
+  required String dateOfBirth,
+  required String email,
+  required String pan,
+}) async {
+  final body = await _patch('/customers/mine/$id', {
+    'firstName': firstName,
+    'lastName': lastName,
+    'mobile': mobile,
+    'dateOfBirth': dateOfBirth,
+    'email': email,
+    'pan': pan,
+  }, accessToken: accessToken);
+  return SavedCustomer.fromJson(body);
+}
+
 class AgentCreditCheck {
   AgentCreditCheck({required this.id, required this.name, required this.mobile, required this.status, required this.checkedAt, this.score});
 
@@ -384,6 +405,27 @@ Future<void> _delete(String path, {required String accessToken, Duration timeout
     final json = response.body.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(jsonDecode(response.body) as Map);
     final message = json['message'];
     throw ApiException(message is String ? message : 'Could not delete that report.');
+  } on ApiException {
+    rethrow;
+  } catch (_) {
+    throw ApiException('The API is not reachable.');
+  }
+}
+
+Future<Map<String, dynamic>> _patch(String path, Map<String, dynamic> payload, {required String accessToken, Duration timeout = const Duration(seconds: 15)}) async {
+  try {
+    final response = await http
+        .patch(
+          Uri.parse('${apiBase()}$path'),
+          headers: {'Authorization': 'Bearer $accessToken', 'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        )
+        .timeout(timeout);
+    final json = response.body.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    if (response.statusCode >= 200 && response.statusCode < 300) return json;
+    final message = json['message'];
+    final detail = message is List ? message.join(' ') : message is String ? message : 'Could not update.';
+    throw ApiException(detail);
   } on ApiException {
     rethrow;
   } catch (_) {

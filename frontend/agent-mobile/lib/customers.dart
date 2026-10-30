@@ -380,6 +380,10 @@ class _PersonCard extends StatelessWidget {
                     Navigator.of(context).push(MaterialPageRoute(builder: (_) => CustomerPage(id: customer.id)));
                     return;
                   }
+                  if (value == 'edit') {
+                    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => AddCustomerPage(existing: customer)));
+                    return;
+                  }
                   if (value != 'delete') return;
                   final store = AgentScope.of(context);
                   final ok = await showDialog<bool>(
@@ -403,6 +407,7 @@ class _PersonCard extends StatelessWidget {
                 },
                 itemBuilder: (context) => const [
                   PopupMenuItem(value: 'open', child: Text('View profile')),
+                  PopupMenuItem(value: 'edit', child: Text('Edit customer')),
                   PopupMenuItem(value: 'delete', child: Text('Delete customer', style: TextStyle(color: Color(0xFFDC2626)))),
                 ],
                 icon: const Icon(Icons.more_vert, color: Color(0xFF8B95A7), size: 18),

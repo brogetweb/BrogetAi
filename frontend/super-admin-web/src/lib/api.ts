@@ -136,6 +136,39 @@ export async function listTravelUsers() {
   return (await response.json()) as TravelUserRow[];
 }
 
+export type FlightOrderRow = {
+  requestId: string;
+  status: string;
+  sector: string;
+  markupPercent: number;
+  netFare: number;
+  markup: number;
+  gst: number;
+  total: number;
+  moneyTo?: {
+    aoPayWallet: number;
+    brogetFee: number;
+    gst: number;
+    customerPaid: number;
+  };
+  pnr: string;
+  travellerName: string;
+  travellerEmail: string;
+  travellerPhone: string;
+  route: string;
+  airline: string;
+  flightCode: string;
+  date: string;
+  paymentMode: string;
+  createdAt: string;
+};
+
+export async function listFlightOrders() {
+  const response = await authorized("/book/flights/orders");
+  if (!response.ok) throw new Error(await readError(response, "Could not load flight orders."));
+  return (await response.json()) as FlightOrderRow[];
+}
+
 export async function setTravelUserStatus(id: string, status: TravelUserRow["status"]) {
   const response = await authorized(`/book/travellers/${encodeURIComponent(id)}/status`, {
     method: "PATCH",
@@ -191,6 +224,40 @@ export async function houseWallet() {
   const response = await authorized("/wallet/house");
   if (!response.ok) throw new Error(await readError(response, "Could not load the Broget wallet."));
   return (await response.json()) as { balance: number; charge: number };
+}
+
+export type CibilAgentRevenue = {
+  agentId: string;
+  agentMongoId: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  status: string;
+  walletBalance: number;
+  checks: number;
+  amount: number;
+  fee: number;
+  gst: number;
+  lastCheckAt: string | null;
+  hasActivity: boolean;
+};
+
+export type CibilRevenueSnapshot = {
+  chargePerCheck: number;
+  feePerCheck: number;
+  gstPerCheck: number;
+  totalChecks: number;
+  totalAmount: number;
+  activeAgents: number;
+  silentAgents: number;
+  agents: CibilAgentRevenue[];
+};
+
+export async function cibilRevenue() {
+  const response = await authorized("/wallet/cibil-revenue");
+  if (!response.ok) throw new Error(await readError(response, "Could not load CIBIL revenue."));
+  return (await response.json()) as CibilRevenueSnapshot;
 }
 
 export async function listCreditReports() {

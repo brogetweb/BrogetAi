@@ -13,21 +13,9 @@ export type Section = {
   rows: Row[];
 };
 
-export const flights: Row[] = [
-  { cells: ["Amit Singh", "DEL → BOM", "Air India", "₹8,420", "Confirmed", "14 Oct"], tone: "ok" },
-  { cells: ["Neha Dubey", "BLR → GOI", "IndiGo", "₹6,150", "Ticketed", "16 Oct"], tone: "info" },
-  { cells: ["Vikram Reddy", "HYD → DEL", "Air India", "₹11,900", "Pending", "12 Oct"], tone: "wait" },
-  { cells: ["Pooja Kumari", "PAT → DEL", "IndiGo", "₹7,240", "Confirmed", "18 Oct"], tone: "ok" },
-  { cells: ["Rahul Kumar", "JAI → BOM", "SpiceJet", "₹5,480", "Pending", "11 Oct"], tone: "wait" },
-];
+export const flights: Row[] = [];
 
-export const hotels: Row[] = [
-  { cells: ["Amit Singh", "Seaface Suites", "Mumbai", "₹14,200", "Confirmed", "14 Oct"], tone: "ok" },
-  { cells: ["Pooja Kumari", "Lake House", "Udaipur", "₹9,800", "Pending", "18 Oct"], tone: "wait" },
-  { cells: ["Rahul Kumar", "Fort View", "Jaipur", "₹7,450", "Confirmed", "11 Oct"], tone: "ok" },
-  { cells: ["Neha Dubey", "River Inn", "Goa", "₹12,600", "Ticketed", "16 Oct"], tone: "info" },
-  { cells: ["Vikram Reddy", "Park Square", "Hyderabad", "₹8,100", "Pending", "12 Oct"], tone: "wait" },
-];
+export const hotels: Row[] = [];
 
 export const sections: Section[] = [
   {
@@ -35,7 +23,7 @@ export const sections: Section[] = [
     label: "Flights",
     group: "Travel",
     title: "Flights",
-    blurb: "Flight bookings from the public site. TripJack stays on the server.",
+    blurb: "Live Book payments only. Customer → Broget Pay; net fare → AO Pay; Broget fee 4% domestic / 7% intl + 18% GST.",
     columns: ["Customer", "Route", "Airline", "Amount", "Status", "Date"],
     rows: flights,
   },
@@ -44,7 +32,7 @@ export const sections: Section[] = [
     label: "Hotels",
     group: "Travel",
     title: "Hotels",
-    blurb: "Hotel bookings from the public site. Provider keys stay on the server.",
+    blurb: "Hotel bookings will show here when the Book hotel checkout is live. No sample rows.",
     columns: ["Customer", "Hotel", "Location", "Amount", "Status", "Date"],
     rows: hotels,
   },
@@ -62,7 +50,7 @@ export const sections: Section[] = [
     label: "Check CIBIL Report",
     group: "CIBIL",
     title: "Check CIBIL Report",
-    blurb: "Agents request a credit report after the customer accepts consent and shares the OTP. The fee comes from the agent's Broget Pay wallet. This desk lists every report. PAN stays masked.",
+    blurb: "Per-agent CIBIL money from wallet usage: who paid how much, who has zero checks yet, plus every report. Fee comes from the agent wallet. PAN stays masked.",
     columns: ["Customer", "Agent", "PAN", "Score", "Band", "Status"],
     rows: [],
   },
@@ -108,14 +96,7 @@ export type TravelUser = {
   status: "active" | "inactive";
 };
 
-export const travelUsers: TravelUser[] = [
-  { id: "U1", name: "Amit Singh", email: "amit.singh@email.com", city: "Delhi", joined: "2 Oct 2026", bookings: 2, status: "active" },
-  { id: "U2", name: "Neha Dubey", email: "neha.dubey@email.com", city: "Bengaluru", joined: "4 Oct 2026", bookings: 2, status: "active" },
-  { id: "U3", name: "Pooja Kumari", email: "pooja.kumari@email.com", city: "Patna", joined: "6 Oct 2026", bookings: 2, status: "active" },
-  { id: "U4", name: "Meera Joshi", email: "meera.joshi@email.com", city: "Mumbai", joined: "8 Oct 2026", bookings: 0, status: "active" },
-  { id: "U5", name: "Rahul Kumar", email: "rahul.kumar@email.com", city: "Jaipur", joined: "28 Sep 2026", bookings: 2, status: "inactive" },
-  { id: "U6", name: "Vikram Reddy", email: "vikram.reddy@email.com", city: "Hyderabad", joined: "21 Sep 2026", bookings: 2, status: "inactive" },
-];
+export const travelUsers: TravelUser[] = [];
 
 export type DeskCustomer = {
   id: string;

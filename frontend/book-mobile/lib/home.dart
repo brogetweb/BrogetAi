@@ -132,7 +132,7 @@ class _BookHomePageState extends State<BookHomePage> {
             final name = ProfileStore.instance.profile?.firstName;
             return ListView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(layout.pagePad, 6, layout.pagePad, 18),
+              padding: EdgeInsets.fromLTRB(layout.pagePad, 4, layout.pagePad, 12),
               children: [
                 Row(
                   children: [
@@ -142,7 +142,7 @@ class _BookHomePageState extends State<BookHomePage> {
                         onTap: () => Scaffold.of(context).openDrawer(),
                       ),
                     ),
-                    Expanded(child: Center(child: BrandMark(size: layout.isCompact ? 16 : 18))),
+                    Expanded(child: Center(child: BrandMark(size: layout.isCompact ? 15 : 16))),
                     Stack(
                       children: [
                         _CircleBtn(icon: Icons.notifications_none_rounded, onTap: () {}),
@@ -155,16 +155,16 @@ class _BookHomePageState extends State<BookHomePage> {
                     ),
                   ],
                 ),
-                SizedBox(height: layout.sectionGap),
+                const SizedBox(height: 6),
                 Text(
                   name == null ? 'Where next?' : 'Hi $name',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: layout.titleSize, color: bookNavy, letterSpacing: -0.3, height: 1.1),
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: layout.titleSize, color: bookNavy, letterSpacing: -0.3, height: 1.05),
                 ),
                 Text(
                   'Best flight deals in minutes',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: layout.isCompact ? 11 : 12, color: bookMuted),
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 11, color: bookMuted, height: 1.2),
                 ),
-                SizedBox(height: layout.sectionGap),
+                const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(borderRadius: BorderRadius.circular(layout.cardRadius), boxShadow: bookShadowBlue),
                   child: ClipRRect(
@@ -185,21 +185,26 @@ class _BookHomePageState extends State<BookHomePage> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(99),
                                   ),
-                                  child: Text('UP TO 25% OFF', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 9, letterSpacing: 0.5)),
+                                  child: Text('UP TO 25% OFF', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 8.5, letterSpacing: 0.4)),
                                 ),
-                                const Spacer(),
-                                Text('Fly More Explore More', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 17, height: 1.1)),
-                                Text('Great deals around the world', style: GoogleFonts.poppins(color: Colors.white70, fontWeight: FontWeight.w500, fontSize: 11)),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Fly More Explore More', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15, height: 1.05)),
+                                    Text('Great deals around the world', style: GoogleFonts.poppins(color: Colors.white70, fontWeight: FontWeight.w500, fontSize: 10)),
+                                  ],
+                                ),
                               ],
                             ),
                           ),
@@ -208,9 +213,9 @@ class _BookHomePageState extends State<BookHomePage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 SizedBox(
-                  height: 34,
+                  height: 28,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: const [
@@ -220,24 +225,24 @@ class _BookHomePageState extends State<BookHomePage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 SoftCard(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Text('Search Flights', style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 14, color: bookNavy)),
+                          Text('Search Flights', style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 13.5, color: bookNavy)),
                           const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(color: const Color(0xFFFFF4E8), borderRadius: BorderRadius.circular(99)),
-                            child: Text('Best price', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 9.5, color: bookOrange)),
+                            child: Text('Best price', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 9, color: bookOrange)),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       SegmentTabs(
                         value: trip,
                         onChanged: (value) => setState(() {
@@ -248,7 +253,7 @@ class _BookHomePageState extends State<BookHomePage> {
                         }),
                         items: const [('one', 'One Way'), ('round', 'Round Trip'), ('multi', 'Multi City')],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Stack(
                         alignment: Alignment.centerRight,
                         children: [
@@ -263,7 +268,7 @@ class _BookHomePageState extends State<BookHomePage> {
                                   if (value != null) setState(() => from = value);
                                 },
                               ),
-                              const SizedBox(height: 7),
+                              const SizedBox(height: 5),
                               FieldBox(
                                 label: 'To',
                                 value: to,
@@ -288,13 +293,13 @@ class _BookHomePageState extends State<BookHomePage> {
                                   from = to;
                                   to = old;
                                 }),
-                                child: const SizedBox(width: 34, height: 34, child: Icon(Icons.swap_vert_rounded, color: Colors.white, size: 17)),
+                                child: const SizedBox(width: 30, height: 30, child: Icon(Icons.swap_vert_rounded, color: Colors.white, size: 16)),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 5),
                       if (trip == 'round')
                         Row(
                           children: [
@@ -306,7 +311,7 @@ class _BookHomePageState extends State<BookHomePage> {
                                 onTap: _pickDepart,
                               ),
                             ),
-                            const SizedBox(width: 7),
+                            const SizedBox(width: 5),
                             Expanded(
                               child: FieldBox(
                                 label: 'Return',
@@ -324,7 +329,7 @@ class _BookHomePageState extends State<BookHomePage> {
                           icon: Icons.calendar_month_rounded,
                           onTap: _pickDepart,
                         ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 5),
                       FieldBox(
                         label: 'Travellers & Class',
                         value: '$travellers Traveller · $cabin',
@@ -337,7 +342,7 @@ class _BookHomePageState extends State<BookHomePage> {
                           if (nextCount != null) setState(() => travellers = nextCount);
                         },
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       PrimaryCta(
                         label: 'Search Flights',
                         onPressed: () => Navigator.push(
@@ -356,9 +361,9 @@ class _BookHomePageState extends State<BookHomePage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 SoftCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                   child: Row(
                     children: const [
                       Expanded(child: _TrustItem(icon: Icons.lock_outline_rounded, label: 'Secure')),
@@ -368,28 +373,28 @@ class _BookHomePageState extends State<BookHomePage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
                 Row(
                   children: [
-                    Expanded(child: Text('Popular Destinations', style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 14.5, color: bookNavy))),
-                    Text('View All', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 11.5, color: bookBlueBright)),
+                    Expanded(child: Text('Popular Destinations', style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 13.5, color: bookNavy))),
+                    Text('View All', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 11, color: bookBlueBright)),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 SizedBox(
-                  height: 138,
+                  height: 118,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: destinations.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
                       final item = destinations[index];
                       final on = liked.contains(item.$1);
                       return Container(
-                        width: 118,
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: bookShadowSoft),
+                        width: 104,
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), boxShadow: bookShadowSoft),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(12),
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
@@ -488,8 +493,8 @@ class _OfferChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 7),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
@@ -497,9 +502,9 @@ class _OfferChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.local_fire_department_rounded, size: 13, color: color),
-          const SizedBox(width: 5),
-          Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 10.5, color: bookNavy)),
+          Icon(Icons.local_fire_department_rounded, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 10, color: bookNavy)),
         ],
       ),
     );
@@ -516,9 +521,9 @@ class _TrustItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, size: 18, color: bookBlueBright),
-        const SizedBox(height: 4),
-        Text(label, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 10, color: bookMuted)),
+        Icon(icon, size: 16, color: bookBlueBright),
+        const SizedBox(height: 2),
+        Text(label, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 9.5, color: bookMuted)),
       ],
     );
   }

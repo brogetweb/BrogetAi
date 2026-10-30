@@ -3,24 +3,29 @@ import 'package:flutter/services.dart';
 
 import 'api.dart';
 import 'cibil_fetch.dart';
+import 'store.dart';
 import 'ui.dart';
 
 class AddCustomerPage extends StatefulWidget {
-  const AddCustomerPage({super.key});
+  const AddCustomerPage({this.existing, super.key});
+
+  final Customer? existing;
 
   @override
   State<AddCustomerPage> createState() => _AddCustomerPageState();
 }
 
 class _AddCustomerPageState extends State<AddCustomerPage> {
-  final firstName = TextEditingController();
-  final lastName = TextEditingController();
-  final mobile = TextEditingController();
-  final email = TextEditingController();
-  final pan = TextEditingController();
+  late final firstName = TextEditingController(text: _splitName(widget.existing?.name).$1);
+  late final lastName = TextEditingController(text: _splitName(widget.existing?.name).$2);
+  late final mobile = TextEditingController(text: widget.existing?.phone.replaceAll(RegExp(r'\D'), '') ?? '');
+  late final email = TextEditingController(text: widget.existing?.email ?? '');
+  late final pan = TextEditingController(text: widget.existing?.pan ?? '');
   var saving = false;
   var error = '';
-  DateTime? dob;
+  late DateTime? dob = widget.existing?.dob;
+
+  bool get editing => widget.existing != null;
 
   @override
   void dispose() {
@@ -55,6 +60,21 @@ class _AddCustomerPageState extends State<AddCustomerPage> {
     });
     final store = AgentScope.of(context);
     try {
+      if (editing) {
+        await store.updateCustomerDetails(
+          customer: widget.existing!,
+          firstName: firstName.text.trim(),
+          lastName: lastName.text.trim(),
+          mobile: mobile.text.trim(),
+          dob: dob!,
+          email: email.text.trim(),
+          pan: pan.text.trim().toUpperCase(),
+        );
+        store.showToast(true, 'Customer updated', '${firstName.text.trim()} ${lastName.text.trim()}');
+        if (!mounted) return;
+        Navigator.of(context).pop(true);
+        return;
+      }
       final saved = await createCustomer(
         accessToken: store.accessToken,
         firstName: firstName.text.trim(),
@@ -81,8 +101,15 @@ class _AddCustomerPageState extends State<AddCustomerPage> {
         saving = false;
         error = caught.message;
       });
-      store.showToast(false, 'Could not add the customer', caught.message);
+      store.showToast(false, editing ? 'Could not update' : 'Could not add the customer', caught.message);
     }
+  }
+
+  static (String, String) _splitName(String? full) {
+    final parts = (full ?? '').trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return ('', '');
+    if (parts.length == 1) return (parts.first, '');
+    return (parts.first, parts.sublist(1).join(' '));
   }
 
   Future<void> pickDate() async {
@@ -105,14 +132,17 @@ class _AddCustomerPageState extends State<AddCustomerPage> {
         surfaceTintColor: Colors.white,
         elevation: 0,
         foregroundColor: dashNavy,
-        title: const Text('Add customer', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(editing ? 'Edit customer' : 'Add customer', style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: [
-          const Text('Credit analytics details', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.4, color: dashNavy)),
+          Text(editing ? 'Update details' : 'Credit analytics details', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.4, color: dashNavy)),
           const SizedBox(height: 6),
-          const Text('Only these details are needed. Consent and the OTP come on the next step.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
+          Text(
+            editing ? 'Change name, mobile, email, DOB or PAN for this customer.' : 'Only these details are needed. Consent and the OTP come on the next step.',
+            style: const TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35),
+          ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
@@ -162,7 +192,7 @@ class _AddCustomerPageState extends State<AddCustomerPage> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               textStyle: const TextStyle(fontWeight: FontWeight.w800),
             ),
-            child: Text(saving ? 'Saving' : 'Continue'),
+            child: Text(saving ? 'Saving' : (editing ? 'Save changes' : 'Continue')),
           ),
         ],
       ),

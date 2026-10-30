@@ -67,7 +67,7 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
         final data = await BookApi.instance.register(
           fullName: nameCtrl.text.trim(),
           email: emailCtrl.text.trim(),
-          phone: phoneCtrl.text.trim().replaceAll(RegExp(r'\D'), '').substring(0, 10),
+          phone: digitsPhone(phoneCtrl.text),
           password: passwordCtrl.text,
           city: cityCtrl.text.trim(),
           gender: gender,
@@ -111,107 +111,165 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
   @override
   Widget build(BuildContext context) {
     final editing = widget.existing != null;
+    final top = MediaQuery.paddingOf(context).top;
     return Scaffold(
       backgroundColor: bookWash,
-      appBar: AppBar(title: Text(editing ? 'Edit profile' : 'Create profile')),
       body: Form(
         key: formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+          padding: EdgeInsets.zero,
           children: [
-            if (widget.bookingGate) ...[
-              Text(
-                'Create a profile before booking your ticket.',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13, color: bookMuted, height: 1.4),
-              ),
-              const SizedBox(height: 14),
-            ],
             Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: bookLine),
+              padding: EdgeInsets.fromLTRB(16, top + 8, 16, 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0B1F3A), Color(0xFF0052CC), Color(0xFF0066FF)],
+                ),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _Field(
-                    controller: nameCtrl,
-                    label: 'Full name',
-                    hint: 'Rahul Sharma',
-                    icon: Icons.badge_outlined,
-                    validator: (v) => (v == null || v.trim().length < 2) ? 'Name required' : null,
-                  ),
-                  const SizedBox(height: 10),
-                  _Field(
-                    controller: emailCtrl,
-                    label: 'Email',
-                    hint: 'you@email.com',
-                    icon: Icons.email_outlined,
-                    keyboard: TextInputType.emailAddress,
-                    validator: (v) {
-                      final value = v?.trim() ?? '';
-                      if (!value.contains('@') || !value.contains('.')) return 'Valid email required';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _Field(
-                    controller: phoneCtrl,
-                    label: 'Mobile number',
-                    hint: '9876543210',
-                    icon: Icons.phone_outlined,
-                    keyboard: TextInputType.phone,
-                    validator: (v) {
-                      final digits = (v ?? '').replaceAll(RegExp(r'\D'), '');
-                      if (digits.length < 10) return '10-digit mobile required';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _Field(
-                    controller: cityCtrl,
-                    label: 'City',
-                    hint: 'Mumbai',
-                    icon: Icons.location_city_outlined,
-                  ),
-                  if (!editing) ...[
-                    const SizedBox(height: 10),
-                    _Field(
-                      controller: passwordCtrl,
-                      label: 'Password',
-                      hint: 'Min 6 characters',
-                      icon: Icons.lock_outline_rounded,
-                      obscure: true,
-                      validator: (v) => (v == null || v.length < 6) ? 'Password min 6 chars' : null,
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      foregroundColor: Colors.white,
                     ),
-                  ],
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Gender', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: bookMuted)),
+                    icon: const Icon(Icons.arrow_back_rounded),
                   ),
-                  const SizedBox(height: 6),
-                  SegmentTabs(
-                    value: gender,
-                    onChanged: (value) => setState(() => gender = value),
-                    items: const [('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')],
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.asset(
+                          'assets/images/app_icon.png',
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Container(
+                            width: 48,
+                            height: 48,
+                            alignment: Alignment.center,
+                            color: Colors.white,
+                            child: const Icon(Icons.person_add_alt_1_rounded, color: bookBlueBright),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              editing ? 'Edit profile' : 'Create profile',
+                              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20, height: 1.1),
+                            ),
+                            Text(
+                              widget.bookingGate
+                                  ? 'Needed before you book a ticket'
+                                  : (editing ? 'Keep your travel details updated' : 'Join Book by Broget AI'),
+                              style: GoogleFonts.poppins(color: Colors.white70, fontWeight: FontWeight.w500, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            PrimaryCta(
-              label: saving ? 'Please wait...' : (editing ? 'Save profile' : 'Create profile'),
-              onPressed: saving ? () {} : _save,
-            ),
-            if (!editing) ...[
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage())),
-                child: Text('Already have an account? Sign in', style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              child: Column(
+                children: [
+                  SoftCard(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                    child: Column(
+                      children: [
+                        _Field(
+                          controller: nameCtrl,
+                          label: 'Full name',
+                          hint: 'Rahul Sharma',
+                          icon: Icons.badge_outlined,
+                          validator: (v) => (v == null || v.trim().length < 2) ? 'Name required' : null,
+                        ),
+                        const SizedBox(height: 8),
+                        _Field(
+                          controller: emailCtrl,
+                          label: 'Email',
+                          hint: 'you@email.com',
+                          icon: Icons.email_outlined,
+                          keyboard: TextInputType.emailAddress,
+                          validator: (v) {
+                            final value = v?.trim() ?? '';
+                            if (!value.contains('@') || !value.contains('.')) return 'Valid email required';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        _Field(
+                          controller: phoneCtrl,
+                          label: 'Mobile number',
+                          hint: '9876543210',
+                          icon: Icons.phone_outlined,
+                          keyboard: TextInputType.phone,
+                          validator: (v) {
+                            final digits = (v ?? '').replaceAll(RegExp(r'\D'), '');
+                            if (digits.length < 10) return '10-digit mobile required';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        _Field(
+                          controller: cityCtrl,
+                          label: 'City',
+                          hint: 'Mumbai',
+                          icon: Icons.location_city_outlined,
+                        ),
+                        if (!editing) ...[
+                          const SizedBox(height: 8),
+                          _Field(
+                            controller: passwordCtrl,
+                            label: 'Password',
+                            hint: 'Min 6 characters',
+                            icon: Icons.lock_outline_rounded,
+                            obscure: true,
+                            validator: (v) => (v == null || v.length < 6) ? 'Password min 6 chars' : null,
+                          ),
+                        ],
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Gender', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: bookMuted)),
+                        ),
+                        const SizedBox(height: 6),
+                        SegmentTabs(
+                          value: gender,
+                          onChanged: (value) => setState(() => gender = value),
+                          items: const [('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  PrimaryCta(
+                    label: saving ? 'Please wait...' : (editing ? 'Save profile' : 'Create profile'),
+                    onPressed: saving ? () {} : _save,
+                  ),
+                  if (!editing) ...[
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage())),
+                      child: Text('Already have an account? Sign in', style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ],
               ),
-            ],
+            ),
           ],
         ),
       ),

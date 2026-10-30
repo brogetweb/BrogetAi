@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'app_nav.dart';
 import 'theme.dart';
 
+export 'toast.dart' show BookToastKind, showBookToast, showLoginSuccessToast, showLogoutSuccessToast, BookToasts;
+
 class SoftCard extends StatelessWidget {
-  const SoftCard({required this.child, this.padding = const EdgeInsets.all(14), this.elevated = true, super.key});
+  const SoftCard({required this.child, this.padding = const EdgeInsets.all(10), this.elevated = true, super.key});
 
   final Widget child;
   final EdgeInsets padding;
@@ -18,9 +19,9 @@ class SoftCard extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: bookLine),
-        boxShadow: elevated ? bookShadowCard : null,
+        boxShadow: elevated ? bookShadowSoft : null,
       ),
       child: child,
     );
@@ -120,14 +121,23 @@ class SplashBrandCard extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 54,
-            height: 54,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(colors: [Color(0xFFFF8A3D), bookOrange]),
-              boxShadow: const [BoxShadow(color: Color(0x66FF7A00), blurRadius: 16, offset: Offset(0, 6))],
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 16, offset: Offset(0, 6))],
             ),
-            child: const Icon(Icons.flight_takeoff_rounded, color: Colors.white, size: 28),
+            clipBehavior: Clip.antiAlias,
+            child: Image.asset(
+              'assets/images/app_icon.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(colors: [Color(0xFFFF8A3D), bookOrange]),
+                ),
+                child: const Icon(Icons.flight_takeoff_rounded, color: Colors.white, size: 28),
+              ),
+            ),
           ),
           const SizedBox(height: 14),
           const BrandMark(light: true, size: 38, hero: true),
@@ -190,38 +200,37 @@ class FieldBox extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: bookLine),
           ),
           child: Row(
             children: [
               if (icon != null) ...[
                 Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(color: bookSoftBlue, borderRadius: BorderRadius.circular(10)),
-                  child: Icon(icon, size: 17, color: bookBlueBright),
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(color: bookSoftBlue, borderRadius: BorderRadius.circular(8)),
+                  child: Icon(icon, size: 15, color: bookBlueBright),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
               ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: bookMuted)),
-                    const SizedBox(height: 1),
+                    Text(label, style: GoogleFonts.poppins(fontSize: 9.5, fontWeight: FontWeight.w600, color: bookMuted, height: 1.1)),
                     Text(
                       value,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.w700, color: bookNavy),
+                      style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: bookNavy, height: 1.2),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: Color(0xFF94A3B8)),
+              const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF94A3B8)),
             ],
           ),
         ),
@@ -251,17 +260,17 @@ class SegmentTabs extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 7),
                   decoration: BoxDecoration(
                     color: value == item.$1 ? bookBlueBright : Colors.transparent,
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: BorderRadius.circular(10),
                     boxShadow: value == item.$1 ? bookShadowBlue : null,
                   ),
                   child: Text(
                     item.$2,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w700,
                       color: value == item.$1 ? Colors.white : bookMuted,
                     ),
@@ -327,189 +336,6 @@ class PrimaryCta extends StatelessWidget {
             const SizedBox(width: 6),
             const Icon(Icons.arrow_forward_rounded, size: 18),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-enum BookToastKind { success, error, info }
-
-OverlayEntry? _bookToastEntry;
-
-void showBookToast(
-  BuildContext context,
-  String message, {
-  BookToastKind kind = BookToastKind.info,
-  IconData? icon,
-  Duration duration = const Duration(milliseconds: 2600),
-}) {
-  void present(BuildContext host) {
-    final overlay = Overlay.maybeOf(host, rootOverlay: true) ?? Overlay.maybeOf(host);
-    if (overlay == null) return;
-
-    _bookToastEntry?.remove();
-    _bookToastEntry = null;
-    ScaffoldMessenger.maybeOf(host)?.hideCurrentSnackBar();
-
-    late final OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (_) => _TopToastHost(
-        message: message,
-        kind: kind,
-        icon: icon,
-        duration: duration,
-        onDone: () {
-          entry.remove();
-          if (_bookToastEntry == entry) _bookToastEntry = null;
-        },
-      ),
-    );
-    _bookToastEntry = entry;
-    overlay.insert(entry);
-  }
-
-  final rootContext = bookNavigatorKey.currentContext;
-  if (rootContext != null) {
-    present(rootContext);
-    return;
-  }
-  present(context);
-}
-
-void showLoginSuccessToast(BuildContext context, {String? name}) {
-  final who = (name ?? '').trim();
-  final text = who.isEmpty ? 'Logged in successfully' : 'Welcome back, $who';
-  // Show after route pop so toast sits cleanly on the next screen.
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final host = bookNavigatorKey.currentContext ?? context;
-    showBookToast(host, text, kind: BookToastKind.success, icon: Icons.login_rounded);
-  });
-}
-
-void showLogoutSuccessToast(BuildContext context) {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final host = bookNavigatorKey.currentContext ?? context;
-    showBookToast(host, 'Logged out successfully', kind: BookToastKind.success, icon: Icons.logout_rounded);
-  });
-}
-
-class _TopToastHost extends StatefulWidget {
-  const _TopToastHost({
-    required this.message,
-    required this.kind,
-    required this.duration,
-    required this.onDone,
-    this.icon,
-  });
-
-  final String message;
-  final BookToastKind kind;
-  final IconData? icon;
-  final Duration duration;
-  final VoidCallback onDone;
-
-  @override
-  State<_TopToastHost> createState() => _TopToastHostState();
-}
-
-class _TopToastHostState extends State<_TopToastHost> with SingleTickerProviderStateMixin {
-  late final AnimationController motion = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 320),
-    reverseDuration: const Duration(milliseconds: 220),
-  );
-  late final Animation<Offset> slide = Tween<Offset>(
-    begin: const Offset(0, -1.2),
-    end: Offset.zero,
-  ).animate(CurvedAnimation(parent: motion, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic));
-  late final Animation<double> fade = CurvedAnimation(parent: motion, curve: Curves.easeOut, reverseCurve: Curves.easeIn);
-
-  @override
-  void initState() {
-    super.initState();
-    motion.forward();
-    Future<void>.delayed(widget.duration, _dismiss);
-  }
-
-  Future<void> _dismiss() async {
-    if (!mounted) return;
-    await motion.reverse();
-    if (mounted) widget.onDone();
-  }
-
-  @override
-  void dispose() {
-    motion.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final Color bg;
-    final IconData mark;
-    switch (widget.kind) {
-      case BookToastKind.success:
-        bg = const Color(0xFF059669);
-        mark = widget.icon ?? Icons.check_circle_rounded;
-        break;
-      case BookToastKind.error:
-        bg = const Color(0xFFDC2626);
-        mark = widget.icon ?? Icons.error_outline_rounded;
-        break;
-      case BookToastKind.info:
-        bg = bookNavy;
-        mark = widget.icon ?? Icons.info_outline_rounded;
-        break;
-    }
-
-    final top = MediaQuery.paddingOf(context).top + 10;
-
-    return Positioned(
-      top: top,
-      left: 16,
-      right: 16,
-      child: SlideTransition(
-        position: slide,
-        child: FadeTransition(
-          opacity: fade,
-          child: Material(
-            color: Colors.transparent,
-            child: GestureDetector(
-              onTap: _dismiss,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(color: bg.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, 8)),
-                    const BoxShadow(color: Color(0x22000000), blurRadius: 12, offset: Offset(0, 4)),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(mark, color: Colors.white, size: 18),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        widget.message,
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13.5, color: Colors.white, height: 1.3),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );

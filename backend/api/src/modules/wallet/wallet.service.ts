@@ -108,6 +108,70 @@ export class WalletService {
     };
   }
 
+  /** Super-admin: CIBIL money collected per agent from wallet usage hits. */
+  async cibilRevenueByAgent() {
+    const agents = await this.agents.find().sort({ name: 1 });
+    const usages = await this.entries
+      .find({ kind: 'usage', status: 'success', agentId: { $ne: 'broget' } })
+      .sort({ createdAt: -1 });
+    const byAgent = new Map<
+      string,
+      { checks: number; amountPaise: number; feePaise: number; gstPaise: number; lastAt?: Date }
+    >();
+
+    for (const entry of usages) {
+      const key = String(entry.agentId);
+      const current = byAgent.get(key) ?? { checks: 0, amountPaise: 0, feePaise: 0, gstPaise: 0 };
+      current.checks += 1;
+      current.amountPaise += entry.amountPaise;
+      current.feePaise += entry.feePaise ?? 0;
+      current.gstPaise += entry.gstPaise ?? 0;
+      const created = (entry as WalletEntryDocument & { createdAt?: Date }).createdAt;
+      if (created && (!current.lastAt || created > current.lastAt)) current.lastAt = created;
+      byAgent.set(key, current);
+    }
+
+    const rows = agents.map((agent) => {
+      const id = String(agent._id);
+      const code = agent.code || id;
+      const stats = byAgent.get(id) ?? byAgent.get(code) ?? { checks: 0, amountPaise: 0, feePaise: 0, gstPaise: 0 };
+      return {
+        agentId: agent.code || id,
+        agentMongoId: id,
+        name: agent.name,
+        email: agent.email,
+        phone: agent.phone,
+        city: agent.city || '',
+        status: agent.status,
+        walletBalance: paiseToRupees(agent.walletBalancePaise ?? 0),
+        checks: stats.checks,
+        amount: paiseToRupees(stats.amountPaise),
+        fee: paiseToRupees(stats.feePaise),
+        gst: paiseToRupees(stats.gstPaise),
+        lastCheckAt: stats.lastAt ? stats.lastAt.toISOString() : null,
+        hasActivity: stats.checks > 0,
+      };
+    });
+
+    rows.sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+
+    const totalChecks = rows.reduce((sum, row) => sum + row.checks, 0);
+    const totalAmount = rows.reduce((sum, row) => sum + row.amount, 0);
+    const activeAgents = rows.filter((row) => row.hasActivity).length;
+    const silentAgents = rows.filter((row) => !row.hasActivity).length;
+
+    return {
+      chargePerCheck: paiseToRupees(API_CHARGE_PAISE),
+      feePerCheck: paiseToRupees(API_FEE_PAISE),
+      gstPerCheck: paiseToRupees(API_GST_PAISE),
+      totalChecks,
+      totalAmount,
+      activeAgents,
+      silentAgents,
+      agents: rows,
+    };
+  }
+
   async createTopup(agentId: string, input: CreateTopupDto) {
     const amountPaise = rupeesToPaise(input.amount);
     const requestId = `ORD${randomBytes(6).toString('hex')}`;

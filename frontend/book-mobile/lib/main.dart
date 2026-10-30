@@ -7,6 +7,7 @@ import 'profile_store.dart';
 import 'responsive.dart';
 import 'splash.dart';
 import 'theme.dart';
+import 'toast.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +44,13 @@ class BrogetBookApp extends StatelessWidget {
           data: media.copyWith(
             textScaler: BookLayout.clampedTextScaler(context),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              child ?? const SizedBox.shrink(),
+              const BookToastLayer(),
+            ],
+          ),
         );
       },
       home: const SplashPage(),

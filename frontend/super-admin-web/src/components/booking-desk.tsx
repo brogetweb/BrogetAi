@@ -59,11 +59,13 @@ export function BookingDesk({ columns, rows }: { columns: string[]; rows: Row[] 
             All dates
           </button>
         ) : (
-          <p className="pb-2.5 text-sm font-semibold text-[#5c677a]">Showing every sample date.</p>
+          <p className="pb-2.5 text-sm font-semibold text-[#5c677a]">Showing all live bookings.</p>
         )}
       </div>
       {filtered.length === 0 ? (
-        <p className="rounded-2xl border border-[#eef1f6] bg-white px-4 py-10 text-center text-sm font-semibold text-[#8b95a7]">No bookings on that date.</p>
+        <p className="rounded-2xl border border-[#eef1f6] bg-white px-4 py-10 text-center text-sm font-semibold text-[#8b95a7]">
+          {rows.length === 0 ? "No hotel bookings yet." : "No bookings on that date."}
+        </p>
       ) : (
         <DataTable columns={columns} rows={filtered} />
       )}

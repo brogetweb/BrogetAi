@@ -19,6 +19,12 @@ export class WalletController {
     return this.wallet.houseSnapshot();
   }
 
+  @Get('cibil-revenue')
+  @UseGuards(AccessTokenGuard)
+  cibilRevenue() {
+    return this.wallet.cibilRevenueByAgent();
+  }
+
   @Get()
   @UseGuards(AgentTokenGuard)
   snapshot(@CurrentUser() user: AccessPayload) {
