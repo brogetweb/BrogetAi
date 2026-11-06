@@ -1,0 +1,130 @@
+{
+  "brogetSearch": {
+    "requestId": "BG179345773513930d7d894",
+    "searchKey": "LOCAL_MOCK_BG179345773513930d7d894",
+    "origin": "DEL",
+    "destination": "BOM",
+    "travelDate": "2026-11-15",
+    "count": 5,
+    "mock": true,
+    "provider": {
+      "mode": "local_mock"
+    },
+    "flights_sample": [
+      {
+        "id": "4925587844442920571",
+        "flightKey": "MOCK_KEY_4925587844442920571",
+        "airlineCode": "6E",
+        "airlineName": "IndiGo",
+        "flightNumber": "2031",
+        "fromCode": "DEL",
+        "toCode": "BOM",
+        "fromCity": "DEL",
+        "toCity": "BOM",
+        "depart": "06:15",
+        "arrive": "08:25",
+        "duration": "02:10",
+        "stops": 0,
+        "isLcc": true,
+        "refundable": true,
+        "food": "Paid Meal",
+        "cabinBaggage": "7KG",
+        "checkInBaggage": "15KG",
+        "fareId": "FARE_4925587844442920571",
+        "baseFare": 2900,
+        "taxes": 599,
+        "price": 3499,
+        "currency": "INR",
+        "fares": [
+          {
+            "fareId": "FARE_4925587844442920571",
+            "productClass": "R",
+            "refundable": true,
+            "food": "Paid Meal",
+            "baseFare": 2900,
+            "taxes": 599,
+            "total": 3499,
+            "cabinBaggage": "7KG",
+            "checkInBaggage": "15KG"
+          }
+        ],
+        "segments": [
+          {
+            "airlineCode": "6E",
+            "airlineName": "IndiGo",
+            "flightNumber": "2031",
+            "origin": "DEL",
+            "destination": "BOM",
+            "originCity": "DEL",
+            "destinationCity": "BOM",
+            "depart": "11/15/2026 06:15",
+            "arrive": "11/15/2026 08:25",
+            "duration": "02:10",
+            "aircraft": "320"
+          }
+        ]
+      },
+      {
+        "id": "4925587844442920572",
+        "flightKey": "MOCK_KEY_4925587844442920572",
+        "airlineCode": "AI",
+        "airlineName": "Air India",
+        "flightNumber": "865",
+        "fromCode": "DEL",
+        "toCode": "BOM",
+        "fromCity": "DEL",
+        "toCity": "BOM",
+        "depart": "09:40",
+        "arrive": "12:05",
+        "duration": "02:25",
+        "stops": 0,
+        "isLcc": false,
+        "refundable": true,
+        "food": "Paid Meal",
+        "cabinBaggage": "7KG",
+        "checkInBaggage": "15KG",
+        "fareId": "FARE_4925587844442920572",
+        "baseFare": 3480,
+        "taxes": 640,
+        "price": 4120,
+        "currency": "INR",
+        "fares": [
+          {
+            "fareId": "FARE_4925587844442920572",
+            "productClass": "R",
+            "refundable": true,
+            "food": "Paid Meal",
+            "baseFare": 3480,
+            "taxes": 640,
+            "total": 4120,
+            "cabinBaggage": "7KG",
+            "checkInBaggage": "15KG"
+          }
+        ],
+        "segments": [
+          {
+            "airlineCode": "AI",
+            "airlineName": "Air India",
+            "flightNumber": "865",
+            "origin": "DEL",
+            "destination": "BOM",
+            "originCity": "DEL",
+            "destinationCity": "BOM",
+            "depart": "11/15/2026 09:40",
+            "arrive": "11/15/2026 12:05",
+            "duration": "02:25",
+            "aircraft": "320"
+          }
+        ]
+      }
+    ],
+    "flights_total": 5
+  },
+  "bosMeta": {
+    "status": 200,
+    "networkError": null,
+    "respLen": 173446,
+    "requestId": "BG1793457706275e2f571f1"
+  },
+  "egressIp": "3.7.65.46"
+}

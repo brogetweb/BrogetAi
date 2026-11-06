@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { BadGatewayException, HttpException, HttpStatus, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadGatewayException, HttpException, HttpStatus, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -11,6 +11,8 @@ import { API_CHARGE_PAISE, API_FEE_PAISE, API_GST_PAISE, TEST_CREDIT_PAISE, pais
 
 @Injectable()
 export class WalletService {
+  private readonly logger = new Logger(WalletService.name);
+
   constructor(
     @InjectModel(WalletEntry.name) private readonly entries: Model<WalletEntryDocument>,
     @InjectModel(HouseWallet.name) private readonly house: Model<HouseWalletDocument>,
@@ -348,17 +350,31 @@ export class WalletService {
     }
     const text = await response.text();
     let payload: unknown = {};
+    let parsed = true;
     try {
       payload = text ? JSON.parse(text) : {};
     } catch {
+      parsed = false;
       payload = {};
     }
     const record = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
     const ok = response.ok && record.status !== false && record.success !== false;
     if (!ok) {
+      // Log what the gateway actually sent (response only - never the request body, which holds the apikey).
+      const snippet = text.replace(/\s+/g, ' ').slice(0, 600);
+      this.logger.warn(
+        `Broget Pay ${path} failed: HTTP ${response.status} ${response.headers.get('content-type') ?? ''} ${parsed ? 'json' : 'non-json'} body=${snippet || '(empty)'}`,
+      );
       const errors = record.errors && typeof record.errors === 'object' ? Object.values(record.errors as Record<string, unknown>).flat() : [];
       const detail = errors.filter((item): item is string => typeof item === 'string').join(' ');
-      const message = typeof record.message === 'string' ? record.message : detail || 'Broget Pay refused the request.';
+      const nested = record.data && typeof record.data === 'object' ? (record.data as Record<string, unknown>).message : undefined;
+      const text2 = [record.message, record.msg, record.error, record.status_text, nested].find((v): v is string => typeof v === 'string' && v.trim() !== '');
+      const message =
+        text2 ||
+        detail ||
+        (parsed
+          ? `Broget Pay refused the request (HTTP ${response.status}).`
+          : `Broget Pay returned an unexpected response (HTTP ${response.status}). Check the server logs.`);
       throw new BadGatewayException(message);
     }
     return record;

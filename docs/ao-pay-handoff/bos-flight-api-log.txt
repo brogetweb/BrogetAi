@@ -1,0 +1,582 @@
+Broget AI — Flight API Log File (AO Pay / BOS verification)
+CapturedAtUTC: 2026-10-31T14:41:48.681Z
+RegistrationID: AOP-1006
+StaticIP_shared_with_AOPay: 65.2.205.197
+ServerHostname: ip-172-31-7-61
+
+========================================================================
+SAMPLE 1 — Outbound BOS AirSearch (production server -> travel.bospay.co.in)
+========================================================================
+StartedUTC: 2026-10-31T14:41:46.275Z
+EndedUTC: 2026-10-31T14:41:48.681Z
+POST https://travel.bospay.co.in/api/V1/Air/Travel/AirSearch
+
+--- REQUEST HEADERS ---
+{
+  "Content-Type": "application/json",
+  "RegistrationID": "AOP-1006",
+  "X-REGISTRATION-ID": "AOP-1006",
+  "ClientSecret": "hi0ioHBOgqzrxMxMVBvpEwkP/q8El08tntEE1p9dAkU=",
+  "X-CLIENT-SECRET": "hi0ioHBOgqzrxMxMVBvpEwkP/q8El08tntEE1p9dAkU=",
+  "PublicKey": "[compact PEM length=454]"
+}
+
+--- REQUEST BODY ---
+{
+  "request_Id": "BG1793457706275e2f571f1",
+  "imeI_Number": "353535353535353",
+  "travel_Type": 0,
+  "booking_Type": 0,
+  "tripInfo": [
+    {
+      "origin": "DEL",
+      "destination": "BOM",
+      "travelDate": "11/15/2026",
+      "trip_Id": 0
+    }
+  ],
+  "adult_Count": "1",
+  "child_Count": "0",
+  "infant_Count": "0",
+  "class_Of_Travel": "0",
+  "inventoryType": 0,
+  "source_Type": 0,
+  "srCitizen_Search": false,
+  "studentFare_Search": false,
+  "defenceFare_Search": false,
+  "filtered_Airline": [
+    {
+      "airline_Code": ""
+    }
+  ],
+  "registrationID": "AOP-1006",
+  "ipAddress": "65.2.205.197"
+}
+
+--- RESPONSE ---
+HTTP 200
+{
+  "response_Header": {
+    "error_Code": "0000",
+    "error_Desc": "SUCCESS",
+    "error_InnerException": "",
+    "request_Id": "BG1793457706275e2f571f1",
+    "status_Id": "11"
+  },
+  "search_Key": "C6iNrLyl2LtTIs4MLnZd3UQP2qhdHm0GLz+kjqEciwdrxtW5kQFL+zW30F3TK2C3Om8X/tpp5njP3k+67acdB3yuXhHqRm+X7J3QwyCd2QMk7dhfMqS2K1NJlYwGRjdJUqNg1q1TporqhqaOVFPypnzoHs2PeDO14lFbMpGXjnkVglO9n1GbroGltR7JTBVS5bXOBK3gSK0z8nHfi7yvLKStlzl9jXZ+4VxoGhsTv+JIp+rDQDYgWYt4w8IBw2WcrOJXv/REIm5NXTon4CdLjb/Z/nyh5BRVkN0x5mz3MkpRmmP1nHkG1lTTHbu6m+drDTHNrvvBRSgqGnM0npM8Xb7W+wuOVU0L4g9EaxKU/7bTTIADdnJImV3q035PB1lwljewE5SaboawP1WoYJ0p27ILQH0JD1k7nh9qQh4Vjsyt7PeqgntEvFG1aIi4cK3eCtgUK9i0uQ62SSM0owgzwRQFQvOm1qsv74dKKDU+2eIzJjzFcQw/ume2Gnhg5XLg16EPW/qsfpLgmEuWd4N+2jOOUs4SrL3VFiLtKp5s6bPJBakl8uC953fWZflPCJ1dgYsezJ/M7Y7uj/Y7+KdiLYxJogtRegEOGXKD/LVQ3BNQyAsXhwjRhec9N61xPcHab0gEApTaS2sKNUn+wqDfQjMAF+0WzijAu5+O8G+IhNx7q0cF8HgECfLY439Tr8+LeVO1UZnnX8eWSn90c/FRpg==",
+  "tripDetails": [
+    {
+      "flights": [
+        {
+          "airline_Code": "6E",
+          "block_Ticket_Allowed": true,
+          "cached": false,
+          "destination": "BOM",
+          "fares": [
+            {
+              "fareDetails": [
+                {
+                  "airportTax_Amount": "2554",
+                  "airportTaxes": [
+                    {
+                      "tax_Amount": "2454",
+                      "tax_Code": "Tax",
+                      "tax_Desc": "Tax"
+                    },
+                    {
+                      "tax_Amount": "100",
+                      "tax_Code": "OCM",
+                      "tax_Desc": "OCM"
+                    }
+                  ],
+                  "basic_Amount": "3064",
+                  "currency_Code": "INR",
+                  "fareClasses": [
+                    {
+                      "class_Code": "S",
+                      "class_Desc": "MAIN",
+                      "fareBasis": "SRIP",
+                      "privileges": null,
+                      "segment_Id": "0"
+                    }
+                  ],
+                  "free_Baggage": {
+                    "check_In_Baggage": "30KG",
+                    "displayRemarks": "",
+                    "hand_Baggage": "7KG"
+                  },
+                  "gst": "0",
+                  "gross_Commission": "0",
+                  "net_Commission": "0",
+                  "paX_Type": "0",
+                  "promo_Discount": "0",
+                  "service_Fee_Amount": "0",
+                  "tds": "0",
+                  "total_Amount": "5618",
+                  "trade_Markup_Amount": "0",
+                  "yQ_Amount": "0"
+                }
+              ],
+              "fareType": "0",
+              "fare_Id": "R4819825814558961024",
+              "fare_Key": null,
+              "food_onboard": "P",
+              "gstMandatory": false,
+              "lastFewSeats": null,
+              "productClass": "R",
+              "promptMessage": null,
+              "refundable": true,
+              "seats_Available": "182",
+              "warning": "Departing from a Nearby Airport"
+            },
+            {
+              "fareDetails": [
+                {
+                  "airportTax_Amount": "2662",
+                  "airportTaxes": [
+                    {
+                      "tax_Amount": "2562",
+                      "tax_Code": "Tax",
+                      "tax_Desc": "Tax"
+                    },
+                    {
+                      "tax_Amount": "100",
+                      "tax_Code": "OCM",
+                      "tax_Desc": "OCM"
+                    }
+                  ],
+                  "basic_Amount": "5223",
+                  "currency_Code": "INR",
+                  "fareClasses": [
+                    {
+                      "class_Code": "Q",
+                      "class_Desc": "REGULAR",
+                      "fareBasis": "QUIP",
+                      "privileges": null,
+                      "segment_Id": "0"
+                    }
+                  ],
+                  "free_Baggage": {
+                    "check_In_Baggage": "30KG",
+                    "displayRemarks": "",
+                    "hand_Baggage": "7KG"
+                  },
+                  "gst": "0",
+                  "gross_Commission": "0",
+                  "net_Commission": "0",
+                  "paX_Type": "0",
+                  "promo_Discount": "0",
+                  "service_Fee_Amount": "0",
+                  "tds": "0",
+                  "total_Amount": "7885",
+                  "trade_Markup_Amount": "0",
+                  "yQ_Amount": "0"
+                }
+              ],
+              "fareType": "0",
+              "fare_Id": "J5136405392510307188",
+              "fare_Key": null,
+              "food_onboard": "P",
+              "gstMandatory": false,
+              "lastFewSeats": null,
+              "productClass": "J",
+              "promptMessage": null,
+              "refundable": true,
+              "seats_Available": "1",
+              "warning": "Departing from a Nearby Airport"
+            },
+            {
+              "fareDetails": [
+                {
+                  "airportTax_Amount": "2722",
+                  "airportTaxes": [
+                    {
+                      "tax_Amount": "2622",
+                      "tax_Code": "Tax",
+                      "tax_Desc": "Tax"
+                    },
+                    {
+                      "tax_Amount": "100",
+                      "tax_Code": "OCM",
+                      "tax_Desc": "OCM"
+                    }
+                  ],
+                  "basic_Amount": "6423",
+                  "currency_Code": "INR",
+                  "fareClasses": [
+                    {
+                      "class_Code": "Q",
+                      "class_Desc": "SME",
+                      "fareBasis": "QLIP",
+                      "privileges": null,
+                      "segment_Id": "0"
+                    }
+                  ],
+                  "free_Baggage": {
+                    "check_In_Baggage": "30KG",
+                    "displayRemarks": "",
+                    "hand_Baggage": "7KG"
+                  },
+                  "gst": "0",
+                  "gross_Commission": "750",
+                  "net_Commission": "750",
+                  "paX_Type": "0",
+                  "promo_Discount": "0",
+                  "service_Fee_Amount": "0",
+                  "tds": "15",
+                  "total_Amount": "9145",
+                  "trade_Markup_Amount": "0",
+                  "yQ_Amount": "0"
+                }
+              ],
+              "fareType": "0",
+              "fare_Id": "O5735836322939169079",
+              "fare_Key": null,
+              "food_onboard": "P",
+              "gstMandatory": false,
+              "lastFewSeats": null,
+              "productClass": "O",
+              "promptMessage": null,
+              "refundable": true,
+              "seats_Available": "1",
+              "warning": "Departing from a Nearby Airport"
+            }
+          ],
+          "flight_Id": "4962672834600201820",
+          "flight_Key": "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",
+          "flight_Numbers": "5175-11/15/2026 12:55",
+          "gsT_Entry_Allowed": true,
+          "hasMoreClass": false,
+          "insta_Cancel_Allowed": false,
+          "inventoryType": "0",
+          "isFareChange": false,
+          "isLCC": true,
+          "origin": "HDO",
+          "repriced": false,
+          "segments": [
+            {
+              "aircraft_Type": "320",
+              "airline_Code": "6E",
+              "airline_Name": "Indigo",
+              "arrival_DateTime": "11/15/2026 14:55",
+              "departure_DateTime": "11/15/2026 12:55",
+              "destination": "BOM",
+              "destination_City": "MUMBAI (BOM)",
+              "destination_Terminal": "1",
+              "duration": "02:00",
+              "flight_Number": "5175",
+              "leg_Index": "0",
+              "operatedBy": "",
+              "origin": "HDO",
+              "origin_City": "Ghaziabad (HDO)",
+              "origin_Terminal": "",
+              "return_Flight": false,
+              "segment_Id": "0",
+              "stop_Over": null
+            }
+          ],
+          "travelDate": "11/15/2026"
+        },
+        {
+          "airline_Code": "6E",
+          "block_Ticket_Allowed": true,
+          "cached": false,
+          "destination": "BOM",
+          "fares": [
+            {
+              "fareDetails": [
+                {
+                  "airportTax_Amount": "2281",
+                  "airportTaxes": [
+                    {
+                      "tax_Amount": "2181",
+                      "tax_Code": "Tax",
+                      "tax_Desc": "Tax"
+                    },
+                    {
+                      "tax_Amount": "100",
+                      "tax_Code": "OCM",
+                      "tax_Desc": "OCM"
+                    }
+                  ],
+                  "basic_Amount": "4500",
+                  "currency_Code": "INR",
+                  "fareClasses": [
+                    {
+                      "class_Code": "R",
+                      "class_Desc": "MAIN",
+                      "fareBasis": "R0IP",
+                      "privileges": null,
+                      "segment_Id": "0"
+                    }
+                  ],
+                  "free_Baggage": {
+                    "check_In_Baggage": "30KG",
+                    "displayRemarks": "",
+                    "hand_Baggage": "7KG"
+                  },
+                  "gst": "0",
+                  "gross_Commission": "0",
+                  "net_Commission": "0",
+                  "paX_Type": "0",
+                  "promo_Discount": "0",
+                  "service_Fee_Amount": "0",
+                  "tds": "0",
+                  "total_Amount": "6781",
+                  "trade_Markup_Amount": "0",
+                  "yQ_Amount": "0"
+                }
+              ],
+              "fareType": "0",
+              "fare_Id": "R4887453526374366238",
+              "fare_Key": null,
+              "food_onboard": "P",
+              "gstMandatory": false,
+              "lastFewSeats": null,
+              "productClass": "R",
+              "promptMessage": null,
+              "refundable": true,
+              "seats_Available": "3",
+              "warning": "Departing from a Nearby Airport"
+            },
+            {
+              "fareDetails": [
+                {
+                  "airportTax_Amount": "2296",
+                  "airportTaxes": [
+                    {
+                      "tax_Amount": "2196",
+                      "tax_Code": "Tax",
+                      "tax_Desc": "Tax"
+                    },
+                    {
+                      "tax_Amount": "100",
+                      "tax_Code": "OCM",
+                      "tax_Desc": "OCM"
+                    }
+                  ],
+                  "basic_Amount": "4800",
+                  "currency_Code": "INR",
+                  "fareClasses": [
+                    {
+                      "class_Code": "R",
+                      "class_Desc": "REGULAR",
+                      "fareBasis": "RUIP",
+                      "privileges": null,
+                      "segment_Id": "0"
+                    }
+                  ],
+                  "free_Baggage": {
+                    "check_In_Baggage": "30KG",
+                    "displayRemarks": "",
+                    "hand_Baggage": "7KG"
+                  },
+                  "gst": "0",
+                  "gross_Commission": "0",
+                  "net_Commission": "0",
+                  "paX_Type": "0",
+                  "promo_Discount": "0",
+                  "service_Fee_Amount": "0",
+                  "tds": "0",
+                  "total_Amount": "7096",
+                  "trade_Markup_Amount": "0",
+                  "yQ_Amount": "0"
+                }
+              ],
+              "fareType": "0",
+              "fare_Id": "J5744443425231629900",
+              "fare_Key": null,
+              "food_onboard": "P",
+              "gstMandatory": false,
+              "lastFewSeats": null,
+              "productClass": "J",
+              "promptMessage": null,
+              "refundable": true,
+              "seats_Available": "3",
+              "warning": "Departing from a Nearby Airport"
+            },
+            {
+              "fareDetails": [
+                {
+                  "airportTax_Amount": "2406",
+                  "airportTaxes": [
+                    {
+                      "tax_Amount": "2306",
+                      "tax_Code": "Tax",
+                      "tax_Desc": "Tax"
+                    },
+                    {
+                      "tax_Amount": "100",
+                      "tax_Code": "OCM",
+                      "tax_Desc": "OCM"
+                    }
+                  ],
+                  "basic_Amount": "7000",
+                  "currency_Code": "INR",
+                  "fareClasses": [
+                    {
+                      "class_Code": "R",
+      
+... truncated totalChars=307542
+
+Production server egress IP at capture: 3.7.65.46
+
+========================================================================
+SAMPLE 2 — Broget Nest Book API (production backend -> Book app)
+========================================================================
+CapturedAtUTC: 2026-10-31T14:42:18Z
+POST http://3.7.65.46/api/v1/book/flights/search/guest
+Content-Type: application/json
+
+--- REQUEST BODY ---
+{
+  "origin": "DEL",
+  "destination": "BOM",
+  "travelDate": "2026-11-15",
+  "adults": 1,
+  "children": 0,
+  "infants": 0,
+  "bookingType": 0,
+  "cabin": "0"
+}
+
+--- RESPONSE STATUS ---
+HTTP/1.1 200 OK
+
+--- RESPONSE BODY (flights_sample first 2) ---
+{
+  "requestId": "BG179345773513930d7d894",
+  "searchKey": "LOCAL_MOCK_BG179345773513930d7d894",
+  "origin": "DEL",
+  "destination": "BOM",
+  "travelDate": "2026-11-15",
+  "count": 5,
+  "mock": true,
+  "provider": {
+    "mode": "local_mock"
+  },
+  "flights_sample": [
+    {
+      "id": "4925587844442920571",
+      "flightKey": "MOCK_KEY_4925587844442920571",
+      "airlineCode": "6E",
+      "airlineName": "IndiGo",
+      "flightNumber": "2031",
+      "fromCode": "DEL",
+      "toCode": "BOM",
+      "fromCity": "DEL",
+      "toCity": "BOM",
+      "depart": "06:15",
+      "arrive": "08:25",
+      "duration": "02:10",
+      "stops": 0,
+      "isLcc": true,
+      "refundable": true,
+      "food": "Paid Meal",
+      "cabinBaggage": "7KG",
+      "checkInBaggage": "15KG",
+      "fareId": "FARE_4925587844442920571",
+      "baseFare": 2900,
+      "taxes": 599,
+      "price": 3499,
+      "currency": "INR",
+      "fares": [
+        {
+          "fareId": "FARE_4925587844442920571",
+          "productClass": "R",
+          "refundable": true,
+          "food": "Paid Meal",
+          "baseFare": 2900,
+          "taxes": 599,
+          "total": 3499,
+          "cabinBaggage": "7KG",
+          "checkInBaggage": "15KG"
+        }
+      ],
+      "segments": [
+        {
+          "airlineCode": "6E",
+          "airlineName": "IndiGo",
+          "flightNumber": "2031",
+          "origin": "DEL",
+          "destination": "BOM",
+          "originCity": "DEL",
+          "destinationCity": "BOM",
+          "depart": "11/15/2026 06:15",
+          "arrive": "11/15/2026 08:25",
+          "duration": "02:10",
+          "aircraft": "320"
+        }
+      ]
+    },
+    {
+      "id": "4925587844442920572",
+      "flightKey": "MOCK_KEY_4925587844442920572",
+      "airlineCode": "AI",
+      "airlineName": "Air India",
+      "flightNumber": "865",
+      "fromCode": "DEL",
+      "toCode": "BOM",
+      "fromCity": "DEL",
+      "toCity": "BOM",
+      "depart": "09:40",
+      "arrive": "12:05",
+      "duration": "02:25",
+      "stops": 0,
+      "isLcc": false,
+      "refundable": true,
+      "food": "Paid Meal",
+      "cabinBaggage": "7KG",
+      "checkInBaggage": "15KG",
+      "fareId": "FARE_4925587844442920572",
+      "baseFare": 3480,
+      "taxes": 640,
+      "price": 4120,
+      "currency": "INR",
+      "fares": [
+        {
+          "fareId": "FARE_4925587844442920572",
+          "productClass": "R",
+          "refundable": true,
+          "food": "Paid Meal",
+          "baseFare": 3480,
+          "taxes": 640,
+          "total": 4120,
+          "cabinBaggage": "7KG",
+          "checkInBaggage": "15KG"
+        }
+      ],
+      "segments": [
+        {
+          "airlineCode": "AI",
+          "airlineName": "Air India",
+          "flightNumber": "865",
+          "origin": "DEL",
+          "destination": "BOM",
+          "originCity": "DEL",
+          "destinationCity": "BOM",
+          "depart": "11/15/2026 09:40",
+          "arrive": "11/15/2026 12:05",
+          "duration": "02:25",
+          "aircraft": "320"
+        }
+      ]
+    }
+  ],
+  "flights_total": 5
+}
+
+========================================================================
+SAMPLE 3 — Broget flights health
+========================================================================
+GET /api/v1/book/flights/health
+{"ok":true,"mock":true,"mode":"local_mock","registrationId":"AOP-1006","baseUrl":"https://travel.bospay.co.in/api/V1/Air/Travel","ipAddress":null,"secretConfigured":true,"publicKeyConfigured":true,"note":"Local mock flights. Set BOS_FLIGHT_MOCK=false later for live IP/UAT."}
+
+========================================================================
+HANDOFF CHECKLIST VALUES
+========================================================================
+1. Public Key: docs/ao-pay-handoff/bos-flight-prod-public.pem
+2. Client Secret: hi0ioHBOgqzrxMxMVBvpEwkP/q8El08tntEE1p9dAkU= (Registration AOP-1006)
+3. Indian Static IP: 65.2.205.197
+4. This API log file
+BOS AirSearch HTTP status at capture: 200 respLen=173446 requestId=BG1793457706275e2f571f1

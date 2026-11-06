@@ -34,9 +34,9 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
     otp.text = _randomOtp();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final found = AgentScope.of(context).customerById(widget.id);
-      if (!mounted) return;
-      setState(() {
-        customer = found;
+    if (!mounted) return;
+    setState(() {
+      customer = found;
         missing = found == null ? '' : _missing(found);
       });
     });
@@ -465,22 +465,22 @@ class _ResultState extends State<_Result> {
               Text('${customer.city}${customer.state.isEmpty ? '' : ', ${customer.state}'}', style: const TextStyle(color: Color(0xFF8B95A7), fontSize: 12)),
               const SizedBox(height: 8),
               if (score != null && band != null) ...[
-                SizedBox(
-                  width: 180,
-                  height: 108,
-                  child: CustomPaint(
-                    painter: _Gauge(score: score, color: band.$2),
-                    child: Align(
-                      alignment: const Alignment(0, 0.72),
-                      child: Text('$score', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -1)),
-                    ),
+              SizedBox(
+                width: 180,
+                height: 108,
+                child: CustomPaint(
+                  painter: _Gauge(score: score, color: band.$2),
+                  child: Align(
+                    alignment: const Alignment(0, 0.72),
+                    child: Text('$score', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -1)),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: band.$2.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
-                  child: Text(band.$1, style: TextStyle(color: band.$2, fontWeight: FontWeight.w800, fontSize: 12)),
-                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: band.$2.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
+                child: Text(band.$1, style: TextStyle(color: band.$2, fontWeight: FontWeight.w800, fontSize: 12)),
+              ),
               ] else
                 Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5C677A), fontWeight: FontWeight.w700, height: 1.35)),
               const SizedBox(height: 14),
@@ -507,7 +507,7 @@ class _ResultState extends State<_Result> {
           ),
         ),
         if (widget.reportId.isNotEmpty) ...[
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
           CreditReportActions(reportId: widget.reportId),
         ],
         const SizedBox(height: 12),
