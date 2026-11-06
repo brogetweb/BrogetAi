@@ -1,4 +1,13 @@
-const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api/v1";
+const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api/v1").trim().replace(/\/+$/, "");
+
+// An https site (Vercel) cannot call an http API — the browser blocks it as mixed content.
+if (typeof window !== "undefined" && window.location.protocol === "https:" && base.startsWith("http://")) {
+  console.error(
+    `[agent-web] NEXT_PUBLIC_API_BASE_URL is "${base}" (http) but this site is https. Browsers block these calls. ` +
+      "Set it to the https API, e.g. https://3.7.65.46.sslip.io/api/v1, and redeploy.",
+  );
+}
+
 const accessKey = "broget-agent-access";
 const refreshKey = "broget-agent-refresh";
 const userKey = "broget-agent-user";
@@ -86,6 +95,15 @@ export function readStoredUser(): AgentAccount | null {
   }
 }
 
+/** Explains a failed fetch (network/CORS/mixed content) so the cause is visible on screen. */
+function unreachableMessage() {
+  if (typeof window === "undefined") return `API not reachable at ${base}.`;
+  if (window.location.protocol === "https:" && base.startsWith("http://")) {
+    return `API not reachable: this site is https but the API URL is http (${base}). Set NEXT_PUBLIC_API_BASE_URL to the https API and redeploy.`;
+  }
+  return `API not reachable at ${base}. Check your internet, or ask the admin to add ${window.location.origin} to the API's CORS_ORIGINS.`;
+}
+
 export async function loginAgent(email: string, password: string): Promise<AgentSession> {
   let response: Response;
   try {
@@ -95,7 +113,7 @@ export async function loginAgent(email: string, password: string): Promise<Agent
       body: JSON.stringify({ email, password }),
     });
   } catch {
-    throw new Error("API not reachable.");
+    throw new Error(unreachableMessage());
   }
   if (!response.ok) throw new Error(await readError(response, "Email or password does not match."));
   const body = (await response.json()) as AgentSession;
@@ -146,15 +164,21 @@ export async function logout() {
 async function authorized(path: string, init: RequestInit = {}) {
   let access = sessionStorage.getItem(accessKey) || "";
   const refresh = sessionStorage.getItem(refreshKey) || "";
-  const run = (token: string) =>
-    fetch(`${base}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...init.headers,
-      },
-    });
+  const run = async (token: string) => {
+    try {
+      return await fetch(`${base}${path}`, {
+        ...init,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...init.headers,
+        },
+      });
+    } catch (error) {
+      if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) throw error;
+      throw new Error(unreachableMessage());
+    }
+  };
 
   const response = await run(access);
   if (response.status !== 401 || !refresh) return response;
@@ -211,7 +235,7 @@ export async function createTopup(amount: number, mobile: string) {
     if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
       throw new Error("Broget Pay is taking too long. Check the wallet ledger before trying again.");
     }
-    throw new Error("API not reachable. Check your connection and try again.");
+    throw error instanceof Error ? error : new Error(unreachableMessage());
   }
   if (response.status === 401) throw new Error("Your session expired. Sign in again.");
   if (!response.ok) throw new Error(await readError(response, "Could not start top-up."));
