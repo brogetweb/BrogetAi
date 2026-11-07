@@ -3,11 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      { source: "/cibil", destination: "https://cibil.brogetai.com/", permanent: false },
-      { source: "/services/payment-gateway", destination: "https://brogetpay.com/", permanent: false },
-      { source: "/services/payment-link", destination: "https://brogetpay.com/", permanent: false },
-      { source: "/services/payout", destination: "https://brogetpay.com/", permanent: false },
-      { source: "/services/builder-ships", destination: "https://www.builderbroget.com/", permanent: false },
+      { source: "/cibil", destination: "/services/cibil", permanent: false },
+      { source: "/sip", destination: "/services/sip", permanent: false },
+      { source: "/services/payment-link", destination: "/services/pay-in", permanent: false },
     ];
   },
   images: {

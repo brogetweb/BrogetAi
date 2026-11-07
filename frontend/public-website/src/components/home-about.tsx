@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { menuGroups } from "@/lib/menu";
+import { liveServices, menuGroups } from "@/lib/menu";
 
 const shots = menuGroups.flatMap((group) =>
   group.items.map((item) => ({ label: item.label, image: item.image, desk: group.label })),
@@ -12,8 +12,8 @@ const shots = menuGroups.flatMap((group) =>
 const parts = [
   ["Travel", "Book flights, trains, buses, and hotels in real time."],
   ["Banking", "CIBIL, a monthly SIP, and fixed or recurring deposits."],
-  ["Payment", "Collect with a gateway or a payment link. Pay out to banks, wallets, UPI, and cards."],
-  ["Our Services", "Education, health care, agriculture, and builder ships."],
+  ["Payment", "Collect with a gateway or Pay In. Pay out to banks, wallets, UPI, and cards."],
+  ["Our Services", "Builder ships, education, health care, and agriculture."],
 ];
 
 export function HomeAbout() {
@@ -56,7 +56,7 @@ export function HomeAbout() {
           </ul>
           {open ? (
             <div className="mt-4">
-              <p className="text-sm leading-6 text-[#1d4ed8]">Most desks on this site are still coming soon. CIBIL, Payment Gateway, Pay In, PayOut, and Builder Ships are open now.</p>
+              <p className="text-sm leading-6 text-[#1d4ed8]">{liveServices.map(({ item }) => item.label).join(", ")} are open now. The other desks are opening soon.</p>
               <Link href="/about" className="mt-3 inline-block text-sm font-semibold text-[#1d4ed8] underline decoration-[#1d4ed8]/40 underline-offset-4 hover:decoration-[#1d4ed8]">
                 Full about page
               </Link>

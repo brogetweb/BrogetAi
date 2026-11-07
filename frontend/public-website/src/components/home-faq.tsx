@@ -55,7 +55,7 @@ const answers: Record<string, [string, string][]> = {
     ["Can I pay on this page?", "No. Payments run on brogetpay.com, not on this website."],
     ["Is it the same login?", "BroGetPay is its own site with its own merchant dashboard."],
     ["What can it take?", "Online payments for purchases and subscriptions."],
-    ["Where is the card?", "Open the Payment Gateway card. It opens brogetpay.com."],
+    ["Where is the card?", "Open the Payment Gateway card under Payment, then open brogetpay.com."],
   ],
   "Pay In": [
     ["Is Pay In open?", "Yes. Pay In is live on brogetpay.com."],
@@ -89,8 +89,8 @@ const answers: Record<string, [string, string][]> = {
   ],
   "Builder Ships": [
     ["Is Builder Ships active?", "Yes. It is open now."],
-    ["Where does it go?", "It opens www.builderbroget.com."],
-    ["Is it on this website?", "The card leaves this site and opens Builder Ships."],
+    ["Where does it go?", "The Builder Ships page links to www.builderbroget.com."],
+    ["Is it on this website?", "The service page is here. The projects live on builderbroget.com."],
     ["What is it for?", "Construction, sites, and builder projects."],
     ["How do I open it?", "Use the Builder Ships card under Our Services."],
   ],

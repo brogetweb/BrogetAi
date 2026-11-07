@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ServiceSoon } from "@/components/service-soon";
+import { ServicePage } from "@/components/service-page";
 import { findService, serviceSlugs } from "@/lib/menu";
+import { serviceDetails } from "@/lib/services";
 
 export function generateStaticParams() {
   return serviceSlugs.map((slug) => ({ slug }));
@@ -11,15 +12,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const found = findService(slug);
   if (!found) return { title: "Broget AI" };
+  const summary = serviceDetails[slug]?.summary ?? found.item.text;
   return {
     title: `${found.item.label} — Broget AI`,
-    description: `${found.item.text} Coming soon.`,
+    description: found.item.soon ? `${summary} Coming soon.` : summary,
   };
 }
 
-export default async function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const found = findService(slug);
   if (!found) notFound();
-  return <ServiceSoon group={found.group} item={found.item} />;
+  return <ServicePage group={found.group} item={found.item} />;
 }
