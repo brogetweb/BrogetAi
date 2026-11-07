@@ -37,7 +37,7 @@ export function Offerings() {
                   {live ? `${live} of ${group.items.length} live` : "Opening soon"}
                 </p>
               </Reveal>
-              <div className={`desk-stage mt-6 grid w-full gap-5 ${deskGrid(group.items.length)}`}>
+              <div className={`desk-stage mt-6 grid w-full gap-5 lg:gap-6 ${deskGrid(group.items.length)}`}>
                 {group.items.map((item, index) => (
                   <Reveal key={item.slug} className="h-full" delay={index * 0.08}>
                     <DeskCard item={item} titleAs="h4" />

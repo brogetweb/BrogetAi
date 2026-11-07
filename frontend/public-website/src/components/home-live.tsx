@@ -1,5 +1,4 @@
-import Image from "next/image";
-import Link from "next/link";
+import { DeskCard, deskGrid } from "@/components/desk-card";
 import { Reveal } from "@/components/reveal";
 import { allServices, liveServices, menuGroups } from "@/lib/menu";
 
@@ -31,23 +30,10 @@ export function HomeLive() {
         <p className="mt-3 text-sm leading-6 text-[#1d4ed8] sm:text-base">These services are running now. Open a page to see what each one does.</p>
       </Reveal>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className={`mt-8 grid gap-5 ${deskGrid(liveServices.length)}`}>
         {liveServices.map(({ group, item }, index) => (
           <Reveal key={item.slug} delay={index * 0.06} className="h-full">
-            <Link href={item.href} className="desk-card group flex h-full flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-              <div className="relative aspect-[16/10] overflow-hidden">
-                <Image src={item.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw" className="object-cover transition duration-700 group-hover:scale-[1.04]" />
-                <span className="absolute top-3 left-3 rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] text-white uppercase">Live</span>
-              </div>
-              <div className="flex flex-1 flex-col p-4">
-                <p className="text-[10px] font-bold tracking-[0.14em] text-[#2f6bff] uppercase">{group.label}</p>
-                <h3 className="mt-1 text-lg font-semibold tracking-tight text-[#163a9a]">{item.label}</h3>
-                <p className="mt-1 flex-1 text-sm leading-6 text-slate-600">{item.text}</p>
-                <p className="mt-3 text-sm font-semibold text-[#1d4ed8]">
-                  View service <span aria-hidden="true">→</span>
-                </p>
-              </div>
-            </Link>
+            <DeskCard item={item} group={group.label} compact />
           </Reveal>
         ))}
       </div>
