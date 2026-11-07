@@ -56,10 +56,10 @@ export const menuGroups: MenuGroup[] = [
     headline: "The desks beside travel and money.",
     lede: "Education, health, agriculture, and builder work.",
     items: [
+      { href: "https://www.builderbroget.com/", label: "Builder Ships", text: "Construction, sites, and builder projects in one place.", image: "/images/home/home-builder.jpg" },
       { slug: "education", href: "/services/education", label: "Education Ecosystem", text: "Learning, campuses, and student services in one place.", image: "/images/home/home-education.jpg", soon: true },
       { slug: "health-care", href: "/services/health-care", label: "Health Care", text: "Clinics, care, and health services for families.", image: "/images/home/home-health.jpg", soon: true },
       { slug: "agriculture", href: "/services/agriculture", label: "Agriculture", text: "Farm inputs, markets, and grower services.", image: "/images/home/home-agriculture.jpg", soon: true },
-      { href: "https://www.builderbroget.com/", label: "Builder Ships", text: "Construction, sites, and builder projects in one place.", image: "/images/home/home-builder.jpg" },
     ],
   },
 ];
