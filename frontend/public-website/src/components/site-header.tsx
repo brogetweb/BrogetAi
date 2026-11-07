@@ -95,10 +95,10 @@ export function SiteHeader() {
       </div>
       <p className="sr-only" aria-live="polite">{notice ? `Now on ${notice}` : ""}</p>
       <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
-        <div className="flex min-w-0 items-center gap-6 xl:gap-8">
+        <div className="flex min-w-0 flex-1 items-center gap-6 xl:gap-8">
           <Brand />
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-0.5 text-sm font-medium xl:flex" onMouseLeave={() => setMenu(null)}>
+          <nav aria-label="Main navigation" className="hidden flex-1 items-center justify-between gap-0.5 pr-4 text-sm font-medium xl:flex 2xl:pr-8" onMouseLeave={() => setMenu(null)}>
           <Link
             href="/"
             aria-current={home ? "page" : undefined}
