@@ -9,7 +9,7 @@ const items = [
   },
   {
     q: "What about CIBIL and SIP?",
-    a: "Both are coming soon. Credit-score checks stay off until access and compliance are approved. SIP is not an active feature in this release.",
+    a: "CIBIL checks are live at cibil.brogetai.com, where an agent runs the report with your consent. SIP is coming soon and is not an active feature in this release.",
   },
   {
     q: "Where do my travel details go?",

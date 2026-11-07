@@ -33,10 +33,10 @@ const answers: Record<string, [string, string][]> = {
     ["Where do I open it?", "Use the Hotel Booking card under Travel."],
   ],
   CIBIL: [
-    ["Can I check a CIBIL report?", "Not yet. A credit check stays off until access is approved."],
-    ["Should I enter a PAN?", "No. Do not enter a real PAN on this site."],
-    ["Is a report saved here?", "This page does not pull or store a live report."],
-    ["Who runs a report later?", "When the desk is live, an agent runs it. It is not live now."],
+    ["Can I check a CIBIL report?", "Yes. CIBIL checks are live at cibil.brogetai.com."],
+    ["Who runs the report?", "A Broget AI agent runs it on the CIBIL desk, with your consent."],
+    ["Should I enter a PAN here?", "No. The PAN is entered only on cibil.brogetai.com, not on this website."],
+    ["Where do I open it?", "Use the CIBIL card under Banking."],
   ],
   SIP: [
     ["Can I start a SIP today?", "SIP is coming soon. It is not an active plan here."],

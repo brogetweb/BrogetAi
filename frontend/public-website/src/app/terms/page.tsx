@@ -15,7 +15,7 @@ const sections = [
     title: "The service",
     clauses: [
       "Broget AI is a booking desk for flights and hotel stays. You can compare options and hold one while you decide.",
-      "Credit score and SIP are marked coming soon. Those pages do not run a credit check and do not take a savings payment.",
+      "Credit score checks run on cibil.brogetai.com, not on this website. SIP is marked coming soon and does not take a savings payment.",
       "Airline and hotel connections, when they are used, run from the server. Provider credentials are not placed in the browser.",
     ],
   },
@@ -59,7 +59,7 @@ const sections = [
     id: "later",
     title: "Credit score and SIP",
     clauses: [
-      "The credit-score page stays closed until consent and access are in place. This website does not ask for a PAN or a credit report.",
+      "Credit-score checks are handled on cibil.brogetai.com, with consent. This website does not ask for a PAN or a credit report.",
       "The SIP page stays closed until it opens. It does not show a fund list and does not take an investment payment.",
       "When either service opens, that page will say what it collects before you continue.",
     ],

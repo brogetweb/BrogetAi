@@ -41,7 +41,7 @@ const sections = [
     id: "not",
     title: "What is not collected",
     clauses: [
-      "CIBIL data is not collected. The credit-score page does not ask for a PAN or a credit report.",
+      "CIBIL data is not collected on this website. Credit checks run on cibil.brogetai.com, and this website does not ask for a PAN or a credit report.",
       "SIP does not take a payment, a fund choice, or a bank detail on this website.",
       "Airline, hotel, and credit-bureau credentials are not placed in the browser.",
     ],

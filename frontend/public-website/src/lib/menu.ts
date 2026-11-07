@@ -34,7 +34,7 @@ export const menuGroups: MenuGroup[] = [
     headline: "Credit, savings, and deposits in one place.",
     lede: "CIBIL, a monthly SIP, and fixed or recurring deposits.",
     items: [
-      { href: "/cibil", label: "CIBIL", text: "Access CIBIL credit reports instantly.", image: "/images/home/home-cibil.jpg", soon: true },
+      { href: "https://cibil.brogetai.com/", label: "CIBIL", text: "Access CIBIL credit reports instantly.", image: "/images/home/home-cibil.jpg" },
       { href: "/sip", label: "SIP", text: "Start a monthly savings plan beside the rest of the desk.", image: "/images/home/home-sip.jpg", soon: true },
       { slug: "fd-rd", href: "/services/fd-rd", label: "FD & RD", text: "Enable fixed and recurring deposit services.", image: "/images/home/home-deposit.jpg", soon: true },
     ],
