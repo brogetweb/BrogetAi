@@ -49,3 +49,24 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: .55; cursor: po
   a:hover img, button:hover img { filter: none; }
 }
 .hero-grid { background-image: linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%); mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%); }
+.hero-grid-dark { background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 20%, #000 35%, transparent 100%); mask-image: radial-gradient(ellipse 75% 65% at 50% 20%, #000 35%, transparent 100%); }
+@keyframes aurora { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(40px, 30px, 0) scale(1.08); } }
+.aurora { animation: aurora 14s ease-in-out infinite; }
+.aurora-slow { animation-duration: 20s; animation-direction: reverse; }
+@keyframes hero-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+.hero-rise { animation: hero-rise .9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hero-rise-late { animation-delay: .15s; }
+@keyframes console-row { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+.console-row { animation: console-row .6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ticker-track { animation: ticker 45s linear infinite; }
+.ticker:hover .ticker-track, .ticker:focus-within .ticker-track { animation-play-state: paused; }
+@keyframes menu-pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.menu-pop { animation: menu-pop .18s ease-out both; }
+.panel-glow { position: relative; }
+.panel-glow::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(37, 99, 235, 0.55), rgba(99, 102, 241, 0.15) 40%, transparent 70%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+.panel-glow:hover::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .aurora, .hero-rise, .console-row, .ticker-track, .menu-pop { animation: none; }
+  .ticker-track { flex-wrap: wrap; width: auto; justify-content: center; padding: 0 1.25rem; }
+}

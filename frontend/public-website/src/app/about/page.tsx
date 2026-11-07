@@ -15,7 +15,7 @@ export default function AboutPage() {
   return (
     <>
       <main className="bg-[#f6f5f2] pb-20 text-[#17191e]">
-        <section className="relative mt-[5.25rem] overflow-hidden bg-[#07101f] text-white">
+        <section className="relative mt-[4.5rem] overflow-hidden bg-[#07101f] text-white">
           <Image src="/images/home/home-hero.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(7,16,31,0.9)_0%,rgba(7,16,31,0.62)_52%,rgba(7,16,31,0.28)_100%)]" />
           <div className="relative mx-auto flex min-h-[22rem] max-w-7xl flex-col justify-center px-5 py-14 sm:min-h-[26rem] sm:px-5 lg:px-8">

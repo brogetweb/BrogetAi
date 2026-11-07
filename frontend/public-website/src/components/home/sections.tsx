@@ -246,23 +246,3 @@ export function Faq() {
     </section>
   );
 }
-
-export function Cta() {
-  return (
-    <section className="bg-white">
-      <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-slate-950 px-6 py-14 text-center sm:px-12 sm:py-16">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_20rem_at_50%_-20%,rgba(59,130,246,0.35),transparent)]" aria-hidden="true" />
-          <div className="relative">
-            <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-[-0.03em] text-white sm:text-4xl">Ready to get started with BrogetAI?</h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg leading-8 text-slate-300">Tell us what you need and we&apos;ll point you to the right service.</p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/contact" className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-950 hover:bg-slate-100">Contact our team</Link>
-              <Link href="/#services" className="rounded-lg border border-white/20 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10">Browse services</Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
