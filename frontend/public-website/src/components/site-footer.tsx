@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { menuGroups } from "@/lib/menu";
-import { OpenAccount } from "./auth-drawer";
 import { Brand } from "./brand";
 
 const columns = [
@@ -15,13 +14,6 @@ const columns = [
       { href: "/contact", label: "Contact us" },
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },
-    ],
-  },
-  {
-    title: "Account",
-    links: [
-      { href: "/login", label: "Log in", mode: "login" as const },
-      { href: "/register", label: "Create account", mode: "register" as const },
     ],
   },
 ];
@@ -42,22 +34,16 @@ export function SiteFooter() {
             Contact the desk
           </Link>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
           {columns.map((column) => (
             <div key={column.title} className="min-w-0">
               <h2 className="text-xs font-bold tracking-[0.16em] text-indigo-200 uppercase">{column.title}</h2>
               <div className="mt-3 flex flex-col items-start gap-1 text-sm">
-                {column.links.map((link) =>
-                  "mode" in link ? (
-                    <OpenAccount key={link.label} mode={link.mode} className="max-w-full rounded-lg py-1.5 text-left text-slate-200 hover:text-white">
-                      {link.label}
-                    </OpenAccount>
-                  ) : (
-                    <Link key={link.href} href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="max-w-full rounded-lg py-1.5 text-slate-200 hover:text-white">
-                      {link.label}
-                    </Link>
-                  ),
-                )}
+                {column.links.map((link) => (
+                  <Link key={link.href} href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="max-w-full rounded-lg py-1.5 text-slate-200 hover:text-white">
+                    {link.label}
+                  </Link>
+                ))}
               </div>
             </div>
           ))}

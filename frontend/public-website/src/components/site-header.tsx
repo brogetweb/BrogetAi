@@ -5,11 +5,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { menuGroups, pageLabel, plainLinks, type MenuGroup } from "@/lib/menu";
 import { Brand } from "./brand";
-import { useAuth } from "./auth-drawer";
 
 export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const pathname = usePathname();
-  const { openAuth } = useAuth();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState<string | null>(null);
   const [mobileGroup, setMobileGroup] = useState<string | null>("travel");
@@ -100,9 +98,6 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => { setOpen(false); openAuth("login"); }} className={`hidden rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 sm:inline-flex`}>
-            Log in
-          </button>
           <button
             type="button"
             className={`inline-flex h-10 w-10 items-center justify-center rounded-full lg:hidden ${solid ? "text-slate-900 hover:bg-slate-100" : "text-white hover:bg-white/10"}`}
@@ -162,9 +157,6 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
                 {link.label}
               </Link>
             ))}
-            <button type="button" onClick={() => { setOpen(false); openAuth("login"); }} className="mt-3 rounded-xl bg-indigo-600 px-3 py-3 text-center text-sm font-semibold text-white">
-              Log in
-            </button>
           </div>
         </nav>
       ) : null}
