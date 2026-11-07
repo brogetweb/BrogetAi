@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { supportEmail, supportHours } from "@/lib/contact";
 import { allServices, liveServices, menuGroups } from "@/lib/menu";
 import { Brand } from "./brand";
 import { ServiceIcon } from "./service-icon";
@@ -44,6 +45,13 @@ export function SiteFooter() {
             <p className="mt-5 max-w-xs text-sm leading-6 text-slate-400">
               Travel, banking, payments, and the services beside them. One platform, one team.
             </p>
+            <a href={`mailto:${supportEmail}`} className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white hover:text-blue-300">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-400" aria-hidden="true">
+                <path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M3 7l9 6 9-6" />
+              </svg>
+              {supportEmail}
+            </a>
+            <p className="mt-1.5 text-xs text-slate-500">Support: {supportHours}</p>
             <p className="mt-6 text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">Live on</p>
             <ul className="mt-3 space-y-2">
               {sites.map((site) => (

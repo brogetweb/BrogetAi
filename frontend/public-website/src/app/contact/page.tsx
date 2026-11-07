@@ -1,69 +1,111 @@
-import Image from "next/image";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/contact-form";
+import { supportEmail, supportHours } from "@/lib/contact";
+import { PageHero } from "@/components/page-hero";
+import { ServiceIcon } from "@/components/service-icon";
 import { SiteFooter } from "@/components/site-footer";
+import { allServices, menuGroups } from "@/lib/menu";
 
-const notes = [
-  ["01", "Say which desk", "Travel, banking, a payment, or one of the services."],
-  ["02", "Add a reference", "If this is about a booking or a report, include the reference you were given."],
-  ["03", "Use a reachable phone", "The reply goes to the email and mobile number on the form."],
-];
+export const metadata: Metadata = {
+  title: "Contact us — Broget AI",
+  description: `Write to the BrogetAI team at ${supportEmail}. Support hours Monday to Saturday, 10:00 to 18:00.`,
+};
 
-const paths = [
-  { title: "Travel", text: "Flights, trains, buses, and hotels.", href: "/#travel", image: "/images/home/home-flight.jpg" },
-  { title: "Banking", text: "CIBIL, SIP, and FD & RD.", href: "/#banking", image: "/images/home/home-cibil.jpg" },
-  { title: "Payment", text: "Gateway, pay in, and payout.", href: "/#payment", image: "/images/home/home-gateway.jpg" },
-  { title: "Our Services", text: "Education, health, agriculture, and builder.", href: "/#products", image: "/images/home/home-education.jpg" },
+const sites = Array.from(new Map(allServices.flatMap(({ item }) => (item.site ? [[item.site.name, item.site]] : []))).values());
+
+const tips = [
+  ["Pick the right topic", "CIBIL, payments, Builder Ships, travel, or something else."],
+  ["Add a reference", "If it is about a report, payment, or booking, include the reference you were given."],
+  ["Use a reachable number", "We reply to the email and mobile number you share."],
 ];
 
 export default function ContactPage() {
   return (
     <>
-      <main className="bg-[#f6f5f2] pb-20 text-[#17191e]">
-        <section className="relative mt-[4.5rem] overflow-hidden bg-[#07101f] text-white">
-          <Image src="/images/home/home-hero.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(7,16,31,0.9)_0%,rgba(7,16,31,0.62)_52%,rgba(7,16,31,0.28)_100%)]" />
-          <div className="relative mx-auto flex min-h-[20rem] max-w-7xl flex-col justify-center px-5 py-14 sm:min-h-[24rem] lg:px-8">
-            <p className="text-[11px] font-bold tracking-[0.2em] text-blue-100 uppercase">Contact us</p>
-            <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.045em] sm:text-6xl">Write to the BrogetAI desk.</h1>
-            <p className="mt-4 max-w-xl text-base leading-7 text-white/80">A booking, a credit report, a payment, or one of the services. One message is enough.</p>
+      <main className="bg-slate-50 text-slate-900">
+        <PageHero
+          eyebrow="Contact us"
+          title="Let's talk about"
+          accent="what you need."
+          text="A credit report, a payment, a builder project, or a question about a service. Send one message and the right team will reply."
+        />
+
+        <section className="relative z-10 mx-auto -mt-10 max-w-6xl px-5 lg:px-8">
+          <div className="grid gap-4 md:grid-cols-3">
+            <a href={`mailto:${supportEmail}`} className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_-25px_rgba(15,23,42,0.3)] hover:border-blue-300">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+                  <path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M3 7l9 6 9-6" />
+                </svg>
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-slate-950">Email us</span>
+                <span className="mt-0.5 block truncate text-sm font-medium text-blue-600 group-hover:text-blue-700">{supportEmail}</span>
+                <span className="mt-1 block text-xs text-slate-500">We reply on working days</span>
+              </span>
+            </a>
+            <div className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_-25px_rgba(15,23,42,0.3)]">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+                  <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2" />
+                </svg>
+              </span>
+              <span>
+                <span className="block text-sm font-semibold text-slate-950">Support hours</span>
+                <span className="mt-0.5 block text-sm font-medium text-slate-700">{supportHours}</span>
+                <span className="mt-1 block text-xs text-slate-500">Indian Standard Time</span>
+              </span>
+            </div>
+            <div className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_-25px_rgba(15,23,42,0.3)]">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                <ServiceIcon name="bolt" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-slate-950">Live services</span>
+                <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                  {sites.map((site) => (
+                    <a key={site.name} href={site.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-slate-700 hover:text-blue-600">
+                      {site.name} ↗
+                    </a>
+                  ))}
+                </span>
+              </span>
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl items-start gap-10 px-5 py-12 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-16">
+        <section className="mx-auto grid max-w-6xl items-start gap-8 px-5 py-14 lg:grid-cols-[1.4fr_1fr] lg:gap-10 lg:px-8 lg:py-20">
           <ContactForm />
-          <aside className="lg:pt-10">
-            <p className="text-[11px] font-bold tracking-[0.18em] text-[#1d4ed8] uppercase">Before you write</p>
-            <ul className="mt-6 space-y-6">
-              {notes.map(([step, title, text]) => (
-                <li key={title}>
-                  <p className="text-xs font-bold tracking-[0.14em] text-[#1d4ed8]">{step}</p>
-                  <p className="mt-1 text-lg font-semibold text-[#163a9a]">{title}</p>
-                  <p className="mt-1 text-sm leading-6 text-[#1d4ed8]">{text}</p>
-                </li>
-              ))}
-            </ul>
+          <aside className="space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h2 className="text-base font-semibold text-slate-950">Before you write</h2>
+              <ol className="mt-5 space-y-5">
+                {tips.map(([title, text], index) => (
+                  <li key={title} className="flex gap-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600 ring-1 ring-blue-100">{index + 1}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{title}</p>
+                      <p className="mt-0.5 text-sm leading-6 text-slate-600">{text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h2 className="text-base font-semibold text-slate-950">Go straight to a desk</h2>
+              <ul className="mt-4 grid grid-cols-2 gap-2">
+                {menuGroups.map((group) => (
+                  <li key={group.id}>
+                    <Link href={`/#${group.id}`} className="group flex items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-800 hover:border-blue-300 hover:text-blue-600">
+                      <ServiceIcon name={group.id} className="h-4 w-4 text-slate-400 group-hover:text-blue-600" />
+                      <span className="truncate">{group.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </aside>
-        </section>
-
-        <section className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mx-auto max-w-xl text-center">
-            <p className="text-[11px] font-bold tracking-[0.18em] text-[#2f6bff] uppercase">Or open a section</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[#163a9a] sm:text-3xl">Go straight to the desk you need.</h2>
-          </div>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {paths.map((item) => (
-              <Link key={item.title} href={item.href} className="group overflow-hidden bg-white ring-1 ring-slate-200">
-                <div className="relative aspect-[4/3] w-full overflow-hidden">
-                  <Image src={item.image} alt="" fill sizes="(max-width: 640px) 100vw, 25vw" className="object-cover object-center transition duration-500 group-hover:scale-[1.03]" />
-                </div>
-                <div className="px-4 py-5 text-center">
-                  <p className="text-lg font-semibold text-[#1d4ed8]">{item.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-[#1d4ed8]">{item.text}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
         </section>
       </main>
       <SiteFooter />

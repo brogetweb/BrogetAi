@@ -66,8 +66,8 @@ export function Hero() {
               <span className="rounded-md bg-emerald-400/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/20">All open</span>
             </div>
             <ul className="divide-y divide-white/5 p-1.5">
-              {liveServices.map(({ group, item }, index) => (
-                <li key={item.slug} className="console-row" style={{ animationDelay: `${0.35 + index * 0.08}s` }}>
+              {liveServices.map(({ group, item }) => (
+                <li key={item.slug}>
                   <Link href={item.href} className="group flex items-center gap-4 rounded-xl px-3.5 py-3 hover:bg-white/5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/25 to-indigo-500/20 text-blue-200 ring-1 ring-white/10">
                       <ServiceIcon name={item.slug} />

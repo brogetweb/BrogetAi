@@ -95,9 +95,19 @@ export function SiteHeader() {
       </div>
       <p className="sr-only" aria-live="polite">{notice ? `Now on ${notice}` : ""}</p>
       <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
-        <Brand />
+        <div className="flex min-w-0 items-center gap-6 xl:gap-8">
+          <Brand />
 
-        <nav aria-label="Main navigation" className="hidden items-center gap-0.5 text-sm font-medium lg:flex" onMouseLeave={() => setMenu(null)}>
+          <nav aria-label="Main navigation" className="hidden items-center gap-0.5 text-sm font-medium xl:flex" onMouseLeave={() => setMenu(null)}>
+          <Link
+            href="/"
+            aria-current={home ? "page" : undefined}
+            onMouseEnter={() => setMenu(null)}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 xl:px-3 ${home ? "bg-slate-100 text-slate-950" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}
+          >
+            <HomeIcon className="h-4 w-4" />
+            Home
+          </Link>
           {menuGroups.map((group) => (
             <DesktopGroup
               key={group.id}
@@ -123,19 +133,10 @@ export function SiteHeader() {
               </Link>
             );
           })}
-        </nav>
+          </nav>
+        </div>
 
-        <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            aria-current={home ? "page" : undefined}
-            className={`hidden items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-semibold sm:inline-flex ${
-              home ? "border-slate-300 bg-slate-100 text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
-            }`}
-          >
-            <HomeIcon />
-            <span className="lg:max-xl:sr-only">Home</span>
-          </Link>
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href="/contact"
             className="hidden items-center gap-1.5 rounded-lg bg-gradient-to-b from-blue-600 to-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_16px_-6px_rgba(37,99,235,0.7),inset_0_1px_0_rgba(255,255,255,0.2)] hover:from-blue-500 hover:to-blue-600 sm:inline-flex"
@@ -145,7 +146,7 @@ export function SiteHeader() {
           </Link>
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-900 hover:bg-slate-50 lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-900 hover:bg-slate-50 xl:hidden"
             aria-expanded={open}
             aria-controls="mobile-nav"
             onClick={() => setOpen((value) => !value)}
@@ -159,7 +160,7 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <nav id="mobile-nav" aria-label="Mobile navigation" className="border-t border-slate-200 bg-white lg:hidden">
+        <nav id="mobile-nav" aria-label="Mobile navigation" className="border-t border-slate-200 bg-white xl:hidden">
           <div className="mx-auto flex max-h-[calc(100dvh-4.5rem)] max-w-7xl flex-col gap-2 overflow-y-auto px-5 py-4">
             <div className="grid grid-cols-2 gap-2">
               <Link href="/" onClick={() => setOpen(false)} className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900">
