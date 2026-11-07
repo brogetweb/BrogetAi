@@ -43,11 +43,11 @@ export const menuGroups: MenuGroup[] = [
     id: "payment",
     label: "Payment",
     headline: "Take money in. Send money out.",
-    lede: "A gateway, a payment link, and a payout rail for banks, wallets, and UPI.",
+    lede: "A gateway, pay-in collections, and a payout rail for banks, wallets, and UPI. Powered by BroGetPay.",
     items: [
-      { href: "https://gateway.brogetpay.com/", label: "Payment Gateway", text: "Accept secure online payments for purchases, subscriptions, and more.", image: "/images/home/home-gateway.jpg" },
-      { slug: "payment-link", href: "/services/payment-link", label: "Payment Link", text: "Send a link and collect the payment without a checkout page.", image: "/images/home/home-payment-link.jpg", soon: true },
-      { slug: "payout", href: "/services/payout", label: "PayOut", text: "Disburse payments to bank accounts, wallets, UPI, and cards.", image: "/images/home/home-payout.jpg", soon: true },
+      { href: "https://brogetpay.com/", label: "Payment Gateway", text: "Accept secure online payments for purchases, subscriptions, and more.", image: "/images/home/home-gateway.jpg" },
+      { href: "https://brogetpay.com/", label: "Pay In", text: "Collect payments by UPI QR, payment link, and bank transfer.", image: "/images/home/home-payment-link.jpg" },
+      { href: "https://brogetpay.com/", label: "PayOut", text: "Disburse payments to bank accounts, wallets, UPI, and cards.", image: "/images/home/home-payout.jpg" },
     ],
   },
   {

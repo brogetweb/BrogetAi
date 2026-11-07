@@ -30,7 +30,7 @@ export function Offerings() {
             </Reveal>
             <div className={`desk-stage mt-6 grid w-full gap-5 ${deskGrid(group.items.length)}`}>
               {group.items.map((item, index) => (
-                <Reveal key={item.href} className="h-full" delay={index * 0.08}>
+                <Reveal key={item.label} className="h-full" delay={index * 0.08}>
                   <DeskCard item={item} titleAs="h4" />
                 </Reveal>
               ))}

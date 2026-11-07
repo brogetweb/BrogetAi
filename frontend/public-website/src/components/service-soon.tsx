@@ -30,7 +30,7 @@ const notes: Record<string, [string, string][]> = {
 };
 
 export function ServiceSoon({ group, item }: { group: MenuGroup; item: MenuItem }) {
-  const others = group.items.filter((entry) => entry.href !== item.href);
+  const others = group.items.filter((entry) => entry.label !== item.label);
   const points = notes[group.id] ?? notes.products;
 
   return (
@@ -76,7 +76,7 @@ export function ServiceSoon({ group, item }: { group: MenuGroup; item: MenuItem 
             </div>
             <div className={`mt-6 grid w-full gap-5 ${deskGrid(others.length)}`}>
               {others.map((entry) => (
-                <DeskCard key={entry.href} item={entry} />
+                <DeskCard key={entry.label} item={entry} />
               ))}
             </div>
           </section>

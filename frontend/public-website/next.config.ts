@@ -4,7 +4,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/cibil", destination: "https://cibil.brogetai.com/", permanent: false },
-      { source: "/services/payment-gateway", destination: "https://gateway.brogetpay.com/", permanent: false },
+      { source: "/services/payment-gateway", destination: "https://brogetpay.com/", permanent: false },
+      { source: "/services/payment-link", destination: "https://brogetpay.com/", permanent: false },
+      { source: "/services/payout", destination: "https://brogetpay.com/", permanent: false },
       { source: "/services/builder-ships", destination: "https://www.builderbroget.com/", permanent: false },
     ];
   },

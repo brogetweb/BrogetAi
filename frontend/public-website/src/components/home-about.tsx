@@ -56,7 +56,7 @@ export function HomeAbout() {
           </ul>
           {open ? (
             <div className="mt-4">
-              <p className="text-sm leading-6 text-[#1d4ed8]">Most desks on this site are still coming soon. CIBIL, Payment Gateway, and Builder Ships are open now.</p>
+              <p className="text-sm leading-6 text-[#1d4ed8]">Most desks on this site are still coming soon. CIBIL, Payment Gateway, Pay In, PayOut, and Builder Ships are open now.</p>
               <Link href="/about" className="mt-3 inline-block text-sm font-semibold text-[#1d4ed8] underline decoration-[#1d4ed8]/40 underline-offset-4 hover:decoration-[#1d4ed8]">
                 Full about page
               </Link>

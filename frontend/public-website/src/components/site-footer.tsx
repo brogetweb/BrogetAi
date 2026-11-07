@@ -40,7 +40,7 @@ export function SiteFooter() {
               <h2 className="text-xs font-bold tracking-[0.16em] text-indigo-200 uppercase">{column.title}</h2>
               <div className="mt-3 flex flex-col items-start gap-1 text-sm">
                 {column.links.map((link) => (
-                  <Link key={link.href} href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="max-w-full rounded-lg py-1.5 text-slate-200 hover:text-white">
+                  <Link key={link.label} href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="max-w-full rounded-lg py-1.5 text-slate-200 hover:text-white">
                     {link.label}
                   </Link>
                 ))}

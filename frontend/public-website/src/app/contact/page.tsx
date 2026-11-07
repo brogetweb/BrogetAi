@@ -12,7 +12,7 @@ const notes = [
 const paths = [
   { title: "Travel", text: "Flights, trains, buses, and hotels.", href: "/#travel", image: "/images/home/home-flight.jpg" },
   { title: "Banking", text: "CIBIL, SIP, and FD & RD.", href: "/#banking", image: "/images/home/home-cibil.jpg" },
-  { title: "Payment", text: "Gateway, payment link, and payout.", href: "/#payment", image: "/images/home/home-gateway.jpg" },
+  { title: "Payment", text: "Gateway, pay in, and payout.", href: "/#payment", image: "/images/home/home-gateway.jpg" },
   { title: "Our Services", text: "Education, health, agriculture, and builder.", href: "/#products", image: "/images/home/home-education.jpg" },
 ];
 

@@ -49,7 +49,7 @@ export default function AboutPage() {
               </div>
               <div className={`mt-6 grid w-full gap-5 ${deskGrid(group.items.length)}`}>
                 {group.items.map((item) => (
-                  <DeskCard key={item.href} item={item} />
+                  <DeskCard key={item.label} item={item} />
                 ))}
               </div>
             </section>
