@@ -11,7 +11,7 @@ import 'booking_store.dart';
 import 'profile_store.dart';
 
 /// Live EC2 API (HTTP). Cleartext is allowed in AndroidManifest for device installs.
-const _prodBookApiBase = 'http://3.7.65.46/api/v1';
+const _prodBookApiBase = 'http://65.2.205.197/api/v1';
 
 String bookApiBase() {
   const fromEnv = String.fromEnvironment('BOOK_API_BASE');
