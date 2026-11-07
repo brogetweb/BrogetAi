@@ -8,7 +8,12 @@ async function bootstrap() {
   app.useBodyParser('urlencoded', { extended: true, limit: '8mb' });
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
-  app.enableCors({ origin: (process.env.CORS_ORIGINS ?? '').split(',').filter(Boolean), credentials: true });
+  const allowed = (process.env.CORS_ORIGINS ?? '').split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean);
+  const patterns = allowed.map((o) => new RegExp('^' + o.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$'));
+  app.enableCors({
+    origin: (origin, cb) => cb(null, !origin || patterns.some((p) => p.test(origin))),
+    credentials: true,
+  });
   app.set('trust proxy', 1);
   app.enableShutdownHooks();
   const port = Number(process.env.PORT ?? 3000);
