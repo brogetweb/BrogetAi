@@ -1,10 +1,9 @@
-const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api/v1").trim().replace(/\/+$/, "");
+const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1").trim().replace(/\/+$/, "");
 
-// An https site (Vercel) cannot call an http API — the browser blocks it as mixed content.
+// Prefer same-origin /api/v1 (Next rewrite → EC2). Direct http:// from an https page is blocked.
 if (typeof window !== "undefined" && window.location.protocol === "https:" && base.startsWith("http://")) {
   console.error(
-    `[agent-web] NEXT_PUBLIC_API_BASE_URL is "${base}" (http) but this site is https. Browsers block these calls. ` +
-      "Run agent-web over http (npm run dev) against http://65.2.205.197/api/v1, or put TLS on the API first.",
+    `[agent-web] NEXT_PUBLIC_API_BASE_URL is "${base}" (http) but this site is https. Use /api/v1 instead.`,
   );
 }
 
@@ -99,7 +98,7 @@ export function readStoredUser(): AgentAccount | null {
 function unreachableMessage() {
   if (typeof window === "undefined") return `API not reachable at ${base}.`;
   if (window.location.protocol === "https:" && base.startsWith("http://")) {
-    return `API not reachable: this site is https but the API URL is http (${base}). Run locally over http, or put TLS on the API first.`;
+    return `API not reachable: this site is https but the API URL is http (${base}). Set NEXT_PUBLIC_API_BASE_URL=/api/v1 and redeploy.`;
   }
   return `API not reachable at ${base}. Check your internet, or ask the admin to add ${window.location.origin} to the API's CORS_ORIGINS.`;
 }
