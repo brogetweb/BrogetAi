@@ -7,7 +7,7 @@ import { Agent, AgentDocument } from '../agents/schemas/agent.schema';
 import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto } from './dto/wallet.dto';
 import { HouseWallet, HouseWalletDocument } from './schemas/house-wallet.schema';
 import { WalletEntry, WalletEntryDocument } from './schemas/wallet-entry.schema';
-import { API_CHARGE_PAISE, API_FEE_PAISE, API_GST_PAISE, TEST_CREDIT_PAISE, paiseToRupees, rupeesToPaise } from './wallet.money';
+import { API_CHARGE_PAISE, API_FEE_PAISE, API_GST_PAISE, paiseToRupees, rupeesToPaise } from './wallet.money';
 
 /** Longer than the 30s provider timeout. */
 const CHECK_LOCK_MS = 60_000;
@@ -24,7 +24,6 @@ export class WalletService {
   ) {}
 
   async snapshot(agentId: string) {
-    await this.ensureTestCredit(agentId);
     const agent = await this.agents.findById(agentId);
     const balancePaise = agent?.walletBalancePaise ?? 0;
     const rows = await this.entries.find({ agentId }).sort({ createdAt: -1 }).limit(100);
@@ -40,25 +39,6 @@ export class WalletService {
       lowBalance: balancePaise < API_CHARGE_PAISE,
       entries: rows.map((row) => this.present(row)),
     };
-  }
-
-  private async ensureTestCredit(agentId: string) {
-    const enabled = (this.config.get<string>('WALLET_TEST_CREDIT') ?? 'true').trim().toLowerCase() !== 'false';
-    if (!enabled) return;
-    const updated = await this.agents.findOneAndUpdate(
-      { _id: agentId, testCreditApplied: { $ne: true } },
-      { $inc: { walletBalancePaise: TEST_CREDIT_PAISE }, $set: { testCreditApplied: true } },
-      { new: true },
-    );
-    if (!updated) return;
-    await this.entries.create({
-      agentId,
-      kind: 'topup',
-      amountPaise: TEST_CREDIT_PAISE,
-      status: 'success',
-      requestId: `TEST${agentId}`,
-      note: 'Test balance',
-    });
   }
 
   /**
