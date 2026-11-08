@@ -93,6 +93,7 @@ export class CreditService {
     });
     await this.customers.upsertFromCheck(this.customerFromCheck(agent, input, score, ok));
     if (!ok) throw new BadGatewayException(`${message.replace(/\.?\s*$/, '.')} No fee was charged.`);
+    if (score === null) return this.present(saved);
     try {
       await this.wallet.chargeApiHit(agent);
     } catch (error) {
