@@ -19,6 +19,7 @@ import { AirSearchDto } from './dto/air-search.dto';
 import { FlightCheckoutDto, FlightPayWebhookDto, FlightQuoteDto } from './dto/flight-checkout.dto';
 import { TicketPdfDto } from './dto/ticket-pdf.dto';
 import { BosFlightClient } from './bos-flight.client';
+import { WebhookSecretGuard } from '../wallet/webhook-secret.guard';
 import { FlightOrdersService } from './flight-orders.service';
 import { FlightsService } from './flights.service';
 
@@ -78,13 +79,15 @@ export class FlightsController {
     return this.orders.listForAdmin();
   }
 
-  @Post('pay/webhook')
+  @Post('pay/webhook/:secret')
+  @UseGuards(WebhookSecretGuard)
   @HttpCode(200)
   payWebhookPost(@Req() req: Request) {
     return this.handlePayWebhook(req);
   }
 
-  @Get('pay/webhook')
+  @Get('pay/webhook/:secret')
+  @UseGuards(WebhookSecretGuard)
   payWebhookGet(@Req() req: Request) {
     return this.handlePayWebhook(req);
   }

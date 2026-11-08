@@ -6,6 +6,7 @@ import { AccessPayload } from '../auth/auth.types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto } from './dto/wallet.dto';
 import { WalletService } from './wallet.service';
+import { WebhookSecretGuard } from './webhook-secret.guard';
 
 @Controller('wallet')
 export class WalletController {
@@ -43,12 +44,14 @@ export class WalletController {
     return this.wallet.createPayout(user.sub, body);
   }
 
-  @Post('payin/webhook')
+  @Post('payin/webhook/:secret')
+  @UseGuards(WebhookSecretGuard)
   payinWebhookPost(@Req() req: Request) {
     return this.handlePayinWebhook(req);
   }
 
-  @Get('payin/webhook')
+  @Get('payin/webhook/:secret')
+  @UseGuards(WebhookSecretGuard)
   payinWebhookGet(@Req() req: Request) {
     return this.handlePayinWebhook(req);
   }
@@ -66,7 +69,8 @@ export class WalletController {
     return this.wallet.payinWebhook(input);
   }
 
-  @Post('payout/webhook')
+  @Post('payout/webhook/:secret')
+  @UseGuards(WebhookSecretGuard)
   payoutWebhook(@Body() body: PayoutWebhookDto) {
     return this.wallet.payoutWebhook(body);
   }
