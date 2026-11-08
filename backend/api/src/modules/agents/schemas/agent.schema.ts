@@ -29,6 +29,9 @@ export class Agent {
 
   @Prop({ default: false })
   testCreditApplied?: boolean;
+
+  @Prop()
+  creditCheckLockedUntil?: Date;
 }
 
 export type AgentDocument = HydratedDocument<Agent>;

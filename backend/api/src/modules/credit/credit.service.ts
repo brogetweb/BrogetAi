@@ -1,4 +1,4 @@
-import { BadGatewayException, Injectable, NotFoundException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { BadGatewayException, Injectable, Logger, NotFoundException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
@@ -15,6 +15,8 @@ const consentMessage = 'I agree to share my data for verification purposes';
 
 @Injectable()
 export class CreditService {
+  private readonly logger = new Logger(CreditService.name);
+
   constructor(
     @InjectModel(CreditReport.name) private readonly reports: Model<CreditReportDocument>,
     @InjectModel(Agent.name) private readonly agents: Model<AgentDocument>,
@@ -29,8 +31,15 @@ export class CreditService {
     const registrationId = this.config.get<string>('AOPAY_REGISTRATION_ID')?.trim();
     const url = this.config.get<string>('AOPAY_CREDIT_REPORT_URL')?.trim();
     if (!registrationId || !url) throw new ServiceUnavailableException('Credit analytics is not configured.');
-    await this.wallet.chargeApiHit(agent);
+    await this.wallet.beginApiHit(agent);
+    try {
+      return await this.runCheck(agent, input, registrationId, url);
+    } finally {
+      await this.wallet.endApiHit(agent);
+    }
+  }
 
+  private async runCheck(agent: AgentDocument, input: CreateCreditReportDto, registrationId: string, url: string) {
     const payload = {
       FirstName: input.firstName,
       LastName: input.lastName,
@@ -59,10 +68,10 @@ export class CreditService {
       } catch {
         provider = { message: text.slice(0, 180) };
       }
-      ok = response.ok;
+      ok = response.ok && isProviderSuccess(provider);
     } catch {
       await this.customers.upsertFromCheck(this.customerFromCheck(agent, input, null, false));
-      throw new BadGatewayException('The credit report could not be reached.');
+      throw new BadGatewayException('The credit report could not be reached. No fee was charged.');
     }
 
     const message = readMessage(provider) || (ok ? 'Credit report ready.' : 'The credit report could not be prepared.');
@@ -83,7 +92,12 @@ export class CreditService {
       report: provider,
     });
     await this.customers.upsertFromCheck(this.customerFromCheck(agent, input, score, ok));
-    if (!ok) throw new BadGatewayException(message);
+    if (!ok) throw new BadGatewayException(`${message.replace(/\.?\s*$/, '.')} No fee was charged.`);
+    try {
+      await this.wallet.chargeApiHit(agent);
+    } catch (error) {
+      this.logger.error(`Report ${saved.id} is ready but agent ${agent.code} was not charged: ${String(error)}`);
+    }
     return this.present(saved);
   }
 
@@ -174,6 +188,27 @@ export class CreditService {
 function maskPan(pan: string) {
   if (pan.length < 6) return pan;
   return `${pan.slice(0, 5)}••••${pan.slice(-1)}`;
+}
+
+/**
+ * AO Pay answers HTTP 200 even when it refuses a request, e.g.
+ * {"message":"Account has been Deactivated...","Status":"402","result":null}.
+ * Any response carrying a score or data that is not explicitly refused counts as a success.
+ */
+export function isProviderSuccess(value: unknown) {
+  if (findScore(value)) return true;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return true;
+  const record = value as Record<string, unknown>;
+  const status = record.Status ?? record.status;
+  if (typeof status === 'boolean' && !status) return false;
+  if (typeof status === 'string' || typeof status === 'number') {
+    const text = String(status).trim().toLowerCase();
+    if (text === 'false' || text === 'failed' || text === 'failure' || text === 'error' || Number(text) >= 400) return false;
+  }
+  for (const key of ['result', 'Result']) {
+    if (key in record && (record[key] === null || record[key] === '')) return false;
+  }
+  return true;
 }
 
 function readMessage(value: unknown) {

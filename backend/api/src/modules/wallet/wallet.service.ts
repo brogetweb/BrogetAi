@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { BadGatewayException, HttpException, HttpStatus, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadGatewayException, ConflictException, HttpException, HttpStatus, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -8,6 +8,9 @@ import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto } fr
 import { HouseWallet, HouseWalletDocument } from './schemas/house-wallet.schema';
 import { WalletEntry, WalletEntryDocument } from './schemas/wallet-entry.schema';
 import { API_CHARGE_PAISE, API_FEE_PAISE, API_GST_PAISE, TEST_CREDIT_PAISE, paiseToRupees, rupeesToPaise } from './wallet.money';
+
+/** Longer than the 30s provider timeout. */
+const CHECK_LOCK_MS = 60_000;
 
 @Injectable()
 export class WalletService {
@@ -58,23 +61,40 @@ export class WalletService {
     });
   }
 
-  async chargeApiHit(agent: AgentDocument) {
-    const updated = await this.agents.findOneAndUpdate(
-      { _id: agent._id, $expr: { $gte: [{ $ifNull: ['$walletBalancePaise', 0] }, API_CHARGE_PAISE] } },
-      { $inc: { walletBalancePaise: -API_CHARGE_PAISE } },
-      { new: true },
+  /**
+   * Run before calling the provider. Moves no money: it confirms the wallet can pay and allows
+   * one check per agent at a time, so parallel checks cannot both pass on a balance that covers one.
+   * The lock expires by itself if the process dies mid-check.
+   */
+  async beginApiHit(agent: AgentDocument) {
+    const now = new Date();
+    const held = await this.agents.findOneAndUpdate(
+      {
+        _id: agent._id,
+        $expr: { $gte: [{ $ifNull: ['$walletBalancePaise', 0] }, API_CHARGE_PAISE] },
+        $or: [{ creditCheckLockedUntil: { $exists: false } }, { creditCheckLockedUntil: { $lte: now } }],
+      },
+      { $set: { creditCheckLockedUntil: new Date(now.getTime() + CHECK_LOCK_MS) } },
     );
-    if (!updated) {
+    if (held) return;
+    const current = await this.agents.findById(agent._id);
+    const balancePaise = current?.walletBalancePaise ?? 0;
+    if (balancePaise < API_CHARGE_PAISE) {
       throw new HttpException(
-        {
-          message: 'Low balance',
-          code: 'LOW_BALANCE',
-          balance: paiseToRupees(agent.walletBalancePaise ?? 0),
-          required: paiseToRupees(API_CHARGE_PAISE),
-        },
+        { message: 'Low balance', code: 'LOW_BALANCE', balance: paiseToRupees(balancePaise), required: paiseToRupees(API_CHARGE_PAISE) },
         HttpStatus.PAYMENT_REQUIRED,
       );
     }
+    throw new ConflictException('A credit check is already running. Please wait for it to finish.');
+  }
+
+  async endApiHit(agent: AgentDocument) {
+    await this.agents.updateOne({ _id: agent._id }, { $unset: { creditCheckLockedUntil: 1 } });
+  }
+
+  /** Run only after a report has arrived. The report is already paid for, so this always deducts. */
+  async chargeApiHit(agent: AgentDocument) {
+    await this.agents.updateOne({ _id: agent._id }, { $inc: { walletBalancePaise: -API_CHARGE_PAISE } });
     const requestId = `USE${randomBytes(8).toString('hex')}`;
     await this.entries.create({
       agentId: String(agent._id),
@@ -97,7 +117,6 @@ export class WalletService {
       requestId: `FEE${requestId}`,
       note: `Credit check · ${agent.name}`,
     });
-    return updated.walletBalancePaise ?? 0;
   }
 
   async houseSnapshot() {
