@@ -32,6 +32,17 @@ export class WalletEntry {
 
   @Prop({ trim: true })
   utr?: string;
+
+  /** Payment gateway order id (Razorpay order_...). */
+  @Prop({ trim: true, index: true, sparse: true })
+  gatewayOrderId?: string;
+
+  @Prop({ trim: true })
+  gatewayPaymentId?: string;
+
+  /** Payer mobile, used to prefill checkout. */
+  @Prop({ trim: true })
+  mobile?: string;
 }
 
 export type WalletEntryDocument = HydratedDocument<WalletEntry>;

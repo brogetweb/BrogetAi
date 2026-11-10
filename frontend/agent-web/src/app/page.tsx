@@ -21,7 +21,7 @@ const steps = [
   { title: "Get your login", copy: "Your Super Admin creates your agent account - the same email and password as the mobile app.", icon: <IconLock size={18} /> },
   { title: "Add money", copy: "Top up your Broget Pay wallet over UPI from ₹300. Balance updates once payment confirms.", icon: <IconWallet size={18} /> },
   { title: "Add a customer", copy: "Save PAN, date of birth, mobile and email once to your shared customer book.", icon: <IconUsers size={18} /> },
-  { title: "Run the check", copy: "Capture consent and OTP, see the score instantly and download the PDF report.", icon: <IconGauge size={18} /> },
+  { title: "Run the check", copy: "Capture consent, see the score instantly and download the PDF report.", icon: <IconGauge size={18} /> },
 ];
 
 const faqs = [
@@ -29,7 +29,7 @@ const faqs = [
   ["How am I charged for a CIBIL check?", "Each check deducts one flat fee plus GST from your Broget Pay wallet. The exact amount is shown on your dashboard before you run a check."],
   ["Is my data shared with the mobile app?", "Yes. Customers, wallet balance and report history are the same on web and mobile - work wherever is convenient."],
   ["What happens if a payment is pending?", "Your balance only changes once Broget Pay confirms the payment. Use Refresh on the dashboard after you finish paying."],
-  ["Is customer consent required?", "Always. A check can only run after the customer accepts consent and an OTP is entered."],
+  ["Is customer consent required?", "Always. A check can only run after the customer accepts consent."],
 ];
 
 export default function LandingPage() {
@@ -107,7 +107,7 @@ export default function LandingPage() {
               className="md:col-span-4"
               icon={<IconGauge size={18} />}
               title="Instant CIBIL with clear score bands"
-              copy="Consent, OTP and score in one guided flow. Poor, Fair, Good or Excellent - a result your customer understands at a glance."
+              copy="Consent and score in one guided flow. Poor, Fair, Good or Excellent - a result your customer understands at a glance."
             >
               <div className="grid items-center gap-6 sm:grid-cols-[1fr_1.1fr]">
                 <div className="pt-4">
@@ -219,7 +219,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {[
-                { icon: <IconShield size={18} />, title: "Consent-first", copy: "No check runs without customer consent and OTP." },
+                { icon: <IconShield size={18} />, title: "Consent-first", copy: "No check runs without customer consent." },
                 { icon: <IconLock size={18} />, title: "Secure sessions", copy: "Token-based sign-in tied to your agent account." },
                 { icon: <IconWallet size={18} />, title: "Transparent ledger", copy: "Every top-up and deduction, line by line." },
                 { icon: <IconFile size={18} />, title: "Report history", copy: "Re-download any past PDF in one click." },
@@ -400,7 +400,7 @@ function HeroVisual() {
         </span>
         <div>
           <p className="text-xs font-semibold text-ink">Consent captured</p>
-          <p className="text-[11px] text-subtle">OTP verified</p>
+          <p className="text-[11px] text-subtle">Consent captured</p>
         </div>
       </div>
     </div>

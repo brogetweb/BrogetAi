@@ -74,7 +74,7 @@ class _CibilScreenState extends State<CibilScreen> {
             const SizedBox(height: 16),
             const Text('Check CIBIL Report', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: dashNavy)),
             const SizedBox(height: 4),
-            const Text('CIBIL Broget uses the customer’s name, mobile, date of birth, email, and PAN. Consent and OTP are required. The ₹61.36 fee is taken from the Broget Pay wallet.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
+            const Text('CIBIL Broget uses the customer’s name, mobile, gender, and PAN. Customer consent is required. The ₹61.36 fee is taken from your wallet.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 13, height: 1.35)),
             if (store.lowBalance) ...[
               const SizedBox(height: 12),
               const LowBalanceBanner(),

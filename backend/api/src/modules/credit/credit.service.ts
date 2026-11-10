@@ -1,4 +1,4 @@
-import { BadGatewayException, Injectable, Logger, NotFoundException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { BadGatewayException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
@@ -6,12 +6,11 @@ import { Model } from 'mongoose';
 import { Agent, AgentDocument } from '../agents/schemas/agent.schema';
 import { AccessPayload } from '../auth/auth.types';
 import { CustomersService } from '../customers/customers.service';
+import { AopayCibilClient } from './aopay-cibil.client';
 import { buildCreditReportPdf } from './credit-report.pdf';
 import { CreateCreditReportDto } from './dto/create-credit-report.dto';
 import { CreditReport, CreditReportDocument } from './schemas/credit-report.schema';
 import { WalletService } from '../wallet/wallet.service';
-
-const consentMessage = 'I agree to share my data for verification purposes';
 
 @Injectable()
 export class CreditService {
@@ -23,59 +22,31 @@ export class CreditService {
     private readonly config: ConfigService,
     private readonly customers: CustomersService,
     private readonly wallet: WalletService,
+    private readonly cibil: AopayCibilClient,
   ) {}
 
   async create(user: AccessPayload, input: CreateCreditReportDto) {
     const agent = await this.agents.findById(user.sub);
     if (!agent || agent.status !== 'active') throw new UnauthorizedException('Sign in again.');
-    const registrationId = this.config.get<string>('AOPAY_REGISTRATION_ID')?.trim();
-    const url = this.config.get<string>('AOPAY_CREDIT_REPORT_URL')?.trim();
-    if (!registrationId || !url) throw new ServiceUnavailableException('Credit analytics is not configured.');
+    this.cibil.registrationId(); // fail fast (503) before touching the wallet when CIBIL is not configured
     await this.wallet.beginApiHit(agent);
     try {
-      return await this.runCheck(agent, input, registrationId, url);
+      return await this.runCheck(agent, input);
     } finally {
       await this.wallet.endApiHit(agent);
     }
   }
 
-  private async runCheck(agent: AgentDocument, input: CreateCreditReportDto, registrationId: string, url: string) {
-    const payload = {
-      FirstName: input.firstName,
-      LastName: input.lastName,
-      MobileNumber: input.mobile,
-      DateOfBirth: input.dateOfBirth,
-      EmailID: input.email,
-      PanNumber: input.pan,
-      OTP: input.otp,
-      ConsentMessage: consentMessage,
-      ConsentAcceptance: 'Yes',
-      RegistrationID: registrationId,
-    };
-
-    let provider: unknown;
-    let ok = false;
+  private async runCheck(agent: AgentDocument, input: CreateCreditReportDto) {
+    let result;
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30000),
-      });
-      const text = await response.text();
-      try {
-        provider = text ? JSON.parse(text) : {};
-      } catch {
-        provider = { message: text.slice(0, 180) };
-      }
-      ok = response.ok && isProviderSuccess(provider);
-    } catch {
+      result = await this.cibil.fetchReport({ firstName: input.firstName, lastName: input.lastName, phone: input.mobile, gender: input.gender, pan: input.pan });
+    } catch (error) {
       await this.customers.upsertFromCheck(this.customerFromCheck(agent, input, null, false));
-      throw new BadGatewayException('The credit report could not be reached. No fee was charged.');
+      throw error;
     }
-
-    const message = readMessage(provider) || (ok ? 'Credit report ready.' : 'The credit report could not be prepared.');
-    const score = ok ? findScore(provider) : null;
+    const { ok, message, reportUrl } = result;
+    const score = ok ? findScore(result.body) : null;
     const saved = await this.reports.create({
       agentId: agent.code,
       agentName: agent.name,
@@ -85,15 +56,18 @@ export class CreditService {
       email: input.email,
       panMasked: maskPan(input.pan),
       dateOfBirth: input.dateOfBirth,
+      gender: input.gender,
       consentAcceptance: 'Yes',
       status: ok ? 'ready' : 'failed',
       score: score ?? undefined,
+      reportUrl: reportUrl || undefined,
       message,
-      report: provider,
+      report: result.body,
     });
     await this.customers.upsertFromCheck(this.customerFromCheck(agent, input, score, ok));
     if (!ok) throw new BadGatewayException(`${message.replace(/\.?\s*$/, '.')} No fee was charged.`);
-    if (score === null) return this.present(saved);
+    // A report was delivered (score and/or full-report link), so the check is paid for.
+    if (score === null && !reportUrl) return this.present(saved);
     try {
       await this.wallet.chargeApiHit(agent);
     } catch (error) {
@@ -180,6 +154,8 @@ export class CreditService {
       dateOfBirth: row.dateOfBirth,
       status: row.status,
       score: row.score ?? null,
+      gender: row.gender ?? null,
+      reportUrl: row.reportUrl ?? null,
       message: row.message,
       createdAt: row.get('createdAt'),
     };
@@ -189,39 +165,6 @@ export class CreditService {
 function maskPan(pan: string) {
   if (pan.length < 6) return pan;
   return `${pan.slice(0, 5)}••••${pan.slice(-1)}`;
-}
-
-/**
- * AO Pay answers HTTP 200 even when it refuses a request, e.g.
- * {"message":"Account has been Deactivated...","Status":"402","result":null}.
- * Any response carrying a score or data that is not explicitly refused counts as a success.
- */
-export function isProviderSuccess(value: unknown) {
-  if (findScore(value)) return true;
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return true;
-  const record = value as Record<string, unknown>;
-  const status = record.Status ?? record.status;
-  if (typeof status === 'boolean' && !status) return false;
-  if (typeof status === 'string' || typeof status === 'number') {
-    const text = String(status).trim().toLowerCase();
-    if (text === 'false' || text === 'failed' || text === 'failure' || text === 'error' || Number(text) >= 400) return false;
-  }
-  for (const key of ['result', 'Result']) {
-    if (key in record && (record[key] === null || record[key] === '')) return false;
-  }
-  return true;
-}
-
-function readMessage(value: unknown) {
-  if (!value || typeof value !== 'object') return '';
-  const record = value as Record<string, unknown>;
-  const direct = record.message ?? record.returnMessage;
-  if (typeof direct === 'string') return direct;
-  const status = record.status;
-  if (status && typeof status === 'object' && typeof (status as { message?: unknown }).message === 'string') {
-    return (status as { message: string }).message;
-  }
-  return '';
 }
 
 function findScore(value: unknown, depth = 0): number | null {
@@ -235,7 +178,7 @@ function findScore(value: unknown, depth = 0): number | null {
   }
   if (!value || typeof value !== 'object') return null;
   const record = value as Record<string, unknown>;
-  for (const key of ['BureauScore', 'bureauScore', 'credit_score', 'CreditScore', 'cibil_score', 'CibilScore', 'score', 'Score']) {
+  for (const key of ['BureauScore', 'bureauScore', 'credit_score', 'CreditScore', 'cibil_score', 'CibilScore', 'riskScore', 'RiskScore', 'scoreValue', 'ScoreValue', 'score', 'Score']) {
     const parsed = scoreNumber(record[key]);
     if (parsed) return parsed;
   }

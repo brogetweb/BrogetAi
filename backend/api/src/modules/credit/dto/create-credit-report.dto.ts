@@ -1,4 +1,4 @@
-import { Equals, IsEmail, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { Equals, IsEmail, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateCreditReportDto {
@@ -29,9 +29,18 @@ export class CreateCreditReportDto {
   @Matches(/^[A-Z]{5}\d{4}[A-Z]$/, { message: 'Enter a valid PAN.' })
   pan: string;
 
-  @Transform(({ value }) => String(value ?? '').trim())
-  @Matches(/^\d{4,6}$/, { message: 'Enter the OTP shared with the customer.' })
-  otp: string;
+  /** Required by the AO Pay V2 Hybrid CIBIL API. */
+  @Transform(({ value }) => {
+    const text = String(value ?? '').trim().toLowerCase();
+    return text === 'male' || text === 'm' ? 'Male' : text === 'female' || text === 'f' ? 'Female' : value;
+  })
+  @IsIn(['Male', 'Female'], { message: 'Select the customer gender.' })
+  gender: 'Male' | 'Female';
+
+  /** No longer sent to AO Pay (V2 has no OTP); accepted so older app builds keep working. */
+  @IsOptional()
+  @IsString()
+  otp?: string;
 
   @Equals('Yes', { message: 'The customer must accept consent before a credit analytics report.' })
   consentAcceptance: 'Yes';

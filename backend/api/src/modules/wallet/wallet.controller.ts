@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Logger, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Logger, Param, Post, RawBodyRequest, Req, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AccessTokenGuard } from '../auth/access-token.guard';
 import { AgentTokenGuard } from '../auth/agent-token.guard';
 import { AccessPayload } from '../auth/auth.types';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto } from './dto/wallet.dto';
+import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto, VerifyRazorpayDto } from './dto/wallet.dto';
 import { WalletService } from './wallet.service';
 import { WebhookSecretGuard } from './webhook-secret.guard';
 
@@ -36,6 +36,32 @@ export class WalletController {
   @UseGuards(AgentTokenGuard)
   topup(@CurrentUser() user: AccessPayload, @Body() body: CreateTopupDto) {
     return this.wallet.createTopup(user.sub, body);
+  }
+
+  @Post('topups/:requestId/check')
+  @UseGuards(AgentTokenGuard)
+  checkTopup(@CurrentUser() user: AccessPayload, @Param('requestId') requestId: string) {
+    return this.wallet.checkTopup(user.sub, requestId);
+  }
+
+  /** Razorpay Checkout success handler (agent web dialog and hosted page). Signature-checked. */
+  @Post('razorpay/verify')
+  @HttpCode(200)
+  verifyRazorpay(@Body() body: VerifyRazorpayDto) {
+    return this.wallet.verifyRazorpay(body);
+  }
+
+  /** Razorpay webhook. Set RAZORPAY_WEBHOOK_SECRET to the secret entered in the Razorpay dashboard. */
+  @Post('razorpay/webhook')
+  @HttpCode(200)
+  razorpayWebhook(@Req() req: RawBodyRequest<Request>) {
+    return this.wallet.razorpayWebhook(req.rawBody, req.header('x-razorpay-signature') ?? undefined, (req.body ?? {}) as Record<string, unknown>);
+  }
+
+  /** Hosted Razorpay checkout page opened by the agent mobile app. */
+  @Get('razorpay/pay/:requestId')
+  async razorpayPay(@Param('requestId') requestId: string, @Res() res: Response) {
+    res.type('html').send(await this.wallet.razorpayPayPage(requestId));
   }
 
   @Post('payouts')

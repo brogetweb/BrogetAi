@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Agent, AgentSchema } from '../agents/schemas/agent.schema';
 import { AuthModule } from '../auth/auth.module';
 import { CustomersModule } from '../customers/customers.module';
+import { AopayCibilClient } from './aopay-cibil.client';
 import { CreditController } from './credit.controller';
 import { CreditService } from './credit.service';
 import { CreditReport, CreditReportSchema } from './schemas/credit-report.schema';
@@ -19,6 +20,6 @@ import { WalletModule } from '../wallet/wallet.module';
     ]),
   ],
   controllers: [CreditController],
-  providers: [CreditService],
+  providers: [CreditService, AopayCibilClient],
 })
 export class CreditModule {}

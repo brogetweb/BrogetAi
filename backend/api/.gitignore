@@ -2,3 +2,7 @@ node_modules
 dist
 .env
 *.tsbuildinfo
+
+# AO Pay CIBIL API logs and server key pair
+logs/
+keys/

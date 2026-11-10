@@ -13,7 +13,7 @@ class HelpSupportPage extends StatelessWidget {
         _Intro(icon: Icons.headset_mic_outlined, wash: Color(0xFFEAF1FF), color: dashBlue, title: 'How can we help?', body: 'Answers for the desk tools you use every day. Records stay on this device.'),
         SizedBox(height: 14),
         _Faq(question: 'How do I add a customer?', answer: 'Enter the first name, last name, mobile, date of birth, email, and PAN. Those details are used for the credit report. The fee comes out of the Broget Pay wallet.'),
-        _Faq(question: 'How do I check a credit analytics report?', answer: 'Open CIBIL Check, select the customer, confirm consent, enter the OTP, then print or download the PDF.'),
+        _Faq(question: 'How do I check a credit analytics report?', answer: 'Open CIBIL Check, select the customer, choose gender, confirm consent, then view the full report or download the PDF.'),
         // _Faq(question: 'Where do KYC documents go?', answer: 'KYC & Documents keeps Aadhaar, PAN, selfie, and address proof on this device. Submit for Verification moves the file to step 2.'),
         _Faq(question: 'How do I update my profile?', answer: 'Open Profile and tap Edit Profile. You can change your name, mobile number, and email. Agent ID and company stay fixed.'),
         SizedBox(height: 8),

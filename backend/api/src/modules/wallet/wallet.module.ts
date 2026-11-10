@@ -5,6 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { HouseWallet, HouseWalletSchema } from './schemas/house-wallet.schema';
 import { WalletEntry, WalletEntrySchema } from './schemas/wallet-entry.schema';
 import { WalletController } from './wallet.controller';
+import { RazorpayClient } from './razorpay.client';
 import { WalletService } from './wallet.service';
 
 @Module({
@@ -17,7 +18,7 @@ import { WalletService } from './wallet.service';
     ]),
   ],
   controllers: [WalletController],
-  providers: [WalletService],
+  providers: [WalletService, RazorpayClient],
   exports: [WalletService],
 })
 export class WalletModule {}

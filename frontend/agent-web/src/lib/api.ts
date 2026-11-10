@@ -207,12 +207,18 @@ export type TopupResult = {
   paymentUrl: string;
   checkoutUrl?: string;
   upiUrl?: string;
+  provider?: string;
+  /** Razorpay public key id, order id and amount for Checkout. */
+  keyId?: string;
+  orderId?: string;
+  amountPaise?: number;
+  mobile?: string;
   status?: string;
 };
 
 /** Same rules the backend DTO and the agent mobile app enforce. */
 export function validateTopup(amount: number, mobile: string): string | null {
-  if (!Number.isFinite(amount) || amount < 300) return "Broget Pay accepts ₹300 or more.";
+  if (!Number.isFinite(amount) || amount < 300) return "Top-up accepts ₹300 or more.";
   if (amount > 500000) return "The most you can add in one payment is ₹5,00,000.";
   if (Math.round(amount * 100) !== amount * 100) return "Use at most 2 decimal places.";
   if (!/^[6-9]\d{9}$/.test(mobile)) return "Enter a 10-digit mobile number.";
@@ -232,15 +238,31 @@ export async function createTopup(amount: number, mobile: string) {
     });
   } catch (error) {
     if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
-      throw new Error("Broget Pay is taking too long. Check the wallet ledger before trying again.");
+      throw new Error("Razorpay is taking too long. Check the wallet ledger before trying again.");
     }
     throw error instanceof Error ? error : new Error(unreachableMessage());
   }
   if (response.status === 401) throw new Error("Your session expired. Sign in again.");
   if (!response.ok) throw new Error(await readError(response, "Could not start top-up."));
   const body = (await response.json()) as TopupResult;
-  if (!body.paymentUrl) throw new Error("Broget Pay did not return a payment link.");
+  if (!body.orderId || !body.keyId) throw new Error("Razorpay did not return an order.");
   return body;
+}
+
+/** POST /wallet/topups/:id/check - asks Razorpay for the latest status of this top-up. */
+export async function checkTopup(requestId: string) {
+  const response = await authorized(`/wallet/topups/${encodeURIComponent(requestId)}/check`, { method: "POST" });
+  if (!response.ok) throw new Error(await readError(response, "Could not check the payment."));
+  return (await response.json()) as { id: string; status: string; note?: string };
+}
+
+export type RazorpaySuccess = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
+
+/** POST /wallet/razorpay/verify - hands the signed Checkout result to the server, which confirms with Razorpay. */
+export async function verifyRazorpayPayment(requestId: string, result: RazorpaySuccess) {
+  const response = await authorized("/wallet/razorpay/verify", { method: "POST", body: JSON.stringify({ requestId, ...result }) });
+  if (!response.ok) throw new Error(await readError(response, "Could not confirm the payment."));
+  return (await response.json()) as { id: string; status: string; note?: string; utr?: string };
 }
 
 export async function listCustomers() {
@@ -275,14 +297,14 @@ export async function requestCreditReport(input: {
   dateOfBirth: string;
   email: string;
   pan: string;
-  otp: string;
+  gender: "Male" | "Female";
 }) {
   const response = await authorized("/credit-reports", {
     method: "POST",
     body: JSON.stringify({ ...input, consentAcceptance: "Yes" }),
   });
   if (!response.ok) throw new Error(await readError(response, "CIBIL check failed."));
-  return (await response.json()) as { id: string; name: string; message: string; score: number | null };
+  return (await response.json()) as { id: string; name: string; message: string; score: number | null; reportUrl?: string | null };
 }
 
 export async function fetchCreditPdf(id: string) {

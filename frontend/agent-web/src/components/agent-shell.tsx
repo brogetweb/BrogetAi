@@ -7,6 +7,8 @@ import { createPortal } from "react-dom";
 import {
   AgentAccount,
   createCustomer,
+  checkTopup,
+  verifyRazorpayPayment,
   createTopup,
   Customer,
   CreditCheck,
@@ -22,7 +24,6 @@ import {
   walletSnapshot,
   WalletSnapshot,
 } from "@/lib/api";
-import QRCode from "qrcode";
 import {
   IconAlert,
   IconArrowDown,
@@ -69,10 +70,6 @@ function money(n: number) {
 function shortDate(value?: string) {
   if (!value) return "-";
   return new Date(value).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
-}
-
-function randomOtp() {
-  return String(100000 + Math.floor(Math.random() * 900000));
 }
 
 function greeting() {
@@ -652,7 +649,7 @@ function HomeTab({
       {/* ===== Quick actions ===== */}
       <div className="grid gap-3 sm:grid-cols-3">
         {[
-          { label: "Run a CIBIL check", hint: "Consent, OTP and instant score", icon: <IconGauge size={20} />, onClick: () => startCheck(), grad: "from-emerald-500 to-teal-600", glow: "group-hover:shadow-emerald-500/20" },
+          { label: "Run a CIBIL check", hint: "Consent and instant score", icon: <IconGauge size={20} />, onClick: () => startCheck(), grad: "from-emerald-500 to-teal-600", glow: "group-hover:shadow-emerald-500/20" },
           { label: "Add a customer", hint: "Save PAN, DOB and contact", icon: <IconUsers size={20} />, onClick: () => go("customers"), grad: "from-blue-500 to-indigo-600", glow: "group-hover:shadow-blue-500/20" },
           { label: "Download reports", hint: "View or save past PDFs", icon: <IconDownload size={20} />, onClick: () => go("checks"), grad: "from-violet-500 to-fuchsia-600", glow: "group-hover:shadow-violet-500/20" },
         ].map((action) => (
@@ -812,7 +809,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
       <PageHeader
         title="Wallet"
         icon={<IconWallet size={22} />}
-        description="Top up Broget Pay and track every credit and debit."
+        description="Top up with Razorpay and track every credit and debit."
         actions={
           <button type="button" onClick={() => void reload()} className="btn btn-secondary">
             <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> Refresh
@@ -836,7 +833,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
       <div className="grid gap-4 lg:grid-cols-[minmax(0,420px)_1fr]">
         <form onSubmit={topup} className="card h-fit p-6">
           <h3 className="text-base font-semibold">Add money</h3>
-          <p className="mt-1 text-sm text-muted">Pay with any UPI app. Your balance updates once Broget Pay confirms the payment.</p>
+          <p className="mt-1 text-sm text-muted">Pay with UPI, cards, net banking or wallets. Your balance updates as soon as Razorpay confirms the payment.</p>
 
           <label className="mt-5 block">
             <span className="field-label">Amount</span>
@@ -887,8 +884,8 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
           </label>
 
           <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-[13px] leading-5 text-amber-900">
-            <p className="font-semibold">Broget Pay</p>
-            <p className="mt-1">UPI, QR, net banking and cards are collected by Broget Pay. This wallet updates only after Broget Pay confirms the payment.</p>
+            <p className="font-semibold">Razorpay secure checkout</p>
+            <p className="mt-1">The Razorpay window opens on this page. This wallet updates only after Razorpay confirms the payment.</p>
           </div>
 
           {error ? (
@@ -908,7 +905,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
             )}
           </button>
           <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-subtle">
-            <IconShield size={14} /> Secured by Broget Pay · UPI
+            <IconShield size={14} /> Secured by Razorpay
           </p>
         </form>
 
@@ -934,8 +931,8 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
           <ol className="mt-3 grid gap-3 sm:grid-cols-3">
             {[
               ["Enter amount", "Minimum ₹300 and a UPI mobile number."],
-              ["Pay with UPI", "Scan the QR or open your UPI app."],
-              ["Balance updates", "Once Broget Pay confirms the payment."],
+              ["Pay securely", "UPI, card, net banking or wallet in the Razorpay window."],
+              ["Balance updates", "Instantly, once Razorpay confirms."],
             ].map(([t, d], i) => (
               <li key={t} className="rounded-xl border border-line bg-soft/60 p-3.5">
                 <span className="grid h-6 w-6 place-items-center rounded-full bg-ink text-[11px] font-semibold text-white">{i + 1}</span>
@@ -950,7 +947,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
       <LedgerTable entries={wallet?.entries ?? null} loading={loading} notify={notify} />
 
       {payment ? (
-        <PayDialog
+        <RazorpayPayDialog
           amount={payment.amount}
           link={payment.link}
           walletState={walletState}
@@ -965,14 +962,46 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
   );
 }
 
-const PAY_WINDOW_SECONDS = 5 * 60;
+const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
+const RZP_BLUE = "#0b5cff";
+
+type RazorpayHandlerResult = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
+type RazorpayInstance = { open: () => void; on: (event: string, cb: (payload: { error?: { description?: string } }) => void) => void };
+type RazorpayCtor = new (options: Record<string, unknown>) => RazorpayInstance;
+
+let razorpayLoader: Promise<RazorpayCtor> | null = null;
+
+/** Loads Razorpay Checkout once per page. */
+function loadRazorpay(): Promise<RazorpayCtor> {
+  const existing = (window as unknown as { Razorpay?: RazorpayCtor }).Razorpay;
+  if (existing) return Promise.resolve(existing);
+  if (!razorpayLoader) {
+    razorpayLoader = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = RAZORPAY_SCRIPT;
+      script.async = true;
+      script.onload = () => {
+        const ctor = (window as unknown as { Razorpay?: RazorpayCtor }).Razorpay;
+        if (ctor) resolve(ctor);
+        else reject(new Error("Razorpay did not load."));
+      };
+      script.onerror = () => {
+        razorpayLoader = null;
+        reject(new Error("Could not load Razorpay. Check your internet connection."));
+      };
+      document.body.appendChild(script);
+    });
+  }
+  return razorpayLoader;
+}
+
+type PayPhase = "ready" | "open" | "verifying" | "paid" | "failed" | "cancelled";
 
 /**
- * Web version of PayinWaitingPage from the agent mobile app:
- * QR of the Broget Pay UPI link + checkout link, then wait for Broget Pay to confirm.
- * The wallet entry id is the top-up requestId, so we track this exact payment.
+ * Razorpay Checkout for a wallet top-up. The Razorpay window opens over this dialog; its signed result goes to
+ * /wallet/razorpay/verify, and the server credits the wallet only after Razorpay reports the payment captured.
  */
-function PayDialog({
+function RazorpayPayDialog({
   amount,
   link,
   walletState,
@@ -986,143 +1015,225 @@ function PayDialog({
   onClose: () => void;
 }) {
   const { wallet, reload } = walletState;
-  const [qr, setQr] = useState<string | null>(null);
-  const [qrFailed, setQrFailed] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(PAY_WINDOW_SECONDS);
+  const [phase, setPhase] = useState<PayPhase>("ready");
+  const [message, setMessage] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const autoOpened = useRef(false);
   const announced = useRef(false);
 
   const entry = wallet?.entries.find((row) => row.id === link.requestId);
-  const status = (entry?.status || link.status || "pending").toLowerCase();
-  const paid = status === "success";
-  const failed = status === "failed";
-  const expired = secondsLeft <= 0;
-  const waiting = !paid && !failed && !expired;
-  const upi = link.upiUrl || "";
-  const checkout = link.checkoutUrl || "";
+  const ledgerStatus = (entry?.status || "").toLowerCase();
+  const view: PayPhase = ledgerStatus === "success" ? "paid" : phase;
+  const done = view === "paid";
 
-  useEffect(() => {
-    if (!upi) return;
-    QRCode.toDataURL(upi, { width: 480, margin: 1, errorCorrectionLevel: "M", color: { dark: "#0a1020", light: "#ffffff" } })
-      .then(setQr)
-      .catch(() => setQrFailed(true));
-  }, [upi]);
+  const settle = useCallback(
+    (status: string | undefined) => {
+      if (status === "success") setPhase("paid");
+      void reload();
+    },
+    [reload],
+  );
 
-  // 5-minute payment window, same as the mobile app.
-  useEffect(() => {
-    if (!waiting) return;
-    const timer = window.setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
-    return () => window.clearInterval(timer);
-  }, [waiting]);
-
-  // Poll the wallet until Broget Pay confirms (webhook) or marks the payment failed.
-  useEffect(() => {
-    if (!waiting) return;
-    const poll = window.setInterval(() => void reload(), 5000);
-    return () => window.clearInterval(poll);
-  }, [waiting, reload]);
-
-  useEffect(() => {
-    if (announced.current) return;
-    if (paid) {
-      announced.current = true;
-      notify(true, "Payment received", `${money(amount)} added to your wallet.`);
-    } else if (failed) {
-      announced.current = true;
-      notify(false, "Payment failed", entry?.note || "Broget Pay marked the payment failed.");
+  const openCheckout = useCallback(async () => {
+    setMessage(null);
+    let Razorpay: RazorpayCtor;
+    try {
+      Razorpay = await loadRazorpay();
+    } catch (caught) {
+      setPhase("failed");
+      setMessage(caught instanceof Error ? caught.message : "Could not load Razorpay.");
+      return;
     }
-  }, [paid, failed, amount, entry?.note, notify]);
+    const rzp = new Razorpay({
+      key: link.keyId,
+      order_id: link.orderId,
+      amount: link.amountPaise ?? Math.round(amount * 100),
+      currency: "INR",
+      name: "Broget AI",
+      description: "Wallet top-up",
+      prefill: { contact: link.mobile ?? "" },
+      notes: { requestId: link.requestId },
+      theme: { color: RZP_BLUE },
+      handler: async (result: RazorpayHandlerResult) => {
+        setPhase("verifying");
+        try {
+          const confirmed = await verifyRazorpayPayment(link.requestId, result);
+          if (confirmed.status === "success") settle("success");
+          else {
+            setPhase("cancelled");
+            setMessage("Razorpay has not confirmed the payment yet. Tap Check status in a moment.");
+            void reload();
+          }
+        } catch (caught) {
+          setPhase("cancelled");
+          setMessage(caught instanceof Error ? caught.message : "Could not confirm the payment. Tap Check status.");
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          setPhase((current) => (current === "open" ? "cancelled" : current));
+        },
+      },
+    });
+    rzp.on("payment.failed", (payload) => {
+      // Razorpay lets the payer retry in the same window; remember the reason in case they close it.
+      setMessage(payload?.error?.description || "The payment failed. You can try again.");
+    });
+    setPhase("open");
+    rzp.open();
+  }, [amount, link, reload, settle]);
+
+  // Open Razorpay right away - the agent already clicked "Proceed to pay".
+  useEffect(() => {
+    if (autoOpened.current) return;
+    autoOpened.current = true;
+    void openCheckout();
+  }, [openCheckout]);
+
+  useEffect(() => {
+    if (announced.current || !done) return;
+    announced.current = true;
+    notify(true, "Payment received", `${money(amount)} added to your wallet.`);
+  }, [done, amount, notify]);
 
   async function checkNow() {
     setChecking(true);
-    await reload();
+    try {
+      const result = await checkTopup(link.requestId);
+      settle(result.status);
+      if (result.status !== "success") setMessage("No completed payment yet. If money was debited, wait a minute and check again.");
+    } catch (caught) {
+      notify(false, "Check status", caught instanceof Error ? caught.message : "Try again");
+    }
     setChecking(false);
   }
 
-  const mm = String(Math.floor(secondsLeft / 60)).padStart(1, "0");
-  const ss = String(secondsLeft % 60).padStart(2, "0");
+  async function copyOrder() {
+    try {
+      await navigator.clipboard.writeText(link.requestId);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard blocked - ignore */
+    }
+  }
 
-  return (
-    <Modal title="Pay with UPI" description={`Order ${link.requestId}`} onClose={onClose}>
-      <div className="text-center">
-        <p className="eyebrow text-subtle">Amount</p>
-        <p className="font-display tabular mt-1 text-4xl font-bold text-ink">{money(amount)}</p>
+  const steps = [
+    { label: "Order created", state: "done" },
+    { label: "Pay securely", state: view === "paid" || view === "verifying" ? "done" : "active" },
+    { label: "Wallet credited", state: view === "paid" ? "done" : view === "verifying" ? "active" : "todo" },
+  ] as const;
 
-        {paid ? (
-          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white">
-              <IconCheck size={28} />
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Add money">
+      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-ink/50 backdrop-blur-[3px]" />
+      <div className="fade-up relative max-h-[94dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+        <div className="relative overflow-hidden px-6 pb-7 pt-5 text-white" style={{ background: "linear-gradient(145deg, #2b6bff 0%, #0b3fbf 60%, #072a87 100%)" }}>
+          <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10" />
+          <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 h-40 w-40 rounded-full bg-white/5" />
+          <div className="relative flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide">
+              <IconShield size={13} /> Secured by Razorpay
             </span>
-            <p className="mt-4 text-base font-semibold text-emerald-800">Payment received</p>
-            <p className="mt-1 text-sm text-emerald-700">Broget Pay confirmed it. Your wallet balance is updated.</p>
+            <button type="button" onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-lg text-white/80 hover:bg-white/15 hover:text-white">
+              <IconX size={18} />
+            </button>
           </div>
-        ) : failed ? (
-          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-6">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-red-500 text-white">
-              <IconX size={28} />
-            </span>
-            <p className="mt-4 text-base font-semibold text-red-800">Payment failed</p>
-            <p className="mt-1 text-sm text-red-700">{entry?.note || "Broget Pay marked the payment failed."} No money was added.</p>
-          </div>
-        ) : (
-          <>
-            <p className={`mt-1 text-sm font-medium ${expired ? "text-red-600" : "text-muted"}`}>
-              {expired ? "The 5-minute window is over. If you already paid, tap Check status." : `Complete this within ${mm}:${ss}`}
-            </p>
-
-            <div className="mx-auto mt-5 w-fit rounded-2xl border border-line bg-white p-3 shadow-[var(--shadow-card)]">
-              {qr ? (
-                // eslint-disable-next-line @next/next/no-img-element -- data URL generated locally
-                <img src={qr} alt="UPI payment QR code" width={220} height={220} className={`h-[220px] w-[220px] ${expired ? "opacity-30" : ""}`} />
-              ) : upi && !qrFailed ? (
-                <div className="skeleton h-[220px] w-[220px]" />
-              ) : (
-                <div className="grid h-[220px] w-[220px] place-items-center px-4 text-sm font-medium text-red-600">
-                  QR is not ready. Use the Broget Pay page below, or start the payment again.
-                </div>
-              )}
-            </div>
-            <p className="mt-3 text-sm font-semibold text-ink">Scan with any UPI app</p>
-            <p className="mt-1 text-xs text-subtle">PhonePe · Google Pay · Paytm · BHIM</p>
-          </>
-        )}
-      </div>
-
-      {waiting || expired ? (
-        <div className="mt-6 grid gap-2 sm:grid-cols-2">
-          {checkout ? (
-            <a href={checkout} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
-              <IconExternal size={15} /> Open Broget Pay page
-            </a>
-          ) : null}
-          {upi ? (
-            <a href={upi} className="btn btn-secondary">
-              <IconWallet size={15} /> Open UPI app
-            </a>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="mt-5 flex items-center gap-2 rounded-xl bg-soft px-3.5 py-3 text-[13px] text-muted">
-        {waiting ? <span className="live-dot h-2 w-2 shrink-0 rounded-full bg-emerald-500" /> : <IconShield size={15} className="shrink-0" />}
-        <span>
-          {waiting
-            ? "Waiting for Broget Pay to confirm - this updates automatically."
-            : "The wallet changes only when Broget Pay confirms the payment."}
-        </span>
-      </div>
-
-      <div className="mt-5 flex gap-2">
-        {!paid && !failed ? (
-          <button type="button" onClick={() => void checkNow()} disabled={checking} className="btn btn-primary flex-1">
-            <IconRefresh size={15} className={checking ? "animate-spin" : ""} /> {checking ? "Checking…" : "Check status"}
+          <p className="relative mt-6 text-xs font-medium uppercase tracking-[0.14em] text-white/70">Adding to Broget wallet</p>
+          <p className="font-display tabular relative mt-1 text-[44px] font-bold leading-none">{money(amount)}</p>
+          <button type="button" onClick={() => void copyOrder()} className="relative mt-3 inline-flex items-center gap-1.5 rounded-md bg-black/15 px-2 py-1 font-mono text-[11px] text-white/85 hover:bg-black/25" title="Copy order id">
+            Order {link.requestId} {copied ? <IconCheck size={12} /> : null}
           </button>
-        ) : null}
-        <button type="button" onClick={onClose} className={`btn btn-secondary ${paid || failed ? "flex-1" : ""}`}>
-          {paid || failed ? "Done" : "Close"}
-        </button>
+        </div>
+
+        <div className="px-6 pb-6 pt-5">
+          <ol className="flex items-start">
+            {steps.map((step, i) => (
+              <li key={step.label} className="flex flex-1 flex-col items-center text-center">
+                <div className="flex w-full items-center">
+                  <span className={`h-[2px] flex-1 ${i === 0 ? "opacity-0" : steps[i - 1].state === "done" && step.state !== "todo" ? "bg-emerald-500" : "bg-line"}`} />
+                  <span
+                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold ${
+                      step.state === "done" ? "bg-emerald-500 text-white" : step.state === "active" ? "text-white ring-4 ring-[#0b5cff]/15" : "bg-soft text-subtle"
+                    }`}
+                    style={step.state === "active" ? { background: RZP_BLUE } : undefined}
+                  >
+                    {step.state === "done" ? <IconCheck size={14} /> : i + 1}
+                  </span>
+                  <span className={`h-[2px] flex-1 ${i === steps.length - 1 ? "opacity-0" : step.state === "done" && steps[i + 1].state !== "todo" ? "bg-emerald-500" : "bg-line"}`} />
+                </div>
+                <span className={`mt-2 text-[11px] font-semibold ${step.state === "todo" ? "text-subtle" : "text-ink"}`}>{step.label}</span>
+              </li>
+            ))}
+          </ol>
+
+          {view === "paid" ? (
+            <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
+              <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-[0_8px_24px_-6px_rgba(16,185,129,.6)]">
+                <IconCheck size={32} />
+              </span>
+              <p className="mt-4 text-lg font-semibold text-emerald-800">Payment successful</p>
+              <p className="mt-1 text-sm text-emerald-700">
+                {money(amount)} added. New balance {money(wallet?.balance ?? 0)}.
+              </p>
+              {entry?.utr ? <p className="mt-2 font-mono text-[11px] text-emerald-700/80">Ref {entry.utr}</p> : null}
+            </div>
+          ) : view === "verifying" ? (
+            <div className="mt-6 rounded-2xl border border-line bg-soft/60 p-6 text-center">
+              <span className="mx-auto block h-10 w-10 animate-spin rounded-full border-[3px] border-[#dbe5ff] border-t-[#0b5cff]" />
+              <p className="mt-4 text-base font-semibold text-ink">Confirming your payment…</p>
+              <p className="mt-1 text-sm text-muted">Please keep this window open.</p>
+            </div>
+          ) : (
+            <>
+              <div className="mt-6 grid grid-cols-4 gap-2">
+                {["UPI", "Cards", "Net banking", "Wallets"].map((method) => (
+                  <span key={method} className="rounded-xl border border-[#e2e8f5] bg-[#f8faff] py-2 text-center text-[11px] font-semibold text-ink">
+                    {method}
+                  </span>
+                ))}
+              </div>
+
+              {view === "cancelled" || view === "failed" ? (
+                <p className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm text-amber-900">
+                  <IconAlert size={16} className="mt-0.5 shrink-0" />
+                  {message || "Payment not completed. No money was taken - you can try again."}
+                </p>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => void openCheckout()}
+                disabled={view === "open"}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-base font-semibold text-white shadow-[0_12px_28px_-10px_rgba(11,92,255,.75)] transition hover:brightness-110 active:scale-[.99] disabled:opacity-60"
+                style={{ background: RZP_BLUE }}
+              >
+                {view === "open" ? "Razorpay window is open…" : view === "ready" ? `Pay ${money(amount)}` : "Try again"} <IconArrowRight size={18} />
+              </button>
+
+              <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-soft px-3.5 py-3 text-[13px] text-muted">
+                {view === "open" ? <span className="live-dot h-2 w-2 shrink-0 rounded-full bg-emerald-500" /> : <IconShield size={15} className="shrink-0" />}
+                <span>{view === "open" ? "Complete the payment in the Razorpay window." : "Your wallet updates only after Razorpay confirms the payment."}</span>
+              </div>
+            </>
+          )}
+
+          <div className="mt-5 flex gap-2">
+            {!done && view !== "ready" ? (
+              <button type="button" onClick={() => void checkNow()} disabled={checking || view === "verifying"} className="btn btn-secondary flex-1">
+                <IconRefresh size={15} className={checking ? "animate-spin" : ""} /> {checking ? "Checking…" : "Check status"}
+              </button>
+            ) : null}
+            <button type="button" onClick={onClose} className={`btn ${done ? "btn-primary" : "btn-secondary"} ${done || view === "ready" ? "flex-1" : ""}`}>
+              {done ? "Done" : "Close"}
+            </button>
+          </div>
+          {!done ? <p className="mt-3 text-center text-[11px] text-subtle">If money was debited but this shows pending, tap Check status - it is never lost.</p> : null}
+        </div>
       </div>
-    </Modal>
+    </div>,
+    document.body,
   );
 }
 
@@ -1369,10 +1480,10 @@ function CibilTab({
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [customerId, setCustomerId] = useState("");
-  const [otp, setOtp] = useState("");
+  const [gender, setGender] = useState<"Male" | "Female" | "">("");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ id: string; score: number | null; message: string; name: string } | null>(null);
+  const [result, setResult] = useState<{ id: string; score: number | null; message: string; name: string; reportUrl?: string | null } | null>(null);
   const selected = useMemo(() => customers.find((row) => row.id === customerId) || null, [customerId, customers]);
 
   useEffect(() => {
@@ -1387,12 +1498,12 @@ function CibilTab({
   }, [notify, initialCustomerId]);
 
   const insufficient = wallet != null && wallet.balance < wallet.charge;
-  const step = result ? 3 : agreed && otp ? 2 : 1;
+  const step = result ? 3 : agreed && gender ? 2 : 1;
 
   async function runCheck() {
     if (!selected) return notify(false, "Pick a customer");
     if (!agreed) return notify(false, "Consent required", "Customer must accept consent.");
-    if (!/^\d{4,6}$/.test(otp.trim())) return notify(false, "Enter OTP");
+    if (!gender) return notify(false, "Select gender", "CIBIL needs the customer's gender.");
     setLoading(true);
     setResult(null);
     try {
@@ -1405,9 +1516,9 @@ function CibilTab({
         dateOfBirth: selected.dateOfBirth,
         email: selected.email,
         pan: selected.pan,
-        otp: otp.trim(),
+        gender,
       });
-      setResult({ id: saved.id, score: saved.score, message: saved.message, name: selected.name });
+      setResult({ id: saved.id, score: saved.score, message: saved.message, name: selected.name, reportUrl: saved.reportUrl });
       notify(true, "CIBIL ready", saved.score != null ? `Score ${saved.score}` : saved.message);
       void reload();
     } catch (error) {
@@ -1420,16 +1531,16 @@ function CibilTab({
   function reset() {
     setResult(null);
     setAgreed(false);
-    setOtp("");
+    setGender("");
   }
 
   return (
     <div>
-      <PageHeader icon={<IconGauge size={22} />} title="Run a CIBIL check" description={`Fee ${money(wallet?.charge ?? 0)} is charged from your Broget Pay wallet.`} />
+      <PageHeader icon={<IconGauge size={22} />} title="Run a CIBIL check" description={`Fee ${money(wallet?.charge ?? 0)} is charged from your wallet.`} />
 
       {/* Stepper */}
       <ol className="mb-6 grid grid-cols-3 gap-2">
-        {["Select customer", "Consent & OTP", "Score & report"].map((label, i) => {
+        {["Select customer", "Gender & consent", "Score & report"].map((label, i) => {
           const n = i + 1;
           const done = step > n;
           const active = step === n;
@@ -1497,29 +1608,32 @@ function CibilTab({
             </div>
           ) : null}
 
-          <h3 className="mt-7 text-sm font-semibold text-ink">2. Consent & OTP</h3>
-          <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-line p-4 transition hover:bg-soft/60">
+          <h3 className="mt-7 text-sm font-semibold text-ink">2. Gender &amp; consent</h3>
+          <div className="mt-3" role="radiogroup" aria-label="Customer gender">
+            <span className="field-label">Gender (as per PAN)</span>
+            <div className="grid grid-cols-2 gap-2">
+              {(["Male", "Female"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={gender === option}
+                  onClick={() => setGender(option)}
+                  className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                    gender === option ? "border-brand bg-brand-50 text-brand ring-2 ring-brand/15" : "border-line bg-white text-muted hover:border-[#cfd8e8]"
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-line p-4 transition hover:bg-soft/60">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#0066ff]" />
             <span className="text-sm text-muted">
               <span className="block font-semibold text-ink">Customer consent</span>I agree to share my data for verification purposes.
             </span>
           </label>
-
-          <div className="mt-4 flex items-end gap-2">
-            <label className="flex-1">
-              <span className="field-label">OTP</span>
-              <input
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                inputMode="numeric"
-                placeholder="Enter 4–6 digit OTP"
-                className="input font-mono text-base tracking-[0.3em] placeholder:font-sans placeholder:text-sm placeholder:tracking-normal"
-              />
-            </label>
-            <button type="button" onClick={() => setOtp(randomOtp())} className="btn btn-secondary h-11">
-              Get OTP
-            </button>
-          </div>
 
           <button
             type="button"
@@ -1563,7 +1677,12 @@ function CibilTab({
               <p className="mt-10 text-center text-sm font-semibold text-ink">{result.name}</p>
               <p className="mt-1 text-center text-sm text-muted">{result.message}</p>
               <ScoreScale />
-              <div className="mt-6">
+              {result.reportUrl ? (
+                <a href={result.reportUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-6 w-full">
+                  <IconExternal size={15} /> View full CIBIL report
+                </a>
+              ) : null}
+              <div className={result.reportUrl ? "mt-2" : "mt-6"}>
                 <PdfActions id={result.id} notify={notify} />
               </div>
               <button type="button" onClick={reset} className="btn btn-ghost mt-2 w-full">

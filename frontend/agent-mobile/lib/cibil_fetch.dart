@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
 import 'api.dart';
+import 'pay_launch.dart' if (dart.library.html) 'pay_launch_web.dart';
 import 'store.dart';
 import 'ui.dart';
 
@@ -19,7 +20,7 @@ class CibilFetchPage extends StatefulWidget {
 }
 
 class _CibilFetchPageState extends State<CibilFetchPage> {
-  final otp = TextEditingController();
+  var gender = '';
   var agreed = false;
   var loading = false;
   var missing = '';
@@ -27,11 +28,11 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
   int? score;
   String message = '';
   String reportId = '';
+  String reportUrl = '';
 
   @override
   void initState() {
     super.initState();
-    otp.text = _randomOtp();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final found = AgentScope.of(context).customerById(widget.id);
     if (!mounted) return;
@@ -42,18 +43,6 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
     });
   }
 
-  void refreshOtp() {
-    setState(() => otp.text = _randomOtp());
-  }
-
-  String _randomOtp() => (100000 + math.Random().nextInt(900000)).toString();
-
-  @override
-  void dispose() {
-    otp.dispose();
-    super.dispose();
-  }
-
   Future<void> submit() async {
     final person = customer;
     final store = AgentScope.of(context);
@@ -62,9 +51,8 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
       store.showToast(false, 'Consent is required', _consent);
       return;
     }
-    final code = otp.text.trim();
-    if (!RegExp(r'^\d{4,6}$').hasMatch(code)) {
-      store.showToast(false, 'Enter the OTP', 'Tap Get OTP, then use that code.');
+    if (gender.isEmpty) {
+      store.showToast(false, 'Select gender', 'CIBIL needs the customer’s gender as per PAN.');
       return;
     }
     final names = person.name.trim().split(RegExp(r'\s+'));
@@ -87,7 +75,7 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
         dateOfBirth: _iso(person.dob!),
         email: person.email.trim(),
         pan: person.pan.trim().toUpperCase(),
-        otp: code,
+        gender: gender,
       );
       if (report.score != null) {
         store.recordCibil(person, report.score!);
@@ -100,6 +88,7 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
         score = report.score;
         message = report.message;
         reportId = report.id;
+        reportUrl = report.reportUrl;
         customer = person;
       });
       store.showToast(true, 'Report ready', report.score == null ? report.message : '${person.name} · ${report.score}');
@@ -135,15 +124,15 @@ class _CibilFetchPageState extends State<CibilFetchPage> {
           else if (loading)
             _Fetching(name: person.name)
           else if (message.isNotEmpty)
-            _Result(customer: person, score: score, message: message, reportId: reportId)
+            _Result(customer: person, score: score, message: message, reportId: reportId, reportUrl: reportUrl)
           else
             _ConsentForm(
               customer: person,
               missing: missing,
               agreed: agreed,
-              otp: otp,
+              gender: gender,
               onAgree: (value) => setState(() => agreed = value ?? false),
-              onGetOtp: refreshOtp,
+              onGender: (value) => setState(() => gender = value),
               onSubmit: missing.isEmpty ? submit : null,
             ),
         ],
@@ -179,7 +168,7 @@ class _Fetching extends StatelessWidget {
           const SizedBox(height: 6),
           Text(name, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5C677A), fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          const Text('Name, mobile, date of birth, email, and PAN are sent with the OTP and consent.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF8B95A7), fontSize: 12, height: 1.4)),
+          const Text('Name, mobile, gender, and PAN are sent to TransUnion CIBIL with the customer’s consent.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF8B95A7), fontSize: 12, height: 1.4)),
         ],
       ),
     );
@@ -191,18 +180,18 @@ class _ConsentForm extends StatelessWidget {
     required this.customer,
     required this.missing,
     required this.agreed,
-    required this.otp,
+    required this.gender,
     required this.onAgree,
-    required this.onGetOtp,
+    required this.onGender,
     required this.onSubmit,
   });
 
   final Customer customer;
   final String missing;
   final bool agreed;
-  final TextEditingController otp;
+  final String gender;
   final ValueChanged<bool?> onAgree;
-  final VoidCallback onGetOtp;
+  final ValueChanged<String> onGender;
   final VoidCallback? onSubmit;
 
   @override
@@ -213,7 +202,7 @@ class _ConsentForm extends StatelessWidget {
       children: [
         const Text('Get the report', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: -0.4)),
         const SizedBox(height: 6),
-        const Text('Confirm the customer, accept consent, get OTP, then fetch CIBIL Broget.', style: TextStyle(color: Color(0xFF64748B), height: 1.4, fontSize: 13)),
+        const Text('Confirm the customer, pick gender, accept consent, then fetch CIBIL Broget.', style: TextStyle(color: Color(0xFF64748B), height: 1.4, fontSize: 13)),
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
@@ -336,44 +325,41 @@ class _ConsentForm extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text('Gender (as per PAN)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy)),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  const Expanded(child: Text('OTP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: dashNavy))),
-                  FilledButton.tonal(
-                    onPressed: ready ? onGetOtp : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFEAF1FF),
-                      foregroundColor: dashBlue,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                  for (final option in const ['Male', 'Female']) ...[
+                    if (option == 'Female') const SizedBox(width: 10),
+                    Expanded(
+                      child: Material(
+                        color: gender == option ? const Color(0xFFEAF1FF) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: ready ? () => onGender(option) : null,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: gender == option ? dashBlue : const Color(0xFFE6EBF5), width: gender == option ? 1.4 : 1),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(gender == option ? Icons.check_circle : Icons.circle_outlined, size: 18, color: gender == option ? dashBlue : const Color(0xFFB0B8C6)),
+                                const SizedBox(width: 8),
+                                Text(option, style: TextStyle(fontWeight: FontWeight.w800, color: gender == option ? dashBlue : dashNavy)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                    child: const Text('Get OTP'),
-                  ),
+                  ],
                 ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: otp,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                maxLength: 6,
-                enabled: ready,
-                style: const TextStyle(fontWeight: FontWeight.w800, color: dashNavy, letterSpacing: 10, fontSize: 28),
-                decoration: InputDecoration(
-                  counterText: '',
-                  hintText: '••••••',
-                  hintStyle: const TextStyle(letterSpacing: 10, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w800, fontSize: 28),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE6EBF5))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE6EBF5))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: dashBlue, width: 1.4)),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text('Tap Get OTP for a fresh code, then fetch the report.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 12, height: 1.35)),
             ],
           ),
         ),
@@ -383,7 +369,7 @@ class _ConsentForm extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: const Color(0xFFFFF6E5), borderRadius: BorderRadius.circular(16)),
           child: const Text(
-            'Each CIBIL Broget check takes ₹61.36 from the Broget Pay wallet.',
+            'Each CIBIL Broget check takes ₹61.36 from your wallet.',
             style: TextStyle(color: Color(0xFF92400E), fontWeight: FontWeight.w700, height: 1.4, fontSize: 13),
           ),
         ),
@@ -430,12 +416,13 @@ class _DetailChip extends StatelessWidget {
 }
 
 class _Result extends StatefulWidget {
-  const _Result({required this.customer, required this.score, required this.message, required this.reportId});
+  const _Result({required this.customer, required this.score, required this.message, required this.reportId, this.reportUrl = ''});
 
   final Customer customer;
   final int? score;
   final String message;
   final String reportId;
+  final String reportUrl;
 
   @override
   State<_Result> createState() => _ResultState();
@@ -506,6 +493,25 @@ class _ResultState extends State<_Result> {
             ],
           ),
         ),
+        if (widget.reportUrl.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final uri = Uri.tryParse(widget.reportUrl);
+              if (uri == null || !await launchPayment(uri)) {
+                if (context.mounted) AgentScope.of(context).showToast(false, 'Full report', 'Could not open the report link.');
+              }
+            },
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            label: const Text('View full CIBIL report', style: TextStyle(fontWeight: FontWeight.w800)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: dashBlue,
+              side: const BorderSide(color: Color(0xFFBFDBFE)),
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ],
         if (widget.reportId.isNotEmpty) ...[
         const SizedBox(height: 16),
           CreditReportActions(reportId: widget.reportId),

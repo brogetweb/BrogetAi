@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false, rawBody: true });
   app.useBodyParser('json', { limit: '8mb' });
   app.useBodyParser('urlencoded', { extended: true, limit: '8mb' });
   app.setGlobalPrefix('api/v1');

@@ -4,10 +4,14 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Agent, AgentDocument } from '../agents/schemas/agent.schema';
-import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto } from './dto/wallet.dto';
+import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto, VerifyRazorpayDto } from './dto/wallet.dto';
 import { HouseWallet, HouseWalletDocument } from './schemas/house-wallet.schema';
 import { WalletEntry, WalletEntryDocument } from './schemas/wallet-entry.schema';
+import { razorpayCheckoutPage } from './razorpay-checkout.page';
+import { RazorpayClient } from './razorpay.client';
 import { API_CHARGE_PAISE, API_FEE_PAISE, API_GST_PAISE, paiseToRupees, rupeesToPaise } from './wallet.money';
+
+const RAZORPAY_NOTE = 'Razorpay';
 
 /** Longer than the 30s provider timeout. */
 const CHECK_LOCK_MS = 60_000;
@@ -21,6 +25,7 @@ export class WalletService {
     @InjectModel(HouseWallet.name) private readonly house: Model<HouseWalletDocument>,
     @InjectModel(Agent.name) private readonly agents: Model<AgentDocument>,
     private readonly config: ConfigService,
+    private readonly razorpay: RazorpayClient,
   ) {}
 
   async snapshot(agentId: string) {
@@ -173,47 +178,111 @@ export class WalletService {
     };
   }
 
+  /** Wallet top-up through Razorpay. The wallet is credited only after Razorpay reports a captured payment. */
   async createTopup(agentId: string, input: CreateTopupDto) {
     const amountPaise = rupeesToPaise(input.amount);
     const requestId = `ORD${randomBytes(6).toString('hex')}`;
-    await this.entries.create({
-      agentId,
-      kind: 'topup',
-      amountPaise,
-      status: 'pending',
-      requestId,
-      note: 'Broget Pay',
-    });
-    let result: Record<string, unknown>;
+    const publicUrl = this.publicUrl();
+    await this.entries.create({ agentId, kind: 'topup', amountPaise, status: 'pending', requestId, note: RAZORPAY_NOTE, mobile: input.mobile });
+    let orderId: string;
     try {
-      result = await this.gateway('/pg/create-request', {
-        apikey: this.apiKey(),
-        mobile: input.mobile,
-        mobilenumber: input.mobile,
-        amount: input.amount.toFixed(2),
-        request_id: requestId,
-        order_id: requestId,
-        redirect_url: `${this.publicUrl()}/api/v1/wallet/payin/return`,
-        remark1: 'Wallet top up',
-        remark2: agentId,
-      });
+      const order = await this.razorpay.createOrder({ amountPaise, receipt: requestId, notes: { requestId, agentId, purpose: 'wallet_topup' } });
+      orderId = order.id;
     } catch (error) {
-      await this.entries.updateOne({ requestId, status: 'pending' }, { status: 'failed' });
+      await this.entries.updateOne({ requestId, status: 'pending' }, { status: 'failed', note: 'Razorpay could not start the payment.' });
       throw error;
     }
-    const paymentUrl = readPaymentUrl(result);
-    if (!paymentUrl) {
-      await this.entries.updateOne({ requestId }, { status: 'failed', note: 'Broget Pay did not return a payment link.' });
-      throw new BadGatewayException('Broget Pay did not return a payment link.');
-    }
-    const upiUrl = await this.readUpiLink(paymentUrl);
+    await this.entries.updateOne({ requestId }, { gatewayOrderId: orderId });
+    const paymentUrl = `${publicUrl}/api/v1/wallet/razorpay/pay/${requestId}`;
     return {
       requestId,
-      paymentUrl: `${this.publicUrl()}/api/v1/wallet/payin/open/${requestId}`,
+      provider: 'razorpay',
+      keyId: this.razorpay.keyId(),
+      orderId,
+      amountPaise,
+      mobile: input.mobile,
+      paymentUrl,
       checkoutUrl: paymentUrl,
-      upiUrl,
+      upiUrl: '',
       status: 'pending',
     };
+  }
+
+  /** Checkout success callback (web dialog and hosted page). The signature is checked, then Razorpay's API decides. */
+  async verifyRazorpay(input: VerifyRazorpayDto) {
+    const entry = await this.entries.findOne({ requestId: input.requestId, kind: 'topup' });
+    if (!entry || !entry.gatewayOrderId || entry.gatewayOrderId !== input.razorpay_order_id) throw new NotFoundException('Top-up not found.');
+    if (!this.razorpay.verifyCheckout(input.razorpay_order_id, input.razorpay_payment_id, input.razorpay_signature)) {
+      this.logger.warn(`Razorpay verify ${input.requestId}: bad signature.`);
+      throw new NotFoundException('Top-up not found.');
+    }
+    const updated = await this.settleRazorpayTopup(input.requestId);
+    return this.present(updated ?? entry);
+  }
+
+  /** Razorpay webhook (payment.captured / order.paid). Only makes us ask Razorpay's API. */
+  async razorpayWebhook(rawBody: Buffer | undefined, signature: string | undefined, body: Record<string, unknown>) {
+    if (!rawBody || !this.razorpay.verifyWebhook(rawBody, signature)) {
+      this.logger.warn('Razorpay webhook ignored (bad signature or RAZORPAY_WEBHOOK_SECRET not set).');
+      return { received: true };
+    }
+    const payload = (body?.payload ?? {}) as { payment?: { entity?: { order_id?: string } }; order?: { entity?: { id?: string } } };
+    const orderId = payload.order?.entity?.id || payload.payment?.entity?.order_id || '';
+    if (!orderId) return { received: true };
+    const entry = await this.entries.findOne({ gatewayOrderId: orderId, kind: 'topup' });
+    if (entry) await this.settleRazorpayTopup(entry.requestId).catch((error) => this.logger.warn(`Razorpay settle ${entry.requestId} failed: ${String(error)}`));
+    return { received: true };
+  }
+
+  /** Agent asks "did my payment go through?" - also covers a closed window or missed webhook. */
+  async checkTopup(agentId: string, requestId: string) {
+    const entry = await this.entries.findOne({ requestId, agentId, kind: 'topup' });
+    if (!entry) throw new NotFoundException('Top-up not found.');
+    // Older Broget Pay / PhonePe top-ups have no Razorpay order and are left as they are.
+    if (entry.status === 'success' || !entry.gatewayOrderId) return this.present(entry);
+    const updated = await this.settleRazorpayTopup(requestId);
+    return this.present(updated ?? entry);
+  }
+
+  /** Hosted checkout page used by the agent mobile app. */
+  async razorpayPayPage(requestId: string) {
+    if (!/^ORD[A-Za-z0-9]+$/.test(requestId)) throw new NotFoundException();
+    const entry = await this.entries.findOne({ requestId, kind: 'topup' });
+    if (!entry || !entry.gatewayOrderId) throw new NotFoundException();
+    return razorpayCheckoutPage({
+      requestId,
+      status: entry.status,
+      amountPaise: entry.amountPaise,
+      keyId: this.razorpay.keyId(),
+      orderId: entry.gatewayOrderId,
+      mobile: entry.mobile ?? '',
+      apiBase: this.publicUrl(),
+    });
+  }
+
+  private async settleRazorpayTopup(requestId: string) {
+    const entry = await this.entries.findOne({ requestId, kind: 'topup' });
+    if (!entry || entry.status === 'success' || !entry.gatewayOrderId) return entry;
+    const payments = await this.razorpay.orderPayments(entry.gatewayOrderId);
+    let paid = payments.find((p) => p.status === 'captured');
+    if (!paid) {
+      const authorized = payments.find((p) => p.status === 'authorized');
+      if (authorized) paid = await this.razorpay.capture(authorized.id, entry.amountPaise).catch(() => undefined);
+    }
+    if (!paid || paid.status !== 'captured') return entry;
+    if (paid.amount !== entry.amountPaise || paid.currency !== 'INR') {
+      this.logger.warn(`Razorpay ${requestId} captured ${paid.amount} ${paid.currency}, expected ${entry.amountPaise} INR.`);
+      return (await this.entries.findOneAndUpdate({ _id: entry._id, status: 'pending' }, { status: 'failed', note: 'Razorpay amount did not match the wallet request.' }, { new: true })) ?? entry;
+    }
+    const reference = paid.acquirer_data?.rrn || paid.acquirer_data?.upi_transaction_id || paid.acquirer_data?.bank_transaction_id || paid.id;
+    // Only one caller can move pending -> success, so the wallet is credited once.
+    const claimed = await this.entries.findOneAndUpdate(
+      { _id: entry._id, status: { $in: ['pending', 'failed'] } },
+      { status: 'success', note: `${RAZORPAY_NOTE} · ${paid.method ?? 'payment'}`, utr: reference, gatewayPaymentId: paid.id },
+      { new: true },
+    );
+    if (claimed) await this.agents.updateOne({ _id: claimed.agentId }, { $inc: { walletBalancePaise: claimed.amountPaise } });
+    return claimed ?? (await this.entries.findById(entry._id));
   }
 
   async payinOpenPage(requestId: string) {
@@ -422,11 +491,4 @@ function androidUpiIntent(upiUrl: string) {
 
 function escapeAttr(value: string) {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-}
-
-function readPaymentUrl(payload: Record<string, unknown>) {
-  const result = payload.result;
-  if (!result || typeof result !== 'object') return '';
-  const url = (result as Record<string, unknown>).payment_url;
-  return typeof url === 'string' ? url : '';
 }

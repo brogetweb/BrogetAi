@@ -12,6 +12,20 @@ export class CreateTopupDto {
   mobile: string;
 }
 
+export class VerifyRazorpayDto {
+  @Matches(/^ORD[A-Za-z0-9]+$/)
+  requestId: string;
+
+  @Matches(/^order_[A-Za-z0-9]+$/)
+  razorpay_order_id: string;
+
+  @Matches(/^pay_[A-Za-z0-9]+$/)
+  razorpay_payment_id: string;
+
+  @Matches(/^[a-f0-9]{64}$/)
+  razorpay_signature: string;
+}
+
 export class CreatePayoutDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })

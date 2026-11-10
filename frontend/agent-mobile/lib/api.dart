@@ -58,17 +58,19 @@ Future<AgentSession> loginAgent(String email, String password) async {
 }
 
 class CreditReportResult {
-  CreditReportResult({required this.id, required this.name, required this.message, this.score});
+  CreditReportResult({required this.id, required this.name, required this.message, this.score, this.reportUrl = ''});
 
   final String id;
   final String name;
   final String message;
   final int? score;
+  /// TransUnion link to the customer's full report (AO Pay V2 Hybrid).
+  final String reportUrl;
 
   factory CreditReportResult.fromJson(Map<String, dynamic> json) {
     final raw = json['score'];
     final parsed = raw == null ? null : int.tryParse('$raw');
-    return CreditReportResult(id: '${json['id'] ?? ''}', name: '${json['name'] ?? ''}', message: '${json['message'] ?? ''}', score: parsed);
+    return CreditReportResult(id: '${json['id'] ?? ''}', name: '${json['name'] ?? ''}', message: '${json['message'] ?? ''}', score: parsed, reportUrl: '${json['reportUrl'] ?? ''}');
   }
 }
 
@@ -101,7 +103,7 @@ Future<CreditReportResult> requestCreditReport({
   required String dateOfBirth,
   required String email,
   required String pan,
-  required String otp,
+  required String gender,
 }) async {
   final body = await _post(
     '/credit-reports',
@@ -112,11 +114,11 @@ Future<CreditReportResult> requestCreditReport({
       'dateOfBirth': dateOfBirth,
       'email': email,
       'pan': pan,
-      'otp': otp,
+      'gender': gender,
       'consentAcceptance': 'Yes',
     },
     accessToken: accessToken,
-    timeout: const Duration(seconds: 35),
+    timeout: const Duration(seconds: 100),
   );
   return CreditReportResult.fromJson(body);
 }
@@ -311,9 +313,10 @@ Future<WalletView> fetchWallet(String accessToken) async {
 }
 
 class WalletPayLink {
-  const WalletPayLink({required this.paymentUrl, this.upiUrl = '', this.checkoutUrl = ''});
+  const WalletPayLink({required this.paymentUrl, this.requestId = '', this.upiUrl = '', this.checkoutUrl = ''});
 
   final String paymentUrl;
+  final String requestId;
   final String upiUrl;
   final String checkoutUrl;
 }
@@ -321,8 +324,14 @@ class WalletPayLink {
 Future<WalletPayLink> createWalletTopup({required String accessToken, required double amount, required String mobile}) async {
   final body = await _post('/wallet/topups', {'amount': amount, 'mobile': mobile}, accessToken: accessToken, timeout: const Duration(seconds: 35));
   final url = '${body['paymentUrl'] ?? ''}';
-  if (url.isEmpty) throw ApiException('Broget Pay did not return a payment link.');
-  return WalletPayLink(paymentUrl: url, upiUrl: '${body['upiUrl'] ?? ''}', checkoutUrl: '${body['checkoutUrl'] ?? ''}');
+  if (url.isEmpty) throw ApiException('Razorpay did not return a payment link.');
+  return WalletPayLink(paymentUrl: url, requestId: '${body['requestId'] ?? ''}', upiUrl: '${body['upiUrl'] ?? ''}', checkoutUrl: '${body['checkoutUrl'] ?? ''}');
+}
+
+/// Asks the server to fetch the latest Razorpay status for this top-up. Returns pending, success or failed.
+Future<String> checkWalletTopup({required String accessToken, required String requestId}) async {
+  final body = await _post('/wallet/topups/${Uri.encodeComponent(requestId)}/check', {}, accessToken: accessToken, timeout: const Duration(seconds: 35));
+  return '${body['status'] ?? 'pending'}';
 }
 
 Future<void> createWalletPayout({

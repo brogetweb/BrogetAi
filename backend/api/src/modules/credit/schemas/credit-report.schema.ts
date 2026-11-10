@@ -36,6 +36,13 @@ export class CreditReport {
   @Prop()
   score?: number;
 
+  @Prop({ enum: ['Male', 'Female'] })
+  gender?: 'Male' | 'Female';
+
+  /** TransUnion web token URL for the full report (V2 Hybrid). */
+  @Prop()
+  reportUrl?: string;
+
   @Prop({ required: true })
   message: string;
 

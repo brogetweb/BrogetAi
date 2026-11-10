@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import 'api.dart';
 import 'pay_launch.dart' if (dart.library.html) 'pay_launch_web.dart';
+import 'razorpay_pay.dart';
 import 'store.dart';
 import 'ui.dart';
 
@@ -135,11 +136,11 @@ class WalletPage extends StatelessWidget {
             ],
           ),
           if (store.wallet.isEmpty)
-            const _Empty(text: 'No wallet movement yet. Add money through Broget Pay.')
+            const _Empty(text: 'No wallet movement yet. Add money to get started.')
           else
             ...store.wallet.take(5).map((entry) => _EntryTile(entry: entry)),
           const SizedBox(height: 8),
-          const Text('Add money opens Broget Pay. The balance changes only after Broget Pay confirms the payment.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 12, height: 1.4)),
+          const Text('Add money opens Razorpay. The balance changes only after Razorpay confirms the payment.', style: TextStyle(color: Color(0xFF8B95A7), fontSize: 12, height: 1.4)),
         ],
       ),
     );
@@ -183,7 +184,7 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
     final parsed = double.tryParse(amount.text.trim());
     final phone = mobile.text.trim();
     if (parsed == null || parsed < 300) {
-      setState(() => error = 'Broget Pay accepts ₹300 or more.');
+      setState(() => error = 'Top-up accepts ₹300 or more.');
       return;
     }
     if (parsed > 500000) {
@@ -202,7 +203,11 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
     try {
       final link = await createWalletTopup(accessToken: store.accessToken, amount: parsed, mobile: phone);
       if (!mounted) return;
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PayinWaitingPage(amount: parsed, paymentUrl: link.paymentUrl, upiUrl: link.upiUrl, checkoutUrl: link.checkoutUrl)));
+      await Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => link.upiUrl.isEmpty
+            ? RazorpayPayPage(amount: parsed, requestId: link.requestId, paymentUrl: link.paymentUrl)
+            : PayinWaitingPage(amount: parsed, requestId: link.requestId, paymentUrl: link.paymentUrl, upiUrl: link.upiUrl, checkoutUrl: link.checkoutUrl),
+      ));
     } on ApiException catch (caught) {
       if (mounted) setState(() => error = caught.message);
     } finally {
@@ -257,11 +262,11 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Broget Pay', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF92400E))),
+                Text('Razorpay secure checkout', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF92400E))),
                 SizedBox(height: 6),
-                Text('The payment page is Broget Pay. UPI, QR, net banking, and cards are collected there.', style: TextStyle(color: Color(0xFF92400E), height: 1.4, fontSize: 13)),
+                Text('Pay with UPI, cards, net banking, or wallets on the Razorpay page.', style: TextStyle(color: Color(0xFF92400E), height: 1.4, fontSize: 13)),
                 SizedBox(height: 4),
-                Text('This wallet updates only after Broget Pay confirms the payment.', style: TextStyle(color: Color(0xFF92400E), height: 1.4, fontSize: 13)),
+                Text('This wallet updates only after Razorpay confirms the payment.', style: TextStyle(color: Color(0xFF92400E), height: 1.4, fontSize: 13)),
               ],
             ),
           ),
@@ -282,9 +287,10 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
 }
 
 class PayinWaitingPage extends StatefulWidget {
-  const PayinWaitingPage({super.key, required this.amount, required this.paymentUrl, this.upiUrl = '', this.checkoutUrl = ''});
+  const PayinWaitingPage({super.key, required this.amount, required this.paymentUrl, this.requestId = '', this.upiUrl = '', this.checkoutUrl = ''});
 
   final double amount;
+  final String requestId;
   final String paymentUrl;
   final String upiUrl;
   final String checkoutUrl;
@@ -345,7 +351,13 @@ class _PayinWaitingPageState extends State<PayinWaitingPage> {
   Future<void> refresh() async {
     setState(() => refreshing = true);
     try {
-      await AgentScope.of(context).loadWallet();
+      final store = AgentScope.of(context);
+      if (widget.requestId.isNotEmpty) {
+        final status = await checkWalletTopup(accessToken: store.accessToken, requestId: widget.requestId);
+        if (mounted && status == 'success') store.showToast(true, 'Payment received', '${inr(widget.amount)} added to your wallet.');
+        if (mounted && status == 'failed') store.showToast(false, 'Payment failed', 'The payment failed. No money was added.');
+      }
+      await store.loadWallet();
     } on ApiException catch (caught) {
       if (mounted) AgentScope.of(context).showToast(false, 'Wallet', caught.message);
     } finally {
@@ -405,7 +417,7 @@ class _PayinWaitingPageState extends State<PayinWaitingPage> {
             Text(openError!, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w700)),
           ],
           const SizedBox(height: 16),
-          const Text('After the UPI payment succeeds, come back and refresh. The wallet updates when Broget Pay confirms it.', style: TextStyle(color: Color(0xFF64748B), height: 1.4)),
+          const Text('After the UPI payment succeeds, come back and refresh. The wallet updates when the payment is confirmed.', style: TextStyle(color: Color(0xFF64748B), height: 1.4)),
           const SizedBox(height: 14),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: dashBlue, minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
@@ -816,7 +828,7 @@ class LowBalanceBanner extends StatelessWidget {
         children: [
           const Text('Low balance', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: 4),
-          Text('A credit check needs ${inr(store.chargeRupees)}. Add money with Broget Pay before the next API hit.', style: const TextStyle(color: Color(0xFF991B1B), height: 1.4, fontSize: 13)),
+          Text('A credit check needs ${inr(store.chargeRupees)}. Add money before the next API hit.', style: const TextStyle(color: Color(0xFF991B1B), height: 1.4, fontSize: 13)),
         ],
       ),
     );
