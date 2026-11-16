@@ -142,7 +142,7 @@ export default function LoginPage() {
             </span>
             <h2 className="mt-6 max-w-md text-4xl font-bold leading-[1.1]">Your CIBIL desk, now on a bigger screen.</h2>
             <ul className="mt-8 space-y-3.5">
-              {["Run consent-based CIBIL checks", "Top up Broget Pay over UPI", "View and download PDF reports"].map((item) => (
+              {["Run consent-based CIBIL checks", "Top up your wallet with UPI or cards", "View and download PDF reports"].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-sm text-white/80">
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20">
                     <IconCheck size={12} />
@@ -170,7 +170,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="absolute bottom-36 right-0 w-60 rounded-2xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
-              <p className="text-xs text-white/60">Broget Pay balance</p>
+              <p className="text-xs text-white/60">Wallet balance</p>
               <p className="font-display tabular mt-1 text-2xl font-bold">₹4,820.00</p>
               <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-300">
                 <IconCheck size={13} /> Top-up confirmed

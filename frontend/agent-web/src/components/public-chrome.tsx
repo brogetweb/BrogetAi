@@ -113,11 +113,11 @@ export function PublicFooter() {
       <div className="relative -mt-8 overflow-hidden">
         <div className="bg-grid-dark mask-fade-b pointer-events-none absolute inset-0 opacity-50" />
         <div className="relative mx-auto max-w-6xl px-4 pb-8 md:px-6">
-          <div className="grid gap-10 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+          <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
             <div>
               <Logo tone="light" />
               <p className="mt-5 max-w-sm text-sm leading-6">
-                The professional workspace for Broget AI field agents. Customers, Broget Pay wallet and CIBIL reports in one place.
+                The professional workspace for Broget AI field agents. Customers, prepaid wallet and CIBIL reports in one place.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {[
@@ -133,11 +133,18 @@ export function PublicFooter() {
             </div>
             <FooterCol title="Product" items={[["Features", "/#features"], ["How it works", "/#how"], ["Pricing", "/#pricing"]]} />
             <FooterCol title="Agents" items={[["Sign in", "/login"], ["Agent panel", "/app"], ["FAQ", "/#faq"]]} />
-            <FooterCol title="Company" items={[["Home", "/"], ["Support", "/#faq"]]} />
+            <FooterCol title="Company" items={[["Home", "/"], ["Contact Us", "/contact"], ["FAQ", "/#faq"]]} />
+            <FooterCol title="Policies" items={[["Terms & Conditions", "/terms"], ["Privacy Policy", "/privacy"], ["Refund & Cancellation", "/refund-policy"]]} />
           </div>
 
           <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-            <p>© {year} Broget AI. All rights reserved.</p>
+            <p>
+              © {year} Broget AI Private Limited. All rights reserved. ·{" "}
+              <Link href="/terms" className="hover:text-white">Terms</Link> ·{" "}
+              <Link href="/privacy" className="hover:text-white">Privacy</Link> ·{" "}
+              <Link href="/refund-policy" className="hover:text-white">Refunds</Link> ·{" "}
+              <Link href="/contact" className="hover:text-white">Contact</Link>
+            </p>
             <p className="flex items-center gap-1.5">
               <IconShield size={13} className="text-emerald-400" /> Credit reports are fetched only with the customer&apos;s explicit consent.
             </p>

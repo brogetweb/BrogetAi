@@ -189,7 +189,7 @@ export function LedgerTable({ entries, loading, notify }: { entries: Entry[] | n
             <IconWallet size={22} />
           </span>
           <p className="mt-4 text-sm font-semibold text-ink">{all.length ? "No entries match these filters" : "No wallet movement yet"}</p>
-          <p className="mt-1 text-sm text-muted">{all.length ? "Try another type, status or search." : "Add money through Broget Pay to get started."}</p>
+          <p className="mt-1 text-sm text-muted">{all.length ? "Try another type, status or search." : "Add money to get started."}</p>
         </div>
       ) : (
         <div className="panel-scroll max-h-[620px] overflow-auto">

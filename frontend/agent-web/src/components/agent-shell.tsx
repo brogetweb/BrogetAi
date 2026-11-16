@@ -60,7 +60,7 @@ const nav: { id: Tab; label: string; hint: string; icon: ReactNode }[] = [
   { id: "customers", label: "Customers", hint: "Your saved customer book", icon: <IconUsers /> },
   { id: "cibil", label: "CIBIL check", hint: "Run a new credit report", icon: <IconGauge /> },
   { id: "checks", label: "Reports", hint: "All credit checks you have run", icon: <IconFile /> },
-  { id: "wallet", label: "Wallet", hint: "Broget Pay balance and ledger", icon: <IconWallet /> },
+  { id: "wallet", label: "Wallet", hint: "Balance, top-ups and ledger", icon: <IconWallet /> },
 ];
 
 function money(n: number) {
@@ -211,7 +211,7 @@ export function AgentShell() {
             <div className="bg-grid-dark absolute inset-0 opacity-50" />
             <div className="relative">
               <p className="flex items-center gap-1.5 text-xs text-white/60">
-                <IconWallet size={13} /> Broget Pay
+                <IconWallet size={13} /> Wallet
               </p>
               <p className="font-display tabular mt-1 text-xl font-bold">{walletLoading && !wallet ? "…" : money(wallet?.balance ?? 0)}</p>
               <button type="button" onClick={() => go("wallet")} className="mt-3 inline-flex h-7 items-center gap-1 rounded-md bg-white px-2.5 text-xs font-semibold text-ink hover:bg-white/90">
@@ -530,7 +530,7 @@ function HomeTab({
                 <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/15">
                   <IconWallet size={15} />
                 </span>
-                Broget Pay balance
+                Wallet balance
               </p>
               <button type="button" onClick={() => void reload()} aria-label="Refresh balance" className="grid h-8 w-8 place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white">
                 <IconRefresh size={15} className={loading ? "animate-spin" : ""} />
@@ -722,7 +722,7 @@ function HomeTab({
             </button>
           </div>
           {loading && !wallet ? <RowsSkeleton rows={3} /> : null}
-          {wallet && wallet.entries.length === 0 ? <EmptyState icon={<IconWallet size={22} />} title="No wallet movement yet" body="Add money through Broget Pay to get started." /> : null}
+          {wallet && wallet.entries.length === 0 ? <EmptyState icon={<IconWallet size={22} />} title="No wallet movement yet" body="Add money to get started." /> : null}
           <LedgerRows entries={(wallet?.entries ?? []).slice(0, 5)} />
         </section>
       </div>

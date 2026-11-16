@@ -19,16 +19,16 @@ import { LogoMark, ScoreGauge } from "@/components/ui";
 
 const steps = [
   { title: "Get your login", copy: "Your Super Admin creates your agent account - the same email and password as the mobile app.", icon: <IconLock size={18} /> },
-  { title: "Add money", copy: "Top up your Broget Pay wallet over UPI from ₹300. Balance updates once payment confirms.", icon: <IconWallet size={18} /> },
+  { title: "Add money", copy: "Top up your wallet with UPI, cards or net banking (Razorpay) from ₹300. Balance updates once payment confirms.", icon: <IconWallet size={18} /> },
   { title: "Add a customer", copy: "Save PAN, date of birth, mobile and email once to your shared customer book.", icon: <IconUsers size={18} /> },
   { title: "Run the check", copy: "Capture consent, see the score instantly and download the PDF report.", icon: <IconGauge size={18} /> },
 ];
 
 const faqs = [
   ["Who can sign in to the agent panel?", "Only agents created by a Broget AI Super Admin. Use the same credentials as the agent mobile app."],
-  ["How am I charged for a CIBIL check?", "Each check deducts one flat fee plus GST from your Broget Pay wallet. The exact amount is shown on your dashboard before you run a check."],
+  ["How am I charged for a CIBIL check?", "Each check deducts one flat fee plus GST from your wallet. The exact amount is shown on your dashboard before you run a check."],
   ["Is my data shared with the mobile app?", "Yes. Customers, wallet balance and report history are the same on web and mobile - work wherever is convenient."],
-  ["What happens if a payment is pending?", "Your balance only changes once Broget Pay confirms the payment. Use Refresh on the dashboard after you finish paying."],
+  ["What happens if a payment is pending?", "Your balance only changes once Razorpay confirms the payment. Use Refresh on the dashboard after you finish paying."],
   ["Is customer consent required?", "Always. A check can only run after the customer accepts consent."],
 ];
 
@@ -54,7 +54,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="fade-up delay-2 mx-auto mt-5 max-w-xl text-base leading-7 text-muted md:text-lg md:leading-8 lg:mx-0">
-              Run consent-based credit checks, top up Broget Pay and download reports - synced with your mobile agent app.
+              Run consent-based credit checks, top up your wallet and download reports - synced with your mobile agent app.
             </p>
 
             <div className="fade-up delay-3 mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
@@ -130,7 +130,7 @@ export default function LandingPage() {
               </div>
             </BentoCard>
 
-            <BentoCard className="md:col-span-2" icon={<IconWallet size={18} />} title="Broget Pay wallet" copy="Top up over UPI and see every credit and debit.">
+            <BentoCard className="md:col-span-2" icon={<IconWallet size={18} />} title="Prepaid wallet" copy="Top up over UPI and see every credit and debit.">
               <div className="space-y-2">
                 <MiniLedger credit label="Wallet top-up" amount="+₹2,000.00" />
                 <MiniLedger label="Credit check" amount="−₹61.36" />
@@ -215,7 +215,7 @@ export default function LandingPage() {
             <p className="eyebrow text-brand-400">Pricing & trust</p>
             <h2 className="mt-4 text-3xl font-bold leading-[1.1] md:text-5xl">Pay per check. No subscription, no surprises.</h2>
             <p className="mt-5 max-w-lg text-base leading-7 text-white/60">
-              Load your Broget Pay wallet once and each CIBIL check is deducted from it - with the fee and GST shown before you run it.
+              Load your wallet once and each CIBIL check is deducted from it - with the fee and GST shown before you run it.
             </p>
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {[
@@ -237,7 +237,7 @@ export default function LandingPage() {
 
           <div className="hairline-top relative rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-8 shadow-[0_40px_100px_-30px_rgba(0,0,0,0.7)] backdrop-blur md:p-10">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-white/70">Broget Pay wallet</p>
+              <p className="text-sm font-medium text-white/70">Wallet balance</p>
               <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-400/20">Pay as you go</span>
             </div>
             <p className="mt-6 flex items-baseline gap-2">
@@ -342,7 +342,7 @@ function HeroVisual() {
               <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/15">
                 <IconWallet size={14} />
               </span>
-              Broget Pay balance
+              Wallet balance
             </span>
             <LogoMark size={26} />
           </div>

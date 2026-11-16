@@ -17,10 +17,10 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Broget AI Agent - CIBIL checks, customers & Broget Pay wallet",
+    default: "Broget AI Agent - CIBIL checks, customers & wallet",
     template: "%s · Broget AI Agent",
   },
-  description: "The professional workspace for Broget AI agents: run consent-based CIBIL checks, manage customers and top up your Broget Pay wallet.",
+  description: "The professional workspace for Broget AI agents: run consent-based CIBIL checks, manage customers and top up your wallet.",
   icons: {
     icon: [{ url: "/favicon.ico" }, { url: "/favicon.png", type: "image/png" }],
   },
