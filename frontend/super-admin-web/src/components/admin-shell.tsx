@@ -10,9 +10,10 @@ import { publicWebsiteUrl } from "@/components/public-chrome";
 import { clearSession, logout, restoreSession, saveSession, walletOverview, type AdminAccount, type AdminSession, type WalletOverview } from "@/lib/api";
 import { agentLabel, findCustomer, groups, maskAadhaar, maskPan, phoneLabel, sections, type DeskCustomer } from "@/lib/desk";
 
-const DeskContext = createContext<{ openCustomer: (id: string) => void; notify: (tone: "ok" | "bad", title: string, detail?: string) => void }>({
+const DeskContext = createContext<{ openCustomer: (id: string) => void; notify: (tone: "ok" | "bad", title: string, detail?: string) => void; admin: AdminAccount | null }>({
   openCustomer: () => {},
   notify: () => {},
+  admin: null,
 });
 
 export function useDesk() {
@@ -27,6 +28,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [noticesOpen, setNoticesOpen] = useState(false);
   const [topups, setTopups] = useState<WalletOverview["recentTopups"]>([]);
   const [freshTopups, setFreshTopups] = useState(0);
+  const [aopay, setAopay] = useState<WalletOverview["aopay"] | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [admin, setAdmin] = useState<AdminAccount | null>(null);
   const [toast, setToast] = useState<{ id: number; tone: "ok" | "bad"; title: string; detail?: string } | null>(null);
@@ -87,6 +90,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   function signOut() {
     setMenu(false);
+    setProfileOpen(false);
     setNoticesOpen(false);
     setAdmin(null);
     setSignedIn(false);
@@ -105,6 +109,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           const real = data.recentTopups.filter((t) => t.status === "success" && !t.testMode);
           const since = Date.now() - 24 * 60 * 60 * 1000;
           setTopups(real.slice(0, 6));
+          setAopay(data.aopay);
           setFreshTopups(real.filter((t) => new Date(t.createdAt).getTime() >= since).length);
         })
         .catch(() => undefined);
@@ -123,6 +128,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
       document.body.style.overflow = "";
     };
   }, [menu, drawerOpen]);
+
+  const currentSection = sections.find((section) => `/${section.slug}` === path);
+  const currentLabel = currentSection?.label ?? "Home";
+  const currentGroup = currentSection?.group;
 
   if (signedIn === null) {
     return (
@@ -143,7 +152,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <DeskContext.Provider value={{ openCustomer, notify: pushToast }}>
+    <DeskContext.Provider value={{ openCustomer, notify: pushToast, admin }}>
       <div className="h-dvh overflow-hidden bg-[#eef3fb] text-[#12182b]">
         <button
           type="button"
@@ -180,11 +189,20 @@ export function AdminShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <div className="shrink-0 border-t border-white/10 px-3 py-4">
-            <button type="button" onClick={signOut} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-[#fecaca] transition-colors duration-200 hover:bg-white/10">
-              <Icon name="logout" />
-              Logout
-            </button>
+          <div className="shrink-0 border-t border-white/10 p-3">
+            <div className="rounded-2xl bg-white/[0.06] p-3 ring-1 ring-white/10">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[linear-gradient(140deg,#5b8cff,#2f6bff)] text-sm font-extrabold">{initials(admin?.name || admin?.email || "A")}</span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-extrabold">{admin?.name || "Super Admin"}</p>
+                  <p className="truncate text-[11px] font-semibold text-[#9fb0d0]">{admin?.email}</p>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link href="/account" onClick={() => setMenu(false)} className="rounded-xl bg-white/10 px-2 py-2 text-center text-xs font-extrabold text-white transition hover:bg-white/15">My account</Link>
+                <button type="button" onClick={signOut} className="rounded-xl bg-[#dc2626]/15 px-2 py-2 text-xs font-extrabold text-[#fecaca] transition hover:bg-[#dc2626]/25">Logout</button>
+              </div>
+            </div>
           </div>
         </aside>
         <div className="flex h-dvh min-w-0 flex-col lg:pl-[280px]">
@@ -192,6 +210,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <button type="button" className="grid h-10 w-10 place-items-center rounded-xl border border-[#e6ebf5] lg:hidden" onClick={() => setMenu(true)} aria-label="Open menu">
               <Icon name="menu" />
             </button>
+            <div className="min-w-0 shrink-0 md:max-w-[220px]">
+              <p className="text-[10px] font-extrabold tracking-[0.14em] text-[#8b95a7]">{currentGroup ? currentGroup.toUpperCase() : "SUPER ADMIN"}</p>
+              <p className="truncate text-base font-extrabold leading-tight">{currentLabel}</p>
+            </div>
             <form
               className="hidden min-w-0 flex-1 md:block"
               onSubmit={(event) => {
@@ -203,18 +225,29 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search flights, hotels, or customers"
-                className="w-full max-w-xl rounded-xl border border-[#e6ebf5] bg-[#f7f9fd] px-4 py-2.5 text-sm font-semibold outline-none transition-colors duration-200 focus:border-[#2f6bff]"
+                className="w-full max-w-md rounded-xl border border-[#e6ebf5] bg-[#f7f9fd] px-4 py-2.5 text-sm font-semibold outline-none transition-colors duration-200 focus:border-[#2f6bff] focus:bg-white"
               />
             </form>
-            <p className="ml-auto max-w-[42vw] truncate rounded-xl bg-[#eaf1ff] px-3 py-2 text-sm font-extrabold text-[#2f6bff] sm:max-w-[240px]" title={admin?.email}>{admin?.email}</p>
+            <Link
+              href="/wallet"
+              title={aopay?.ok ? "Live AO Pay balance" : aopay?.message}
+              className={`ml-auto hidden items-center gap-2 rounded-xl border px-3 py-2 text-sm font-extrabold transition sm:inline-flex ${aopay?.ok && (aopay.balance ?? 0) < 500 ? "border-[#fecaca] bg-[#fff1f2] text-[#dc2626]" : "border-[#d6e4ff] bg-[#eaf1ff] text-[#2f6bff]"} hover:brightness-[.98]`}
+            >
+              <Icon name="wallet" />
+              <span className="text-[11px] font-bold opacity-70">AO Pay</span>
+              <span className="tabular-nums">{aopay?.ok && aopay.balance != null ? `₹${aopay.balance.toLocaleString("en-IN", { maximumFractionDigits: 2 })}` : "—"}</span>
+            </Link>
             <div className="relative">
-              <button type="button" aria-label="Notifications" aria-expanded={noticesOpen} onClick={() => setNoticesOpen((open) => !open)} className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#e6ebf5] bg-white text-[#12182b]">
+              <button type="button" aria-label="Notifications" aria-expanded={noticesOpen} onClick={() => {
+                  setNoticesOpen((open) => !open);
+                  setProfileOpen(false);
+                }} className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#e6ebf5] bg-white text-[#12182b]">
                 <Icon name="bell" />
                 {freshTopups ? <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#16a34a] px-1 text-[10px] font-extrabold text-white">{freshTopups}</span> : null}
                 <span className="sr-only">Notifications</span>
               </button>
               {noticesOpen ? (
-                <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-[#e6ebf5] bg-white p-2 shadow-xl">
+                <div className="pop-in absolute right-0 z-30 mt-2 w-80 rounded-2xl border border-[#e6ebf5] bg-white p-2 shadow-xl">
                   <p className="px-2 py-1.5 text-xs font-extrabold tracking-[0.12em] text-[#8b95a7]">NOTIFICATIONS</p>
                   <p className="px-2 pt-1 text-[11px] font-extrabold text-[#2f6bff]">AGENT TOP-UPS</p>
                   {topups.length === 0 ? <p className="px-2 py-2 text-sm font-semibold text-[#5c677a]">No top-ups yet.</p> : null}
@@ -233,11 +266,45 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 </div>
               ) : null}
             </div>
-            <button type="button" onClick={signOut} className="rounded-xl border border-[#fecaca] bg-[#fff1f2] px-3 py-2 text-sm font-extrabold text-[#dc2626]">
-              Logout
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOpen((open) => !open);
+                  setNoticesOpen(false);
+                }}
+                aria-expanded={profileOpen}
+                aria-label="Account menu"
+                className="flex items-center gap-2 rounded-xl border border-[#e6ebf5] bg-white p-1 pr-2 transition hover:bg-[#f8fafc]"
+              >
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[linear-gradient(140deg,#5b8cff,#2f6bff)] text-xs font-extrabold text-white">{initials(admin?.name || admin?.email || "A")}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true" className={`text-[#8b95a7] transition-transform ${profileOpen ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6" /></svg>
+              </button>
+              {profileOpen ? (
+                <>
+                  <button type="button" aria-label="Close account menu" className="fixed inset-0 z-20 cursor-default" onClick={() => setProfileOpen(false)} />
+                  <div className="pop-in absolute right-0 z-30 mt-2 w-64 rounded-2xl border border-[#e6ebf5] bg-white p-2 shadow-xl">
+                    <div className="rounded-xl bg-[#f8fafc] px-3 py-2.5">
+                      <p className="truncate text-sm font-extrabold">{admin?.name || "Super Admin"}</p>
+                      <p className="truncate text-xs font-semibold text-[#8b95a7]">{admin?.email}</p>
+                    </div>
+                    <Link href="/account" onClick={() => setProfileOpen(false)} className="mt-1 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold hover:bg-[#f4f7fc]">
+                      <Icon name="account" /> My account &amp; password
+                    </Link>
+                    <Link href="/wallet" onClick={() => setProfileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold hover:bg-[#f4f7fc]">
+                      <Icon name="wallet" /> Wallet &amp; AO Pay
+                    </Link>
+                    <button type="button" onClick={signOut} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-[#dc2626] hover:bg-[#fff1f2]">
+                      <Icon name="logout" /> Logout
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </div>
           </header>
-          <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 md:px-6 md:py-6">{children}</main>
+          <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 md:px-8 md:py-7">
+            <div key={path} className="page-in mx-auto max-w-[1400px]">{children}</div>
+          </main>
         </div>
         {drawerMounted && customerId ? <CustomerDrawer id={customerId} open={drawerOpen} onClose={closeDrawer} /> : null}
         <LoginToast toast={toast} onClose={() => setToast(null)} />
@@ -405,7 +472,7 @@ function CustomerFile({ customer }: { customer: DeskCustomer }) {
   );
 }
 
-function Icon({ name }: { name: string }) {
+export function Icon({ name }: { name: string }) {
   const props = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   if (name === "menu") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h16" /></svg>;
   if (name === "bell") return <svg {...props}><path d="M6 9a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9M10 20a2 2 0 0 0 4 0" /></svg>;
@@ -421,4 +488,9 @@ function Icon({ name }: { name: string }) {
   if (name === "account") return <svg {...props}><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></svg>;
   if (name === "agents") return <svg {...props}><path d="M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M19 8v6M22 11h-6" /></svg>;
   return <svg {...props}><path d="M10 7V5a2 2 0 0 1 2-2h7v14h-7a2 2 0 0 1-2-2M10 12H3M6 9l-3 3 3 3" /></svg>;
+}
+
+function initials(value: string) {
+  const parts = value.replace(/@.*/, "").split(/[\s._-]+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "A") + (parts[1]?.[0] ?? "")).toUpperCase();
 }

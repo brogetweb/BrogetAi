@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HouseWalletCard } from "@/components/agent-count";
+import { Icon, useDesk } from "@/components/admin-shell";
 import {
   cibilRevenue,
   listAgents,
   listCreditReports,
   listCustomers,
   listFlightOrders,
+  walletOverview,
   type CibilRevenueSnapshot,
+  type WalletOverview,
   type FlightOrderRow,
 } from "@/lib/api";
 
@@ -18,6 +21,9 @@ function money(n: number) {
 }
 
 export function HomeDesk() {
+  const { admin } = useDesk();
+  const [overview, setOverview] = useState<WalletOverview | null>(null);
+  const [today] = useState(() => new Date());
   const [flights, setFlights] = useState<FlightOrderRow[]>([]);
   const [cibil, setCibil] = useState<CibilRevenueSnapshot | null>(null);
   const [agents, setAgents] = useState(0);
@@ -28,10 +34,11 @@ export function HomeDesk() {
 
   useEffect(() => {
     let active = true;
-    Promise.allSettled([listFlightOrders(), cibilRevenue(), listAgents(), listCustomers(), listCreditReports()])
+    Promise.allSettled([listFlightOrders(), cibilRevenue(), listAgents(), listCustomers(), listCreditReports(), walletOverview()])
       .then((results) => {
         if (!active) return;
-        const [flightRes, cibilRes, agentRes, customerRes, reportRes] = results;
+        const [flightRes, cibilRes, agentRes, customerRes, reportRes, overviewRes] = results;
+        if (overviewRes.status === "fulfilled") setOverview(overviewRes.value);
         if (flightRes.status === "fulfilled") setFlights(flightRes.value);
         if (cibilRes.status === "fulfilled") setCibil(cibilRes.value);
         if (agentRes.status === "fulfilled") setAgents(agentRes.value.length);
@@ -57,17 +64,73 @@ export function HomeDesk() {
   const recentFlights = [...flights].slice(0, 5);
   const topAgents = (cibil?.agents ?? []).filter((a) => a.hasActivity).slice(0, 5);
   const silentAgents = (cibil?.agents ?? []).filter((a) => !a.hasActivity).slice(0, 5);
+  const realTopups = (overview?.recentTopups ?? []).filter((t) => t.status === "success" && !t.testMode);
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.9fr]">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">Welcome back</h1>
-          <p className="mt-1 text-sm font-semibold text-[#5c677a]">
-            Live money from Book flights and agent CIBIL wallet charges. No sample rows.
-          </p>
+      <section className="relative overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#0e1b33_0%,#16306b_55%,#2f6bff_120%)] px-6 py-6 text-white md:px-8 md:py-7">
+        <div aria-hidden className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[#2f6bff]/40 blur-3xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-extrabold tracking-[0.14em] text-[#9fb0d0]">{today.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).toUpperCase()}</p>
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight md:text-3xl">{greeting(today)}, {(admin?.name || "Admin").split(" ")[0]}</h1>
+            <p className="mt-1 max-w-xl text-sm font-semibold text-[#c9d6f2]">Live money from agent wallets, CIBIL checks and Book flights. No sample rows.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              ["/agents", "agents", "Add agent"],
+              ["/wallet", "wallet", "Wallet & AO Pay"],
+              ["/cibil", "cibil", "CIBIL reports"],
+              ["/customers", "customers", "Customers"],
+            ].map(([href, icon, label]) => (
+              <Link key={href} href={href} className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-extrabold ring-1 ring-white/15 transition hover:bg-white/20">
+                <Icon name={icon} /> {label}
+              </Link>
+            ))}
+          </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+      </section>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi
+          href="/wallet"
+          tone="text-[#2f6bff]"
+          label="AO Pay balance"
+          value={overview?.aopay.ok && overview.aopay.balance != null ? money(overview.aopay.balance) : "—"}
+          hint={overview ? (overview.aopay.ok ? "Live from AO Pay" : "Add AO Pay balance keys") : "…"}
+        />
+        <Kpi href="/wallet" tone="text-[#16a34a]" label="Agents recharged" value={overview ? money(overview.totals.recharged) : "…"} hint={overview ? `${overview.totals.topups} payments` : "…"} />
+        <Kpi href="/cibil" tone="text-[#7c3aed]" label="Used for CIBIL" value={overview ? money(overview.totals.used) : "…"} hint={overview ? `${overview.totals.checks} checks` : "…"} />
+        <Kpi href="/wallet" tone="text-[#d97706]" label="Agent wallets now" value={overview ? money(overview.totals.agentBalances) : "…"} hint="Spendable by agents" />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.9fr]">
+        <section className="rounded-3xl border border-[#e6ebf5] bg-white p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-extrabold">Latest agent top-ups</h2>
+              <p className="text-xs font-bold text-[#8b95a7]">Real Razorpay payments, newest first</p>
+            </div>
+            <Link href="/wallet" className="text-sm font-extrabold text-[#2f6bff]">View all</Link>
+          </div>
+          <div className="divide-y divide-[#eef1f6]">
+            {realTopups.slice(0, 5).map((t) => (
+              <div key={t.id} className="flex items-center justify-between gap-3 py-2.5">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#e8f8ee] text-xs font-extrabold text-[#16a34a]">{t.agentName.slice(0, 2).toUpperCase()}</span>
+                  <div className="min-w-0">
+                    <p className="truncate font-extrabold text-[#12182b]">{t.agentName}</p>
+                    <p className="text-xs font-semibold text-[#8b95a7]">{new Date(t.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</p>
+                  </div>
+                </div>
+                <p className="shrink-0 font-extrabold text-[#16a34a]">+{money(t.amount)}</p>
+              </div>
+            ))}
+            {overview && realTopups.length === 0 ? <p className="py-8 text-center text-sm font-semibold text-[#8b95a7]">No agent top-ups yet.</p> : null}
+          </div>
+        </section>
+        <div className="grid content-start gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <HouseWalletCard />
           <Link href="/flights" className="rounded-2xl bg-[#2f6bff] p-4 text-white transition hover:brightness-105">
             <p className="text-lg font-extrabold">Flights money</p>
             <p className="mt-1 text-sm font-semibold text-[#d6e4ff]">{loading ? "…" : `${money(flightTotal)} collected`}</p>
@@ -78,8 +141,6 @@ export function HomeDesk() {
           </Link>
         </div>
       </div>
-
-      <HouseWalletCard />
 
       {error ? <p className="rounded-2xl border border-[#fecdd3] bg-[#fff1f2] px-4 py-3 text-sm font-semibold text-[#be123c]">{error}</p> : null}
 
@@ -180,7 +241,7 @@ export function HomeDesk() {
 
 function Tile({ label, value, tint }: { label: string; value: string; tint: string }) {
   return (
-    <article className={`rounded-2xl p-4 ${tint}`}>
+    <article className={`rounded-2xl border border-white/60 p-4 ${tint}`}>
       <p className="text-2xl font-extrabold tracking-tight">{value}</p>
       <p className="mt-1 text-sm font-extrabold">{label}</p>
     </article>
@@ -193,5 +254,20 @@ function Mini({ label, value }: { label: string; value: string }) {
       <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#8b95a7]">{label}</p>
       <p className="mt-1 text-lg font-extrabold text-[#0b1f3a]">{value}</p>
     </div>
+  );
+}
+
+function greeting(date: Date) {
+  const hour = date.getHours();
+  return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+}
+
+function Kpi({ href, label, value, hint, tone }: { href: string; label: string; value: string; hint: string; tone: string }) {
+  return (
+    <Link href={href} className={`kpi-card group rounded-2xl border border-[#e6ebf5] bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-lg ${tone}`}>
+      <p className="text-sm font-extrabold text-[#5c677a]">{label}</p>
+      <p className="mt-2 text-3xl font-extrabold tracking-tight text-[#12182b]">{value}</p>
+      <p className="mt-1 text-xs font-bold">{hint}</p>
+    </Link>
   );
 }
