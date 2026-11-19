@@ -28,7 +28,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [noticesOpen, setNoticesOpen] = useState(false);
   const [topups, setTopups] = useState<WalletOverview["recentTopups"]>([]);
   const [freshTopups, setFreshTopups] = useState(0);
-  const [aopay, setAopay] = useState<WalletOverview["aopay"] | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [admin, setAdmin] = useState<AdminAccount | null>(null);
@@ -109,7 +108,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
           const real = data.recentTopups.filter((t) => t.status === "success" && !t.testMode);
           const since = Date.now() - 24 * 60 * 60 * 1000;
           setTopups(real.slice(0, 6));
-          setAopay(data.aopay);
           setFreshTopups(real.filter((t) => new Date(t.createdAt).getTime() >= since).length);
         })
         .catch(() => undefined);
@@ -228,15 +226,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 className="w-full max-w-md rounded-xl border border-[#e6ebf5] bg-[#f7f9fd] px-4 py-2.5 text-sm font-semibold outline-none transition-colors duration-200 focus:border-[#2f6bff] focus:bg-white"
               />
             </form>
-            <Link
-              href="/wallet"
-              title={aopay?.ok ? "Live AO Pay balance" : aopay?.message}
-              className={`ml-auto hidden items-center gap-2 rounded-xl border px-3 py-2 text-sm font-extrabold transition sm:inline-flex ${aopay?.ok && (aopay.balance ?? 0) < 500 ? "border-[#fecaca] bg-[#fff1f2] text-[#dc2626]" : "border-[#d6e4ff] bg-[#eaf1ff] text-[#2f6bff]"} hover:brightness-[.98]`}
-            >
-              <Icon name="wallet" />
-              <span className="text-[11px] font-bold opacity-70">AO Pay</span>
-              <span className="tabular-nums">{aopay?.ok && aopay.balance != null ? `₹${aopay.balance.toLocaleString("en-IN", { maximumFractionDigits: 2 })}` : "—"}</span>
-            </Link>
+            <span className="ml-auto" />
             <div className="relative">
               <button type="button" aria-label="Notifications" aria-expanded={noticesOpen} onClick={() => {
                   setNoticesOpen((open) => !open);
@@ -260,7 +250,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                       <span className="shrink-0 text-sm font-extrabold text-[#16a34a]">+₹{t.amount.toLocaleString("en-IN")}</span>
                     </div>
                   ))}
-                  <Link href="/wallet" onClick={() => setNoticesOpen(false)} className="mt-1 block rounded-xl bg-[#eaf1ff] px-2 py-2 text-center text-xs font-extrabold text-[#2f6bff]">Open Wallet &amp; AO Pay</Link>
+                  <Link href="/wallet" onClick={() => setNoticesOpen(false)} className="mt-1 block rounded-xl bg-[#eaf1ff] px-2 py-2 text-center text-xs font-extrabold text-[#2f6bff]">Open Agent Wallets</Link>
                   <p className="px-2 py-2 text-xs font-semibold text-[#8b95a7]">New customers show on their list.</p>
                   {/* <p className="px-2 py-3 text-sm font-semibold text-[#5c677a]">New customers and KYC uploads show on their lists.</p> */}
                 </div>
@@ -292,7 +282,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                       <Icon name="account" /> My account &amp; password
                     </Link>
                     <Link href="/wallet" onClick={() => setProfileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold hover:bg-[#f4f7fc]">
-                      <Icon name="wallet" /> Wallet &amp; AO Pay
+                      <Icon name="wallet" /> Agent wallets
                     </Link>
                     <button type="button" onClick={signOut} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-[#dc2626] hover:bg-[#fff1f2]">
                       <Icon name="logout" /> Logout

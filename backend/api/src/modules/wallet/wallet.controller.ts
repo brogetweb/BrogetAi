@@ -20,7 +20,7 @@ export class WalletController {
     return this.wallet.houseSnapshot();
   }
 
-  /** Super admin: AO Pay balance, every agent's top-ups and usage, and the latest top-ups. */
+  /** Super admin: every agent's top-ups and usage, and the latest top-ups. */
   @Get('admin/overview')
   @UseGuards(AccessTokenGuard)
   adminOverview() {

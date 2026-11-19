@@ -9,7 +9,7 @@ const when = (v?: string | null) => (v ? new Date(v).toLocaleString("en-IN", { d
 
 type TopupFilter = "all" | "success" | "pending" | "failed" | "test";
 
-/** Super admin: AO Pay balance, what every agent recharged and used, and each top-up as it comes in. */
+/** Super admin: what every agent recharged and used, their balance now, and each top-up as it comes in. */
 export function WalletOverviewDesk() {
   const { notify } = useDesk();
   const [data, setData] = useState<WalletOverview | null>(null);
@@ -57,21 +57,19 @@ export function WalletOverviewDesk() {
     return <p className="rounded-2xl bg-white px-4 py-10 text-center text-sm font-semibold text-[#8b95a7]">{loading ? "Loading wallet overview" : "Could not load the wallet overview."}</p>;
   }
 
-  const { aopay, totals } = data;
-  const aopayChecksLeft = aopay.balance != null && data.chargePerCheck > 0 ? Math.floor(aopay.balance / data.chargePerCheck) : null;
+  const { totals } = data;
+  const pending = data.agents.reduce((t, a) => t + a.pendingTopups, 0);
 
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <article className={`rounded-2xl border p-4 ${aopay.ok && (aopay.balance ?? 0) < 500 ? "border-[#fecaca] bg-[#fff1f2]" : "border-[#d6e4ff] bg-[#eaf1ff]"}`}>
+        <article className="rounded-2xl border border-[#d6e4ff] bg-[#eaf1ff] p-4">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-extrabold">AO Pay balance</p>
+            <p className="text-sm font-extrabold">Pending top-ups</p>
             <button type="button" onClick={() => void load()} disabled={loading} className="rounded-lg bg-white px-2 py-1 text-[11px] font-extrabold text-[#2f6bff] disabled:opacity-50">{loading ? "…" : "Refresh"}</button>
           </div>
-          <p className="mt-2 text-3xl font-extrabold tracking-tight">{aopay.balance != null ? inr(aopay.balance) : "-"}</p>
-          <p className="mt-1 text-xs font-bold text-[#5c677a]">
-            {aopay.ok ? `≈ ${aopayChecksLeft ?? 0} CIBIL checks · ${when(aopay.checkedAt)}` : aopay.message}
-          </p>
+          <p className="mt-2 text-3xl font-extrabold tracking-tight">{pending}</p>
+          <p className="mt-1 text-xs font-bold text-[#5c677a]">Started but not yet confirmed by Razorpay</p>
         </article>
         <Stat label="Agents recharged" value={inr(totals.recharged)} hint={`${totals.topups} payments · ${totals.agentsWithRecharge} agents`} />
         <Stat label="Used for CIBIL" value={inr(totals.used)} hint={`${totals.checks} checks`} />
