@@ -202,6 +202,8 @@ export type AgentProfile = AgentAccount & {
   memberSince: string | null;
   lastLoginAt: string | null;
   passwordChangedAt: string | null;
+  /** True after a super admin reset the password - the agent should pick their own. */
+  mustChangePassword?: boolean;
 };
 
 /** GET /auth/agent/me */

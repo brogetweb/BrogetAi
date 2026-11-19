@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { AdminAccountDesk } from "@/components/admin-account";
 import { AgentsDesk } from "@/components/agents-desk";
 import { BookingDesk } from "@/components/booking-desk";
 import { CibilList } from "@/components/cibil-list";
@@ -28,9 +29,10 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
         {section.slug === "customers" ? <CustomerList /> : null}
         {section.slug === "cibil" ? <CibilList /> : null}
         {section.slug === "agents" ? <AgentsDesk /> : null}
+        {section.slug === "account" ? <AdminAccountDesk /> : null}
         {/* {section.slug === "kyc" ? <KycDesk /> : null} */}
         {section.slug === "users" ? <TravelUsers /> : null}
-        {section.slug === "flights" || section.slug === "hotels" || section.slug === "customers" || section.slug === "cibil" || section.slug === "agents" || section.slug === "users" ? null : <SectionView section={section} />}
+        {section.slug === "flights" || section.slug === "hotels" || section.slug === "customers" || section.slug === "cibil" || section.slug === "agents" || section.slug === "users" || section.slug === "account" ? null : <SectionView section={section} />}
       </div>
     </div>
   );

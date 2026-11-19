@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useDesk } from "@/components/admin-shell";
 import { createAgent, deleteAgent, listAgents, setAgentStatus, type AgentProfile } from "@/lib/api";
 import { phoneLabel } from "@/lib/desk";
+import { AgentManagePanel } from "@/components/agent-manage-panel";
 
 export function AgentsDesk() {
   const { notify } = useDesk();
@@ -56,7 +57,7 @@ export function AgentsDesk() {
     const next = agent.status === "active" ? "inactive" : "active";
     try {
       const saved = await setAgentStatus(agent.id, next);
-      setAgents((current) => current.map((row) => (row.id === saved.id ? saved : row)));
+      setAgents((current) => current.map((row) => (row.id === saved.id ? { ...row, ...saved } : row)));
       notify(next === "inactive" ? "bad" : "ok", next === "inactive" ? "Agent blocked" : "Agent active", saved.name);
     } catch (caught) {
       notify("bad", "Could not update the agent", caught instanceof Error ? caught.message : "Try again.");
@@ -85,7 +86,7 @@ export function AgentsDesk() {
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="bg-[#f8fafc] text-[11px] font-extrabold tracking-wide text-[#8b95a7]">
                 <tr>
-                  {["Agent", "ID", "City", "Mobile", "Status", ""].map((column) => (
+                  {["Agent", "ID", "City", "Mobile", "Last sign-in", "Status", ""].map((column) => (
                     <th key={column || "view"} className="px-4 py-3 font-extrabold">{column}</th>
                   ))}
                 </tr>
@@ -100,11 +101,15 @@ export function AgentsDesk() {
                     <td className="px-4 py-3 font-semibold text-[#3d4658]">{agent.id}</td>
                     <td className="px-4 py-3 font-semibold text-[#3d4658]">{agent.city}</td>
                     <td className="px-4 py-3 font-semibold text-[#3d4658]">{phoneLabel(agent.phone)}</td>
-                    <td className="px-4 py-3"><StatusPill status={agent.status} /></td>
+                    <td className="px-4 py-3 text-xs font-semibold text-[#5c677a]">{agent.lastLoginAt ? new Date(agent.lastLoginAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Never"}</td>
+                    <td className="px-4 py-3">
+                      <StatusPill status={agent.status} />
+                      {agent.mustChangePassword ? <p className="mt-1 text-[10px] font-extrabold text-[#b45309]">Must change password</p> : null}
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button type="button" onClick={() => { setCreating(false); setOpenId(agent.id); }} className="rounded-xl border border-[#d6e4ff] bg-[#eaf1ff] px-3 py-1.5 text-xs font-extrabold text-[#2f6bff]">
-                          View
+                          Manage
                         </button>
                         <button type="button" onClick={() => void toggleBlock(agent)} className={`rounded-xl px-3 py-1.5 text-xs font-extrabold ${agent.status === "active" ? "bg-[#fff1f2] text-[#dc2626]" : "bg-[#e8f8ee] text-[#16a34a]"}`}>
                           {agent.status === "active" ? "Block" : "Unblock"}
@@ -133,7 +138,16 @@ export function AgentsDesk() {
           onError={(message) => notify("bad", "Could not create the agent", message)}
         />
       ) : null}
-      {openAgent ? <AgentPanel agent={openAgent} onClose={() => setOpenId(null)} onBlock={() => void toggleBlock(openAgent)} onDelete={() => setPendingDelete(openAgent)} /> : null}
+      {openAgent ? (
+        <AgentManagePanel
+          agent={openAgent}
+          notify={notify}
+          onClose={() => setOpenId(null)}
+          onSaved={(saved) => setAgents((current) => current.map((row) => (row.id === saved.id ? { ...row, ...saved } : row)))}
+          onBlock={() => void toggleBlock(openAgent)}
+          onDelete={() => setPendingDelete(openAgent)}
+        />
+      ) : null}
       {pendingDelete ? (
         <div className="fixed inset-0 z-[70]">
           <button type="button" aria-label="Cancel delete" onClick={() => { if (!deleting) setPendingDelete(null); }} className="absolute inset-0 bg-[#0e1b33]/45 fade-in" />
@@ -238,53 +252,3 @@ function StatusPill({ status }: { status: AgentProfile["status"] }) {
   return <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${active ? "bg-[#e8f8ee] text-[#16a34a]" : "bg-[#fff1f2] text-[#dc2626]"}`}>{active ? "Active" : "Inactive"}</span>;
 }
 
-function AgentPanel({ agent, onClose, onBlock, onDelete }: { agent: AgentProfile; onClose: () => void; onBlock: () => void; onDelete: () => void }) {
-  return (
-    <div className="fixed inset-0 z-40">
-      <button type="button" aria-label="Close agent panel" onClick={onClose} className="absolute inset-0 bg-[#0e1b33]/45 fade-in" />
-      <aside className="drawer-in absolute inset-y-0 right-0 flex w-full flex-col bg-[#f4f7fc] shadow-2xl sm:max-w-[460px] sm:rounded-l-[28px]">
-        <div className="flex items-start justify-between gap-3 border-b border-[#e6ebf5] bg-white px-5 py-4 sm:rounded-tl-[28px]">
-          <div>
-            <p className="text-xs font-extrabold tracking-[0.12em] text-[#8b95a7]">{agent.id}</p>
-            <h2 className="text-xl font-extrabold">{agent.name}</h2>
-          </div>
-          <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-xl border border-[#eef1f6] bg-white" aria-label="Close">
-            ×
-          </button>
-        </div>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
-          <div className="flex items-center justify-between gap-3">
-            <StatusPill status={agent.status} />
-            <div className="flex gap-2">
-              <button type="button" onClick={onBlock} className={`rounded-xl px-3 py-2 text-xs font-extrabold ${agent.status === "active" ? "bg-[#fff1f2] text-[#dc2626]" : "bg-[#e8f8ee] text-[#16a34a]"}`}>
-                {agent.status === "active" ? "Block" : "Unblock"}
-              </button>
-              <button type="button" onClick={onDelete} className="rounded-xl border border-[#fecaca] bg-white px-3 py-2 text-xs font-extrabold text-[#dc2626]">
-                Delete
-              </button>
-            </div>
-          </div>
-          <section className="rounded-2xl bg-white p-4">
-            <h3 className="text-xs font-extrabold tracking-[0.12em] text-[#8b95a7]">Profile</h3>
-            <dl className="mt-3 space-y-3 text-sm">
-              <Row label="Email" value={agent.email} />
-              <Row label="Mobile" value={phoneLabel(agent.phone)} />
-              <Row label="City" value={agent.city} />
-              <Row label="Agent ID" value={agent.id} />
-            </dl>
-          </section>
-          <p className="text-sm font-semibold leading-6 text-[#5c677a]">{agent.status === "inactive" ? "This agent is blocked." : "This agent can sign in to the agent app with this email and password."}</p>
-        </div>
-      </aside>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs font-extrabold text-[#8b95a7]">{label}</dt>
-      <dd className="font-extrabold text-[#12182b]">{value}</dd>
-    </div>
-  );
-}

@@ -49,6 +49,7 @@ export class AuthService implements OnModuleInit {
     const matches = user ? await bcrypt.compare(password, user.passwordHash) : false;
     if (!user || !matches || user.role !== 'super_admin') throw new UnauthorizedException(mismatch);
     if (user.status !== 'active') throw new UnauthorizedException('This account is inactive.');
+    await this.users.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
     return this.issue({ id: user.id, email: user.email, role: 'super_admin' }, this.present(user));
   }
 
@@ -129,6 +130,7 @@ export class AuthService implements OnModuleInit {
     }
     agent.passwordHash = await bcrypt.hash(newPassword, 12);
     agent.passwordChangedAt = new Date();
+    agent.mustChangePassword = false;
     await agent.save();
     // Every existing session (other browsers, the mobile app) must sign in again with the new password.
     await this.revokeAgentSessions(key);
@@ -161,6 +163,59 @@ export class AuthService implements OnModuleInit {
       memberSince: agent.get('createdAt') ?? null,
       lastLoginAt: agent.lastLoginAt ?? null,
       passwordChangedAt: agent.passwordChangedAt ?? null,
+      mustChangePassword: agent.mustChangePassword === true,
+    };
+  }
+
+  // ---------- super admin's own account
+
+  async adminProfile(userId: string) {
+    return this.presentAdminProfile(await this.activeAdmin(userId));
+  }
+
+  async updateAdminProfile(userId: string, name: string) {
+    const user = await this.activeAdmin(userId);
+    user.name = name;
+    await user.save();
+    return this.presentAdminProfile(user);
+  }
+
+  async changeAdminPassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.activeAdmin(userId);
+    const key = `admin:${user.id}`;
+    const failures = this.passwordFailures.get(key);
+    if (failures && failures.until > Date.now() && failures.count >= PASSWORD_ATTEMPTS) {
+      throw new HttpException('Too many wrong attempts. Try again in 15 minutes.', HttpStatus.TOO_MANY_REQUESTS);
+    }
+    if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      const next = failures && failures.until > Date.now() ? failures.count + 1 : 1;
+      this.passwordFailures.set(key, { count: next, until: Date.now() + PASSWORD_LOCK_MS });
+      throw new BadRequestException('Your current password is not correct.');
+    }
+    this.passwordFailures.delete(key);
+    if (await bcrypt.compare(newPassword, user.passwordHash)) {
+      throw new BadRequestException('Choose a new password that is different from the current one.');
+    }
+    user.passwordHash = await bcrypt.hash(newPassword, 12);
+    user.passwordChangedAt = new Date();
+    await user.save();
+    await this.sessions.updateMany({ userId: user._id, role: { $in: ['super_admin', null] }, revokedAt: { $exists: false } }, { $set: { revokedAt: new Date() } });
+    const session = await this.issue({ id: user.id, email: user.email, role: 'super_admin' }, this.present(user));
+    return { ...session, profile: this.presentAdminProfile(user) };
+  }
+
+  private async activeAdmin(userId: string) {
+    const user = await this.users.findById(userId);
+    if (!user || user.status !== 'active' || user.role !== 'super_admin') throw new UnauthorizedException('Sign in again.');
+    return user;
+  }
+
+  private presentAdminProfile(user: UserDocument) {
+    return {
+      ...this.present(user),
+      memberSince: user.get('createdAt') ?? null,
+      lastLoginAt: user.lastLoginAt ?? null,
+      passwordChangedAt: user.passwordChangedAt ?? null,
     };
   }
 

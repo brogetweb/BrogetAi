@@ -4,7 +4,7 @@ import { AgentTokenGuard } from './agent-token.guard';
 import { AuthService } from './auth.service';
 import { AccessPayload } from './auth.types';
 import { CurrentUser } from './current-user.decorator';
-import { ChangePasswordDto, UpdateAgentProfileDto } from './dto/agent-profile.dto';
+import { ChangePasswordDto, UpdateAdminProfileDto, UpdateAgentProfileDto } from './dto/agent-profile.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 
@@ -58,6 +58,26 @@ export class AuthController {
   @UseGuards(AgentTokenGuard)
   logoutAllAgent(@CurrentUser() user: AccessPayload) {
     return this.auth.logoutAllAgent(user.sub);
+  }
+
+  /** Super admin's own account. */
+  @Get('admin/me')
+  @UseGuards(AccessTokenGuard)
+  adminProfile(@CurrentUser() user: AccessPayload) {
+    return this.auth.adminProfile(user.sub);
+  }
+
+  @Patch('admin/me')
+  @UseGuards(AccessTokenGuard)
+  updateAdminProfile(@CurrentUser() user: AccessPayload, @Body() body: UpdateAdminProfileDto) {
+    return this.auth.updateAdminProfile(user.sub, body.name);
+  }
+
+  @Post('admin/change-password')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard)
+  changeAdminPassword(@CurrentUser() user: AccessPayload, @Body() body: ChangePasswordDto) {
+    return this.auth.changeAdminPassword(user.sub, body.currentPassword, body.newPassword);
   }
 
   @Get('me')

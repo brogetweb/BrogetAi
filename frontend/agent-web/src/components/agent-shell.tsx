@@ -8,6 +8,7 @@ import {
   AgentAccount,
   createCustomer,
   checkTopup,
+  fetchProfile,
   verifyRazorpayPayment,
   createTopup,
   Customer,
@@ -95,6 +96,7 @@ export function AgentShell() {
   const [checkFor, setCheckFor] = useState<string | null>(null);
   const [wallet, setWallet] = useState<WalletSnapshot | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const { toasts, notify, dismiss, remove } = useToasts();
   const mainRef = useRef<HTMLElement>(null);
 
@@ -128,6 +130,14 @@ export function AgentShell() {
   useEffect(() => {
     if (user) void fetchWallet();
   }, [user, fetchWallet]);
+
+  // After an admin reset, nudge the agent to choose their own password.
+  useEffect(() => {
+    if (!user) return;
+    fetchProfile()
+      .then((profile) => setMustChangePassword(profile.mustChangePassword === true))
+      .catch(() => undefined);
+  }, [user]);
 
   const go = useCallback((next: Tab) => {
     setTab(next);
@@ -276,6 +286,16 @@ export function AgentShell() {
 
         <main ref={mainRef} className="panel-scroll min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
           <div key={tab} className="view-in stagger mx-auto max-w-6xl">
+            {mustChangePassword && tab !== "profile" ? (
+              <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="flex items-center gap-3 text-sm font-medium text-amber-900">
+                  <IconLock size={18} className="shrink-0" /> Your password was reset by the admin. Set your own password to keep your account secure.
+                </p>
+                <button type="button" onClick={() => go("profile")} className="btn shrink-0 bg-amber-600 text-white hover:bg-amber-700">
+                  Change password
+                </button>
+              </div>
+            ) : null}
             {tab === "home" ? <HomeTab user={user} walletState={walletState} notify={notify} go={go} startCheck={startCheck} /> : null}
             {tab === "customers" ? <CustomersTab notify={notify} startCheck={startCheck} /> : null}
             {tab === "cibil" ? <CibilTab notify={notify} walletState={walletState} initialCustomerId={checkFor} go={go} /> : null}
@@ -284,7 +304,7 @@ export function AgentShell() {
             {tab === "profile" ? (
               <>
                 <PageHeader title="Profile" icon={<IconLock size={22} />} description="View and update your details, change your password and manage sign-ins." />
-                <ProfileTab notify={notify} onSaved={setUser} onSignedOut={() => router.replace("/login")} />
+                <ProfileTab notify={notify} onSaved={setUser} onSignedOut={() => router.replace("/login")} onPasswordChanged={() => setMustChangePassword(false)} />
               </>
             ) : null}
           </div>

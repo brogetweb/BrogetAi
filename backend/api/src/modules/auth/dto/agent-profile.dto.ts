@@ -23,6 +23,15 @@ export class UpdateAgentProfileDto {
   city: string;
 }
 
+/** Super admin's own name. */
+export class UpdateAdminProfileDto {
+  @Transform(trim)
+  @IsString()
+  @MinLength(2, { message: 'Enter your full name.' })
+  @MaxLength(60)
+  name: string;
+}
+
 export class ChangePasswordDto {
   @IsString()
   @MinLength(1, { message: 'Enter your current password.' })

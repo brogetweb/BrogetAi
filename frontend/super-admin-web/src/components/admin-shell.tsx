@@ -380,6 +380,7 @@ function Icon({ name }: { name: string }) {
   if (name === "cibil") return <svg {...props}><path d="M12 3a9 9 0 1 0 9 9h-9z" /></svg>;
   if (name === "customers") return <svg {...props}><path d="M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M20 19v-1a3 3 0 0 0-2-2.8M16 6.1a3 3 0 0 1 0 5.8" /></svg>;
   if (name === "kyc") return <svg {...props}><path d="M8 4h6l4 4v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM14 4v4h4M9 13h6M9 17h4" /></svg>;
+  if (name === "account") return <svg {...props}><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></svg>;
   if (name === "agents") return <svg {...props}><path d="M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M19 8v6M22 11h-6" /></svg>;
   return <svg {...props}><path d="M10 7V5a2 2 0 0 1 2-2h7v14h-7a2 2 0 0 1-2-2M10 12H3M6 9l-3 3 3 3" /></svg>;
 }

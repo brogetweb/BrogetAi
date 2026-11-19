@@ -18,7 +18,7 @@ const passwordRules = [
   { label: "Contains a number", test: (v: string) => /\d/.test(v) },
 ];
 
-export function ProfileTab({ notify, onSaved, onSignedOut }: { notify: Notify; onSaved: (user: AgentAccount) => void; onSignedOut: () => void }) {
+export function ProfileTab({ notify, onSaved, onSignedOut, onPasswordChanged }: { notify: Notify; onSaved: (user: AgentAccount) => void; onSignedOut: () => void; onPasswordChanged?: () => void }) {
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -46,6 +46,11 @@ export function ProfileTab({ notify, onSaved, onSignedOut }: { notify: Notify; o
 
   return (
     <div className="space-y-6">
+      {profile.mustChangePassword ? (
+        <p role="alert" className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+          <IconAlert size={16} className="mt-0.5 shrink-0" /> Your password was reset by the Broget AI admin. Choose your own password below.
+        </p>
+      ) : null}
       <div className="card flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
         <Avatar name={profile.name || profile.email} size={64} />
         <div className="min-w-0 flex-1">
@@ -70,7 +75,13 @@ export function ProfileTab({ notify, onSaved, onSignedOut }: { notify: Notify; o
             onSaved({ id: next.id, email: next.email, name: next.name, phone: next.phone, city: next.city, role: "agent" });
           }}
         />
-        <PasswordForm notify={notify} onChanged={setProfile} />
+        <PasswordForm
+          notify={notify}
+          onChanged={(next) => {
+            setProfile(next);
+            onPasswordChanged?.();
+          }}
+        />
       </div>
 
       <SecurityCard profile={profile} notify={notify} onSignedOut={onSignedOut} />

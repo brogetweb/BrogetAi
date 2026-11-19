@@ -98,7 +98,75 @@ export type AgentProfile = {
   phone: string;
   city: string;
   status: "active" | "inactive";
+  createdAt?: string | null;
+  lastLoginAt?: string | null;
+  passwordChangedAt?: string | null;
+  mustChangePassword?: boolean;
 };
+
+export type AdminProfile = AdminAccount & {
+  memberSince: string | null;
+  lastLoginAt: string | null;
+  passwordChangedAt: string | null;
+};
+
+/** PATCH /agents/:id - name, login email, mobile, city. A new email signs the agent out everywhere. */
+export async function updateAgent(id: string, input: { name: string; email: string; phone: string; city: string }) {
+  const response = await authorized(`/agents/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) });
+  if (!response.ok) throw new Error(await readError(response, "Could not save the agent."));
+  return (await response.json()) as AgentProfile;
+}
+
+/** POST /agents/:id/reset-password - signs the agent out everywhere and asks them to pick their own password. */
+export async function resetAgentPassword(id: string, newPassword: string) {
+  const response = await authorized(`/agents/${encodeURIComponent(id)}/reset-password`, { method: "POST", body: JSON.stringify({ newPassword }) });
+  if (!response.ok) throw new Error(await readError(response, "Could not reset the password."));
+  return (await response.json()) as AgentProfile & { signedOut: number };
+}
+
+/** POST /agents/:id/logout-all */
+export async function logoutAgentEverywhere(id: string) {
+  const response = await authorized(`/agents/${encodeURIComponent(id)}/logout-all`, { method: "POST" });
+  if (!response.ok) throw new Error(await readError(response, "Could not sign the agent out."));
+  return (await response.json()) as { id: string; signedOut: number };
+}
+
+/** GET /auth/admin/me */
+export async function fetchAdminProfile() {
+  const response = await authorized("/auth/admin/me");
+  if (!response.ok) throw new Error(await readError(response, "Could not load your account."));
+  return (await response.json()) as AdminProfile;
+}
+
+/** PATCH /auth/admin/me */
+export async function updateAdminProfile(name: string) {
+  const response = await authorized("/auth/admin/me", { method: "PATCH", body: JSON.stringify({ name }) });
+  if (!response.ok) throw new Error(await readError(response, "Could not save your name."));
+  return (await response.json()) as AdminProfile;
+}
+
+/** POST /auth/admin/change-password - other admin sessions end; this tab gets a fresh session. */
+export async function changeAdminPassword(currentPassword: string, newPassword: string) {
+  const response = await authorized("/auth/admin/change-password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) });
+  if (!response.ok) throw new Error(await readError(response, "Could not change your password."));
+  const body = (await response.json()) as AdminSession & { profile: AdminProfile };
+  if (body.accessToken && body.refreshToken) saveSession(body);
+  return body.profile;
+}
+
+/** Strong random password for a reset: 12 chars, letters + digits, no look-alike characters. */
+export function generatePassword() {
+  const letters = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
+  const digits = "23456789";
+  const all = letters + digits;
+  const pick = (set: string) => set[crypto.getRandomValues(new Uint32Array(1))[0] % set.length];
+  const chars = [pick(letters), pick(digits), ...Array.from({ length: 10 }, () => pick(all))];
+  for (let i = chars.length - 1; i > 0; i -= 1) {
+    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join("");
+}
 
 async function authorized(path: string, init: RequestInit = {}) {
   const access = window.sessionStorage.getItem(accessKey);
