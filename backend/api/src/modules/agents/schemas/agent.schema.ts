@@ -32,6 +32,12 @@ export class Agent {
 
   @Prop()
   creditCheckLockedUntil?: Date;
+
+  @Prop()
+  lastLoginAt?: Date;
+
+  @Prop()
+  passwordChangedAt?: Date;
 }
 
 export type AgentDocument = HydratedDocument<Agent>;

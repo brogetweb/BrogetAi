@@ -36,6 +36,7 @@ import {
   IconFile,
   IconGauge,
   IconHome,
+  IconLock,
   IconLogout,
   IconMenu,
   IconPlus,
@@ -48,10 +49,11 @@ import {
 } from "@/components/icons";
 import { Avatar, EmptyState, Logo, ScoreBadge, ScoreGauge, scoreBand } from "@/components/ui";
 import { BandBars, DailyBars, lastDays, Sparkline } from "@/components/charts";
+import { ProfileTab } from "@/components/profile-tab";
 import { Toaster, useToasts } from "@/components/toast";
 import { LedgerTable } from "@/components/ledger-table";
 
-type Tab = "home" | "customers" | "cibil" | "checks" | "wallet";
+type Tab = "home" | "customers" | "cibil" | "checks" | "wallet" | "profile";
 type Notify = (ok: boolean, title: string, detail?: string) => void;
 type WalletState = { wallet: WalletSnapshot | null; loading: boolean; reload: () => Promise<void> };
 
@@ -61,6 +63,7 @@ const nav: { id: Tab; label: string; hint: string; icon: ReactNode }[] = [
   { id: "cibil", label: "CIBIL check", hint: "Run a new credit report", icon: <IconGauge /> },
   { id: "checks", label: "Reports", hint: "All credit checks you have run", icon: <IconFile /> },
   { id: "wallet", label: "Wallet", hint: "Balance, top-ups and ledger", icon: <IconWallet /> },
+  { id: "profile", label: "Profile", hint: "Your details, password and security", icon: <IconLock /> },
 ];
 
 function money(n: number) {
@@ -221,11 +224,13 @@ export function AgentShell() {
           </div>
 
           <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-            <Avatar name={user.name || user.email} size={34} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">{user.name}</p>
-              <p className="truncate text-xs text-white/50">{user.email}</p>
-            </div>
+            <button type="button" onClick={() => go("profile")} title="Profile" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition hover:opacity-90">
+              <Avatar name={user.name || user.email} size={34} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-white">{user.name}</span>
+                <span className="block truncate text-xs text-white/50">{user.email}</span>
+              </span>
+            </button>
             <button
               type="button"
               title="Log out"
@@ -264,9 +269,9 @@ export function AgentShell() {
           <Link href="/" className="btn btn-ghost btn-sm hidden h-9 xl:inline-flex" title="Public site">
             <IconExternal size={15} /> Website
           </Link>
-          <span className="hidden sm:block">
+          <button type="button" onClick={() => go("profile")} title="Profile & password" aria-label="Open profile" className="hidden rounded-full transition hover:ring-2 hover:ring-brand/30 sm:block">
             <Avatar name={user.name || user.email} size={32} />
-          </span>
+          </button>
         </header>
 
         <main ref={mainRef} className="panel-scroll min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
@@ -276,6 +281,12 @@ export function AgentShell() {
             {tab === "cibil" ? <CibilTab notify={notify} walletState={walletState} initialCustomerId={checkFor} go={go} /> : null}
             {tab === "checks" ? <ChecksTab notify={notify} startCheck={startCheck} /> : null}
             {tab === "wallet" ? <WalletTab user={user} walletState={walletState} notify={notify} /> : null}
+            {tab === "profile" ? (
+              <>
+                <PageHeader title="Profile" icon={<IconLock size={22} />} description="View and update your details, change your password and manage sign-ins." />
+                <ProfileTab notify={notify} onSaved={setUser} onSignedOut={() => router.replace("/login")} />
+              </>
+            ) : null}
           </div>
         </main>
       </div>
