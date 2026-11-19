@@ -40,6 +40,10 @@ export class WalletEntry {
   @Prop({ trim: true })
   gatewayPaymentId?: string;
 
+  /** Paid with Razorpay TEST keys: shown in the ledger but never added to the spendable balance. */
+  @Prop({ default: false })
+  testMode?: boolean;
+
   /** Payer mobile, used to prefill checkout. */
   @Prop({ trim: true })
   mobile?: string;

@@ -20,6 +20,12 @@ export class User {
 
   @Prop({ required: true, enum: ['active', 'inactive'], default: 'active' })
   status: UserStatus;
+
+  @Prop()
+  lastLoginAt?: Date;
+
+  @Prop()
+  passwordChangedAt?: Date;
 }
 
 export type UserDocument = HydratedDocument<User>;

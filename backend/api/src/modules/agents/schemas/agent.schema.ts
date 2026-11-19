@@ -32,6 +32,16 @@ export class Agent {
 
   @Prop()
   creditCheckLockedUntil?: Date;
+
+  @Prop()
+  lastLoginAt?: Date;
+
+  @Prop()
+  passwordChangedAt?: Date;
+
+  /** Set when a super admin resets the password; cleared when the agent picks their own. */
+  @Prop({ default: false })
+  mustChangePassword?: boolean;
 }
 
 export type AgentDocument = HydratedDocument<Agent>;

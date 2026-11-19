@@ -8,6 +8,7 @@ import {
   AgentAccount,
   createCustomer,
   checkTopup,
+  fetchProfile,
   verifyRazorpayPayment,
   createTopup,
   Customer,
@@ -36,6 +37,7 @@ import {
   IconFile,
   IconGauge,
   IconHome,
+  IconLock,
   IconLogout,
   IconMenu,
   IconPlus,
@@ -48,10 +50,11 @@ import {
 } from "@/components/icons";
 import { Avatar, EmptyState, Logo, ScoreBadge, ScoreGauge, scoreBand } from "@/components/ui";
 import { BandBars, DailyBars, lastDays, Sparkline } from "@/components/charts";
+import { ProfileTab } from "@/components/profile-tab";
 import { Toaster, useToasts } from "@/components/toast";
 import { LedgerTable } from "@/components/ledger-table";
 
-type Tab = "home" | "customers" | "cibil" | "checks" | "wallet";
+type Tab = "home" | "customers" | "cibil" | "checks" | "wallet" | "profile";
 type Notify = (ok: boolean, title: string, detail?: string) => void;
 type WalletState = { wallet: WalletSnapshot | null; loading: boolean; reload: () => Promise<void> };
 
@@ -61,6 +64,7 @@ const nav: { id: Tab; label: string; hint: string; icon: ReactNode }[] = [
   { id: "cibil", label: "CIBIL check", hint: "Run a new credit report", icon: <IconGauge /> },
   { id: "checks", label: "Reports", hint: "All credit checks you have run", icon: <IconFile /> },
   { id: "wallet", label: "Wallet", hint: "Balance, top-ups and ledger", icon: <IconWallet /> },
+  { id: "profile", label: "Profile", hint: "Your details, password and security", icon: <IconLock /> },
 ];
 
 function money(n: number) {
@@ -92,6 +96,7 @@ export function AgentShell() {
   const [checkFor, setCheckFor] = useState<string | null>(null);
   const [wallet, setWallet] = useState<WalletSnapshot | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const { toasts, notify, dismiss, remove } = useToasts();
   const mainRef = useRef<HTMLElement>(null);
 
@@ -125,6 +130,14 @@ export function AgentShell() {
   useEffect(() => {
     if (user) void fetchWallet();
   }, [user, fetchWallet]);
+
+  // After an admin reset, nudge the agent to choose their own password.
+  useEffect(() => {
+    if (!user) return;
+    fetchProfile()
+      .then((profile) => setMustChangePassword(profile.mustChangePassword === true))
+      .catch(() => undefined);
+  }, [user]);
 
   const go = useCallback((next: Tab) => {
     setTab(next);
@@ -221,11 +234,13 @@ export function AgentShell() {
           </div>
 
           <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-            <Avatar name={user.name || user.email} size={34} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">{user.name}</p>
-              <p className="truncate text-xs text-white/50">{user.email}</p>
-            </div>
+            <button type="button" onClick={() => go("profile")} title="Profile" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition hover:opacity-90">
+              <Avatar name={user.name || user.email} size={34} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-white">{user.name}</span>
+                <span className="block truncate text-xs text-white/50">{user.email}</span>
+              </span>
+            </button>
             <button
               type="button"
               title="Log out"
@@ -264,18 +279,34 @@ export function AgentShell() {
           <Link href="/" className="btn btn-ghost btn-sm hidden h-9 xl:inline-flex" title="Public site">
             <IconExternal size={15} /> Website
           </Link>
-          <span className="hidden sm:block">
+          <button type="button" onClick={() => go("profile")} title="Profile & password" aria-label="Open profile" className="hidden rounded-full transition hover:ring-2 hover:ring-brand/30 sm:block">
             <Avatar name={user.name || user.email} size={32} />
-          </span>
+          </button>
         </header>
 
         <main ref={mainRef} className="panel-scroll min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
           <div key={tab} className="view-in stagger mx-auto max-w-6xl">
+            {mustChangePassword && tab !== "profile" ? (
+              <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="flex items-center gap-3 text-sm font-medium text-amber-900">
+                  <IconLock size={18} className="shrink-0" /> Your password was reset by the admin. Set your own password to keep your account secure.
+                </p>
+                <button type="button" onClick={() => go("profile")} className="btn shrink-0 bg-amber-600 text-white hover:bg-amber-700">
+                  Change password
+                </button>
+              </div>
+            ) : null}
             {tab === "home" ? <HomeTab user={user} walletState={walletState} notify={notify} go={go} startCheck={startCheck} /> : null}
             {tab === "customers" ? <CustomersTab notify={notify} startCheck={startCheck} /> : null}
             {tab === "cibil" ? <CibilTab notify={notify} walletState={walletState} initialCustomerId={checkFor} go={go} /> : null}
             {tab === "checks" ? <ChecksTab notify={notify} startCheck={startCheck} /> : null}
             {tab === "wallet" ? <WalletTab user={user} walletState={walletState} notify={notify} /> : null}
+            {tab === "profile" ? (
+              <>
+                <PageHeader title="Profile" icon={<IconLock size={22} />} description="View and update your details, change your password and manage sign-ins." />
+                <ProfileTab notify={notify} onSaved={setUser} onSignedOut={() => router.replace("/login")} onPasswordChanged={() => setMustChangePassword(false)} />
+              </>
+            ) : null}
           </div>
         </main>
       </div>
@@ -849,10 +880,10 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
                 className="input pl-8 text-base font-semibold"
               />
             </span>
-            <span className="mt-1.5 block text-xs text-subtle">Minimum ₹300 · maximum ₹5,00,000 per payment</span>
+            <span className="mt-1.5 block text-xs text-subtle">Minimum ₹65 · maximum ₹5,00,000 per payment</span>
           </label>
           <div className="mt-3 flex flex-wrap gap-2">
-            {[500, 1000, 2000, 5000].map((value) => (
+            {[100, 500, 1000, 5000].map((value) => (
               <button
                 key={value}
                 type="button"
@@ -930,7 +961,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
           <h4 className="mt-6 text-sm font-semibold text-ink">How a top-up works</h4>
           <ol className="mt-3 grid gap-3 sm:grid-cols-3">
             {[
-              ["Enter amount", "Minimum ₹300 and a UPI mobile number."],
+              ["Enter amount", "Minimum ₹65 and a UPI mobile number."],
               ["Pay securely", "UPI, card, net banking or wallet in the Razorpay window."],
               ["Balance updates", "Instantly, once Razorpay confirms."],
             ].map(([t, d], i) => (
@@ -1094,8 +1125,8 @@ function RazorpayPayDialog({
   useEffect(() => {
     if (announced.current || !done) return;
     announced.current = true;
-    notify(true, "Payment received", `${money(amount)} added to your wallet.`);
-  }, [done, amount, notify]);
+    notify(true, entry?.testMode ? "Test payment received" : "Payment received", entry?.testMode ? "Test mode - not added to your balance." : `${money(amount)} added to your wallet.`);
+  }, [done, amount, notify, entry?.testMode]);
 
   async function checkNow() {
     setChecking(true);
@@ -1173,10 +1204,14 @@ function RazorpayPayDialog({
               <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-[0_8px_24px_-6px_rgba(16,185,129,.6)]">
                 <IconCheck size={32} />
               </span>
-              <p className="mt-4 text-lg font-semibold text-emerald-800">Payment successful</p>
-              <p className="mt-1 text-sm text-emerald-700">
-                {money(amount)} added. New balance {money(wallet?.balance ?? 0)}.
-              </p>
+              <p className="mt-4 text-lg font-semibold text-emerald-800">{entry?.testMode ? "Test payment successful" : "Payment successful"}</p>
+              {entry?.testMode ? (
+                <p className="mt-1 text-sm text-amber-700">Test mode: {money(amount)} is recorded but NOT added to your balance, so it cannot be used for CIBIL checks.</p>
+              ) : (
+                <p className="mt-1 text-sm text-emerald-700">
+                  {money(amount)} added. New balance {money(wallet?.balance ?? 0)}.
+                </p>
+              )}
               {entry?.utr ? <p className="mt-2 font-mono text-[11px] text-emerald-700/80">Ref {entry.utr}</p> : null}
             </div>
           ) : view === "verifying" ? (

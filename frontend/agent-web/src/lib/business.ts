@@ -18,6 +18,6 @@ export const pricing = {
   cibilFee: 52,
   cibilGst: 9.36,
   cibilTotal: 61.36,
-  minTopup: 300,
+  minTopup: 65,
   maxTopup: 500000,
 } as const;

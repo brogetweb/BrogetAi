@@ -82,9 +82,18 @@ export const sections: Section[] = [
     columns: ["Agent", "ID", "City", "Customers"],
     rows: [],
   },
+  {
+    slug: "account",
+    label: "My account",
+    group: "Settings",
+    title: "My account",
+    blurb: "Your super-admin profile, password and sign-in activity.",
+    columns: [],
+    rows: [],
+  },
 ];
 
-export const groups = ["Travel", "CIBIL", "Agents"];
+export const groups = ["Travel", "CIBIL", "Agents", "Settings"];
 
 export type TravelUser = {
   id: string;

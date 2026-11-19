@@ -183,8 +183,8 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
   Future<void> next() async {
     final parsed = double.tryParse(amount.text.trim());
     final phone = mobile.text.trim();
-    if (parsed == null || parsed < 300) {
-      setState(() => error = 'Top-up accepts ₹300 or more.');
+    if (parsed == null || parsed < 65) {
+      setState(() => error = 'Top-up accepts ₹65 or more.');
       return;
     }
     if (parsed > 500000) {
@@ -234,7 +234,7 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
-            children: [500, 1000, 2000, 5000].map((value) {
+            children: [100, 500, 1000, 5000].map((value) {
               final selected = amount.text == '$value';
               return ChoiceChip(
                 label: Text('₹$value'),

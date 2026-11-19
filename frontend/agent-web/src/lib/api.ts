@@ -58,7 +58,7 @@ export type WalletSnapshot = {
   fee: number;
   gst: number;
   lowBalance: boolean;
-  entries: { id: string; kind: string; amount: number; status: string; note?: string; utr?: string; fee?: number; gst?: number; createdAt: string }[];
+  entries: { id: string; kind: string; amount: number; status: string; note?: string; utr?: string; fee?: number; gst?: number; testMode?: boolean; createdAt: string }[];
 };
 
 type ErrorBody = { message?: string | string[]; code?: string };
@@ -196,6 +196,49 @@ async function authorized(path: string, init: RequestInit = {}) {
   return run(access);
 }
 
+export type AgentProfile = AgentAccount & {
+  code: string;
+  status: string;
+  memberSince: string | null;
+  lastLoginAt: string | null;
+  passwordChangedAt: string | null;
+  /** True after a super admin reset the password - the agent should pick their own. */
+  mustChangePassword?: boolean;
+};
+
+/** GET /auth/agent/me */
+export async function fetchProfile() {
+  const response = await authorized("/auth/agent/me");
+  if (!response.ok) throw new Error(await readError(response, "Could not load your profile."));
+  return (await response.json()) as AgentProfile;
+}
+
+/** PATCH /auth/agent/me - name, mobile and city. Email is the login ID and is changed by the admin only. */
+export async function updateProfile(input: { name: string; phone: string; city: string }) {
+  const response = await authorized("/auth/agent/me", { method: "PATCH", body: JSON.stringify(input) });
+  if (!response.ok) throw new Error(await readError(response, "Could not save your profile."));
+  const profile = (await response.json()) as AgentProfile;
+  const stored = readStoredUser();
+  if (stored) sessionStorage.setItem(userKey, JSON.stringify({ ...stored, name: profile.name, phone: profile.phone, city: profile.city }));
+  return profile;
+}
+
+/** POST /auth/agent/change-password - every other device is signed out; this tab gets a fresh session. */
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const response = await authorized("/auth/agent/change-password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) });
+  if (!response.ok) throw new Error(await readError(response, "Could not change your password."));
+  const body = (await response.json()) as AgentSession & { profile: AgentProfile };
+  if (body.accessToken && body.refreshToken && body.user?.email) saveSession(body);
+  return body.profile;
+}
+
+/** POST /auth/agent/logout-all - signs out every browser and the mobile app, including this tab. */
+export async function logoutEverywhere() {
+  const response = await authorized("/auth/agent/logout-all", { method: "POST" });
+  if (!response.ok) throw new Error(await readError(response, "Could not sign out other devices."));
+  clearSession();
+}
+
 export async function walletSnapshot() {
   const response = await authorized("/wallet");
   if (!response.ok) throw new Error(await readError(response, "Could not load wallet."));
@@ -218,7 +261,7 @@ export type TopupResult = {
 
 /** Same rules the backend DTO and the agent mobile app enforce. */
 export function validateTopup(amount: number, mobile: string): string | null {
-  if (!Number.isFinite(amount) || amount < 300) return "Top-up accepts ₹300 or more.";
+  if (!Number.isFinite(amount) || amount < 65) return "Top-up accepts ₹65 or more.";
   if (amount > 500000) return "The most you can add in one payment is ₹5,00,000.";
   if (Math.round(amount * 100) !== amount * 100) return "Use at most 2 decimal places.";
   if (!/^[6-9]\d{9}$/.test(mobile)) return "Enter a 10-digit mobile number.";
