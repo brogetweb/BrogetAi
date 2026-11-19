@@ -196,6 +196,47 @@ async function authorized(path: string, init: RequestInit = {}) {
   return run(access);
 }
 
+export type AgentProfile = AgentAccount & {
+  code: string;
+  status: string;
+  memberSince: string | null;
+  lastLoginAt: string | null;
+  passwordChangedAt: string | null;
+};
+
+/** GET /auth/agent/me */
+export async function fetchProfile() {
+  const response = await authorized("/auth/agent/me");
+  if (!response.ok) throw new Error(await readError(response, "Could not load your profile."));
+  return (await response.json()) as AgentProfile;
+}
+
+/** PATCH /auth/agent/me - name, mobile and city. Email is the login ID and is changed by the admin only. */
+export async function updateProfile(input: { name: string; phone: string; city: string }) {
+  const response = await authorized("/auth/agent/me", { method: "PATCH", body: JSON.stringify(input) });
+  if (!response.ok) throw new Error(await readError(response, "Could not save your profile."));
+  const profile = (await response.json()) as AgentProfile;
+  const stored = readStoredUser();
+  if (stored) sessionStorage.setItem(userKey, JSON.stringify({ ...stored, name: profile.name, phone: profile.phone, city: profile.city }));
+  return profile;
+}
+
+/** POST /auth/agent/change-password - every other device is signed out; this tab gets a fresh session. */
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const response = await authorized("/auth/agent/change-password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) });
+  if (!response.ok) throw new Error(await readError(response, "Could not change your password."));
+  const body = (await response.json()) as AgentSession & { profile: AgentProfile };
+  if (body.accessToken && body.refreshToken && body.user?.email) saveSession(body);
+  return body.profile;
+}
+
+/** POST /auth/agent/logout-all - signs out every browser and the mobile app, including this tab. */
+export async function logoutEverywhere() {
+  const response = await authorized("/auth/agent/logout-all", { method: "POST" });
+  if (!response.ok) throw new Error(await readError(response, "Could not sign out other devices."));
+  clearSession();
+}
+
 export async function walletSnapshot() {
   const response = await authorized("/wallet");
   if (!response.ok) throw new Error(await readError(response, "Could not load wallet."));
