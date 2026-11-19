@@ -8,6 +8,7 @@ import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto, Ver
 import { HouseWallet, HouseWalletDocument } from './schemas/house-wallet.schema';
 import { WalletEntry, WalletEntryDocument } from './schemas/wallet-entry.schema';
 import { razorpayCheckoutPage } from './razorpay-checkout.page';
+import { AopayBalanceClient } from './aopay-balance.client';
 import { RazorpayClient } from './razorpay.client';
 import { API_CHARGE_PAISE, API_FEE_PAISE, API_GST_PAISE, paiseToRupees, rupeesToPaise } from './wallet.money';
 
@@ -26,6 +27,7 @@ export class WalletService {
     @InjectModel(Agent.name) private readonly agents: Model<AgentDocument>,
     private readonly config: ConfigService,
     private readonly razorpay: RazorpayClient,
+    private readonly aopayBalance: AopayBalanceClient,
   ) {}
 
   async snapshot(agentId: string) {
@@ -114,6 +116,113 @@ export class WalletService {
       balance: paiseToRupees(row?.balancePaise ?? 0),
       charge: paiseToRupees(API_CHARGE_PAISE),
       entries: rows.map((entry) => this.present(entry)),
+    };
+  }
+
+  /**
+   * Super admin money view: live AO Pay balance, what each agent recharged and used, and recent top-ups.
+   * Test-mode Razorpay payments are counted separately and never as real money.
+   */
+  async adminOverview() {
+    const [aopay, agents, perAgent, recent] = await Promise.all([
+      this.aopayBalance.fetch(),
+      this.agents.find().sort({ name: 1 }),
+      this.entries.aggregate<{
+        _id: string;
+        topupPaise: number;
+        topups: number;
+        testTopupPaise: number;
+        usedPaise: number;
+        checks: number;
+        pendingTopups: number;
+        lastTopupAt?: Date;
+        lastCheckAt?: Date;
+      }>([
+        { $match: { agentId: { $ne: 'broget' } } },
+        {
+          $group: {
+            _id: '$agentId',
+            topupPaise: { $sum: { $cond: [{ $and: [{ $eq: ['$kind', 'topup'] }, { $eq: ['$status', 'success'] }, { $ne: ['$testMode', true] }] }, '$amountPaise', 0] } },
+            topups: { $sum: { $cond: [{ $and: [{ $eq: ['$kind', 'topup'] }, { $eq: ['$status', 'success'] }, { $ne: ['$testMode', true] }] }, 1, 0] } },
+            testTopupPaise: { $sum: { $cond: [{ $and: [{ $eq: ['$kind', 'topup'] }, { $eq: ['$status', 'success'] }, { $eq: ['$testMode', true] }] }, '$amountPaise', 0] } },
+            usedPaise: { $sum: { $cond: [{ $and: [{ $eq: ['$kind', 'usage'] }, { $eq: ['$status', 'success'] }] }, '$amountPaise', 0] } },
+            checks: { $sum: { $cond: [{ $and: [{ $eq: ['$kind', 'usage'] }, { $eq: ['$status', 'success'] }] }, 1, 0] } },
+            pendingTopups: { $sum: { $cond: [{ $and: [{ $eq: ['$kind', 'topup'] }, { $eq: ['$status', 'pending'] }] }, 1, 0] } },
+            lastTopupAt: { $max: { $cond: [{ $and: [{ $eq: ['$kind', 'topup'] }, { $eq: ['$status', 'success'] }] }, '$createdAt', null] } },
+            lastCheckAt: { $max: { $cond: [{ $eq: ['$kind', 'usage'] }, '$createdAt', null] } },
+          },
+        },
+      ]),
+      this.entries.find({ kind: 'topup', agentId: { $ne: 'broget' } }).sort({ createdAt: -1 }).limit(100),
+    ]);
+
+    const stats = new Map(perAgent.map((row) => [String(row._id), row]));
+    const byId = new Map(agents.map((agent) => [String(agent._id), agent]));
+    const rows = agents.map((agent) => {
+      const s = stats.get(String(agent._id)) ?? stats.get(agent.code);
+      return {
+        agentId: agent.code,
+        name: agent.name,
+        email: agent.email,
+        phone: agent.phone,
+        status: agent.status as 'active' | 'inactive' | 'deleted',
+        balance: paiseToRupees(agent.walletBalancePaise ?? 0),
+        recharged: paiseToRupees(s?.topupPaise ?? 0),
+        topups: s?.topups ?? 0,
+        testRecharged: paiseToRupees(s?.testTopupPaise ?? 0),
+        used: paiseToRupees(s?.usedPaise ?? 0),
+        checks: s?.checks ?? 0,
+        pendingTopups: s?.pendingTopups ?? 0,
+        lastTopupAt: s?.lastTopupAt ?? null,
+        lastCheckAt: s?.lastCheckAt ?? null,
+      };
+    });
+    // Money moved by agents that were later deleted must still be counted.
+    const known = new Set(agents.flatMap((agent) => [String(agent._id), agent.code]));
+    for (const s of perAgent) {
+      const id = String(s._id);
+      if (known.has(id) || (!s.topupPaise && !s.usedPaise && !s.testTopupPaise && !s.pendingTopups)) continue;
+      rows.push({
+        agentId: id,
+        name: 'Deleted agent',
+        email: '',
+        phone: '',
+        status: 'deleted',
+        balance: 0,
+        recharged: paiseToRupees(s.topupPaise),
+        topups: s.topups,
+        testRecharged: paiseToRupees(s.testTopupPaise),
+        used: paiseToRupees(s.usedPaise),
+        checks: s.checks,
+        pendingTopups: s.pendingTopups,
+        lastTopupAt: s.lastTopupAt ?? null,
+        lastCheckAt: s.lastCheckAt ?? null,
+      });
+    }
+    rows.sort((a, b) => b.recharged - a.recharged || b.used - a.used || a.name.localeCompare(b.name));
+
+    const sum = (pick: (r: (typeof rows)[number]) => number) => Math.round(rows.reduce((t, r) => t + pick(r), 0) * 100) / 100;
+    return {
+      aopay,
+      chargePerCheck: paiseToRupees(API_CHARGE_PAISE),
+      totals: {
+        recharged: sum((r) => r.recharged),
+        topups: rows.reduce((t, r) => t + r.topups, 0),
+        testRecharged: sum((r) => r.testRecharged),
+        used: sum((r) => r.used),
+        checks: rows.reduce((t, r) => t + r.checks, 0),
+        agentBalances: sum((r) => r.balance),
+        agentsWithRecharge: rows.filter((r) => r.topups > 0).length,
+      },
+      agents: rows,
+      recentTopups: recent.map((entry) => {
+        const agent = byId.get(String(entry.agentId));
+        return {
+          ...this.present(entry),
+          agentId: agent?.code ?? String(entry.agentId),
+          agentName: agent?.name ?? 'Deleted agent',
+        };
+      }),
     };
   }
 

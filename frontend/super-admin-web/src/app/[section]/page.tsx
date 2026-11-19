@@ -9,6 +9,7 @@ import { FlightOrders } from "@/components/flight-orders";
 // import { KycDesk } from "@/components/kyc-desk";
 import { SectionView } from "@/components/section-view";
 import { TravelUsers } from "@/components/travel-users";
+import { WalletOverviewDesk } from "@/components/wallet-overview";
 import { findSection, sections } from "@/lib/desk";
 
 export function generateStaticParams() {
@@ -30,9 +31,10 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
         {section.slug === "cibil" ? <CibilList /> : null}
         {section.slug === "agents" ? <AgentsDesk /> : null}
         {section.slug === "account" ? <AdminAccountDesk /> : null}
+        {section.slug === "wallet" ? <WalletOverviewDesk /> : null}
         {/* {section.slug === "kyc" ? <KycDesk /> : null} */}
         {section.slug === "users" ? <TravelUsers /> : null}
-        {section.slug === "flights" || section.slug === "hotels" || section.slug === "customers" || section.slug === "cibil" || section.slug === "agents" || section.slug === "users" || section.slug === "account" ? null : <SectionView section={section} />}
+        {section.slug === "flights" || section.slug === "hotels" || section.slug === "customers" || section.slug === "cibil" || section.slug === "agents" || section.slug === "users" || section.slug === "account" || section.slug === "wallet" ? null : <SectionView section={section} />}
       </div>
     </div>
   );

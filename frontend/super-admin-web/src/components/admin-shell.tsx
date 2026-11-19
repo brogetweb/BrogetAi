@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { LoginScreen } from "@/components/login-screen";
 import { publicWebsiteUrl } from "@/components/public-chrome";
-import { clearSession, logout, restoreSession, saveSession, type AdminAccount, type AdminSession } from "@/lib/api";
+import { clearSession, logout, restoreSession, saveSession, walletOverview, type AdminAccount, type AdminSession, type WalletOverview } from "@/lib/api";
 import { agentLabel, findCustomer, groups, maskAadhaar, maskPan, phoneLabel, sections, type DeskCustomer } from "@/lib/desk";
 
 const DeskContext = createContext<{ openCustomer: (id: string) => void; notify: (tone: "ok" | "bad", title: string, detail?: string) => void }>({
@@ -25,6 +25,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false);
   const [query, setQuery] = useState("");
   const [noticesOpen, setNoticesOpen] = useState(false);
+  const [topups, setTopups] = useState<WalletOverview["recentTopups"]>([]);
+  const [freshTopups, setFreshTopups] = useState(0);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [admin, setAdmin] = useState<AdminAccount | null>(null);
   const [toast, setToast] = useState<{ id: number; tone: "ok" | "bad"; title: string; detail?: string } | null>(null);
@@ -91,6 +93,28 @@ export function AdminShell({ children }: { children: ReactNode }) {
     pushToast("ok", "Signed out");
     void logout().catch(() => clearSession());
   }
+
+  // Latest agent top-ups for the bell. Refreshed every 2 minutes while signed in.
+  useEffect(() => {
+    if (!signedIn) return;
+    let active = true;
+    const pull = () =>
+      walletOverview()
+        .then((data) => {
+          if (!active) return;
+          const real = data.recentTopups.filter((t) => t.status === "success" && !t.testMode);
+          const since = Date.now() - 24 * 60 * 60 * 1000;
+          setTopups(real.slice(0, 6));
+          setFreshTopups(real.filter((t) => new Date(t.createdAt).getTime() >= since).length);
+        })
+        .catch(() => undefined);
+    void pull();
+    const timer = window.setInterval(pull, 120_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [signedIn]);
 
   useEffect(() => {
     const locked = menu || drawerOpen;
@@ -186,12 +210,25 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <div className="relative">
               <button type="button" aria-label="Notifications" aria-expanded={noticesOpen} onClick={() => setNoticesOpen((open) => !open)} className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#e6ebf5] bg-white text-[#12182b]">
                 <Icon name="bell" />
+                {freshTopups ? <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#16a34a] px-1 text-[10px] font-extrabold text-white">{freshTopups}</span> : null}
                 <span className="sr-only">Notifications</span>
               </button>
               {noticesOpen ? (
                 <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-[#e6ebf5] bg-white p-2 shadow-xl">
                   <p className="px-2 py-1.5 text-xs font-extrabold tracking-[0.12em] text-[#8b95a7]">NOTIFICATIONS</p>
-                  <p className="px-2 py-3 text-sm font-semibold text-[#5c677a]">New customers show on their list.</p>
+                  <p className="px-2 pt-1 text-[11px] font-extrabold text-[#2f6bff]">AGENT TOP-UPS</p>
+                  {topups.length === 0 ? <p className="px-2 py-2 text-sm font-semibold text-[#5c677a]">No top-ups yet.</p> : null}
+                  {topups.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between gap-2 rounded-xl px-2 py-2 hover:bg-[#f8fafc]">
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-extrabold">{t.agentName}</span>
+                        <span className="block text-[11px] font-semibold text-[#8b95a7]">{new Date(t.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</span>
+                      </span>
+                      <span className="shrink-0 text-sm font-extrabold text-[#16a34a]">+₹{t.amount.toLocaleString("en-IN")}</span>
+                    </div>
+                  ))}
+                  <Link href="/wallet" onClick={() => setNoticesOpen(false)} className="mt-1 block rounded-xl bg-[#eaf1ff] px-2 py-2 text-center text-xs font-extrabold text-[#2f6bff]">Open Wallet &amp; AO Pay</Link>
+                  <p className="px-2 py-2 text-xs font-semibold text-[#8b95a7]">New customers show on their list.</p>
                   {/* <p className="px-2 py-3 text-sm font-semibold text-[#5c677a]">New customers and KYC uploads show on their lists.</p> */}
                 </div>
               ) : null}
@@ -380,6 +417,7 @@ function Icon({ name }: { name: string }) {
   if (name === "cibil") return <svg {...props}><path d="M12 3a9 9 0 1 0 9 9h-9z" /></svg>;
   if (name === "customers") return <svg {...props}><path d="M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M20 19v-1a3 3 0 0 0-2-2.8M16 6.1a3 3 0 0 1 0 5.8" /></svg>;
   if (name === "kyc") return <svg {...props}><path d="M8 4h6l4 4v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM14 4v4h4M9 13h6M9 17h4" /></svg>;
+  if (name === "wallet") return <svg {...props}><path d="M3 7a2 2 0 0 1 2-2h13v4M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2zM16 14h.01" /></svg>;
   if (name === "account") return <svg {...props}><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></svg>;
   if (name === "agents") return <svg {...props}><path d="M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M19 8v6M22 11h-6" /></svg>;
   return <svg {...props}><path d="M10 7V5a2 2 0 0 1 2-2h7v14h-7a2 2 0 0 1-2-2M10 12H3M6 9l-3 3 3 3" /></svg>;
