@@ -8,7 +8,6 @@ import { CreatePayoutDto, CreateTopupDto, PayinWebhookDto, PayoutWebhookDto, Ver
 import { HouseWallet, HouseWalletDocument } from './schemas/house-wallet.schema';
 import { WalletEntry, WalletEntryDocument } from './schemas/wallet-entry.schema';
 import { razorpayCheckoutPage } from './razorpay-checkout.page';
-import { AopayBalanceClient } from './aopay-balance.client';
 import { RazorpayClient } from './razorpay.client';
 import { API_CHARGE_PAISE, API_FEE_PAISE, API_GST_PAISE, paiseToRupees, rupeesToPaise } from './wallet.money';
 
@@ -27,7 +26,6 @@ export class WalletService {
     @InjectModel(Agent.name) private readonly agents: Model<AgentDocument>,
     private readonly config: ConfigService,
     private readonly razorpay: RazorpayClient,
-    private readonly aopayBalance: AopayBalanceClient,
   ) {}
 
   async snapshot(agentId: string) {
@@ -120,12 +118,12 @@ export class WalletService {
   }
 
   /**
-   * Super admin money view: live AO Pay balance, what each agent recharged and used, and recent top-ups.
+   * Super admin money view: what each agent recharged and used, and recent top-ups.
+   * (Our own AO Pay balance is checked on the AO Pay dashboard.)
    * Test-mode Razorpay payments are counted separately and never as real money.
    */
   async adminOverview() {
-    const [aopay, agents, perAgent, recent] = await Promise.all([
-      this.aopayBalance.fetch(),
+    const [agents, perAgent, recent] = await Promise.all([
       this.agents.find().sort({ name: 1 }),
       this.entries.aggregate<{
         _id: string;
@@ -203,7 +201,6 @@ export class WalletService {
 
     const sum = (pick: (r: (typeof rows)[number]) => number) => Math.round(rows.reduce((t, r) => t + pick(r), 0) * 100) / 100;
     return {
-      aopay,
       chargePerCheck: paiseToRupees(API_CHARGE_PAISE),
       totals: {
         recharged: sum((r) => r.recharged),

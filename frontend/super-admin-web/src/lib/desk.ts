@@ -75,10 +75,10 @@ export const sections: Section[] = [
   // },
   {
     slug: "wallet",
-    label: "Wallet & AO Pay",
+    label: "Agent Wallets",
     group: "CIBIL",
-    title: "Wallet & AO Pay",
-    blurb: "Our live AO Pay balance, how much each agent recharged and used, and every agent top-up as it comes in.",
+    title: "Agent Wallets",
+    blurb: "How much each agent recharged and used, their balance now, and every agent top-up as it comes in. Our own AO Pay balance is on the AO Pay dashboard.",
     columns: [],
     rows: [],
   },

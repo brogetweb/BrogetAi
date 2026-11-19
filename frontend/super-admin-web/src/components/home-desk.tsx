@@ -79,7 +79,7 @@ export function HomeDesk() {
           <div className="flex flex-wrap gap-2">
             {[
               ["/agents", "agents", "Add agent"],
-              ["/wallet", "wallet", "Wallet & AO Pay"],
+              ["/wallet", "wallet", "Agent wallets"],
               ["/cibil", "cibil", "CIBIL reports"],
               ["/customers", "customers", "Customers"],
             ].map(([href, icon, label]) => (
@@ -92,13 +92,7 @@ export function HomeDesk() {
       </section>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi
-          href="/wallet"
-          tone="text-[#2f6bff]"
-          label="AO Pay balance"
-          value={overview?.aopay.ok && overview.aopay.balance != null ? money(overview.aopay.balance) : "—"}
-          hint={overview ? (overview.aopay.ok ? "Live from AO Pay" : "Add AO Pay balance keys") : "…"}
-        />
+        <Kpi href="/agents" tone="text-[#2f6bff]" label="Agents" value={loading ? "…" : String(agents)} hint={loading ? "…" : `${customers} customers`} />
         <Kpi href="/wallet" tone="text-[#16a34a]" label="Agents recharged" value={overview ? money(overview.totals.recharged) : "…"} hint={overview ? `${overview.totals.topups} payments` : "…"} />
         <Kpi href="/cibil" tone="text-[#7c3aed]" label="Used for CIBIL" value={overview ? money(overview.totals.used) : "…"} hint={overview ? `${overview.totals.checks} checks` : "…"} />
         <Kpi href="/wallet" tone="text-[#d97706]" label="Agent wallets now" value={overview ? money(overview.totals.agentBalances) : "…"} hint="Spendable by agents" />
