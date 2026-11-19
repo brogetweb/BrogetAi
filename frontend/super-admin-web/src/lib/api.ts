@@ -154,6 +154,36 @@ export async function changeAdminPassword(currentPassword: string, newPassword: 
   return body.profile;
 }
 
+export type WalletOverview = {
+  aopay: { configured: boolean; ok: boolean; balance: number | null; message: string; checkedAt: string };
+  chargePerCheck: number;
+  totals: { recharged: number; topups: number; testRecharged: number; used: number; checks: number; agentBalances: number; agentsWithRecharge: number };
+  agents: {
+    agentId: string;
+    name: string;
+    email: string;
+    phone: string;
+    status: string;
+    balance: number;
+    recharged: number;
+    topups: number;
+    testRecharged: number;
+    used: number;
+    checks: number;
+    pendingTopups: number;
+    lastTopupAt: string | null;
+    lastCheckAt: string | null;
+  }[];
+  recentTopups: { id: string; agentId: string; agentName: string; amount: number; status: string; note: string; utr: string; testMode: boolean; createdAt: string }[];
+};
+
+/** GET /wallet/admin/overview - AO Pay balance, per-agent recharge/usage and latest top-ups. */
+export async function walletOverview() {
+  const response = await authorized("/wallet/admin/overview");
+  if (!response.ok) throw new Error(await readError(response, "Could not load the wallet overview."));
+  return (await response.json()) as WalletOverview;
+}
+
 /** Strong random password for a reset: 12 chars, letters + digits, no look-alike characters. */
 export function generatePassword() {
   const letters = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";

@@ -74,6 +74,15 @@ export const sections: Section[] = [
   //   rows: [],
   // },
   {
+    slug: "wallet",
+    label: "Wallet & AO Pay",
+    group: "CIBIL",
+    title: "Wallet & AO Pay",
+    blurb: "Our live AO Pay balance, how much each agent recharged and used, and every agent top-up as it comes in.",
+    columns: [],
+    rows: [],
+  },
+  {
     slug: "agents",
     label: "Agents",
     group: "Agents",

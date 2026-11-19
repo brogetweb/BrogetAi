@@ -5,6 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { HouseWallet, HouseWalletSchema } from './schemas/house-wallet.schema';
 import { WalletEntry, WalletEntrySchema } from './schemas/wallet-entry.schema';
 import { WalletController } from './wallet.controller';
+import { AopayBalanceClient } from './aopay-balance.client';
 import { RazorpayClient } from './razorpay.client';
 import { WalletService } from './wallet.service';
 
@@ -18,7 +19,7 @@ import { WalletService } from './wallet.service';
     ]),
   ],
   controllers: [WalletController],
-  providers: [WalletService, RazorpayClient],
+  providers: [WalletService, RazorpayClient, AopayBalanceClient],
   exports: [WalletService],
 })
 export class WalletModule {}
