@@ -1094,8 +1094,8 @@ function RazorpayPayDialog({
   useEffect(() => {
     if (announced.current || !done) return;
     announced.current = true;
-    notify(true, "Payment received", `${money(amount)} added to your wallet.`);
-  }, [done, amount, notify]);
+    notify(true, entry?.testMode ? "Test payment received" : "Payment received", entry?.testMode ? "Test mode - not added to your balance." : `${money(amount)} added to your wallet.`);
+  }, [done, amount, notify, entry?.testMode]);
 
   async function checkNow() {
     setChecking(true);
@@ -1173,10 +1173,14 @@ function RazorpayPayDialog({
               <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-[0_8px_24px_-6px_rgba(16,185,129,.6)]">
                 <IconCheck size={32} />
               </span>
-              <p className="mt-4 text-lg font-semibold text-emerald-800">Payment successful</p>
-              <p className="mt-1 text-sm text-emerald-700">
-                {money(amount)} added. New balance {money(wallet?.balance ?? 0)}.
-              </p>
+              <p className="mt-4 text-lg font-semibold text-emerald-800">{entry?.testMode ? "Test payment successful" : "Payment successful"}</p>
+              {entry?.testMode ? (
+                <p className="mt-1 text-sm text-amber-700">Test mode: {money(amount)} is recorded but NOT added to your balance, so it cannot be used for CIBIL checks.</p>
+              ) : (
+                <p className="mt-1 text-sm text-emerald-700">
+                  {money(amount)} added. New balance {money(wallet?.balance ?? 0)}.
+                </p>
+              )}
               {entry?.utr ? <p className="mt-2 font-mono text-[11px] text-emerald-700/80">Ref {entry.utr}</p> : null}
             </div>
           ) : view === "verifying" ? (

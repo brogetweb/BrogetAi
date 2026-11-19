@@ -32,6 +32,11 @@ export class RazorpayClient {
     return this.creds().keyId;
   }
 
+  /** rzp_test_* keys: payments are simulated and must never become spendable balance. */
+  isTestMode() {
+    return this.creds().keyId.startsWith('rzp_test_');
+  }
+
   createOrder(input: { amountPaise: number; receipt: string; notes: Record<string, string> }) {
     return this.call<RazorpayOrder>('POST', '/orders', { amount: input.amountPaise, currency: 'INR', receipt: input.receipt, notes: input.notes });
   }

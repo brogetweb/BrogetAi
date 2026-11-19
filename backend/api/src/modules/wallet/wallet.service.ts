@@ -32,11 +32,14 @@ export class WalletService {
     const agent = await this.agents.findById(agentId);
     const balancePaise = agent?.walletBalancePaise ?? 0;
     const rows = await this.entries.find({ agentId }).sort({ createdAt: -1 }).limit(100);
-    const added = rows.filter((row) => row.kind === 'topup' && row.status === 'success').reduce((sum, row) => sum + row.amountPaise, 0);
+    const added = rows.filter((row) => row.kind === 'topup' && row.status === 'success' && !row.testMode).reduce((sum, row) => sum + row.amountPaise, 0);
+    const testAdded = rows.filter((row) => row.kind === 'topup' && row.status === 'success' && row.testMode).reduce((sum, row) => sum + row.amountPaise, 0);
     const spent = rows.filter((row) => row.kind !== 'topup' && row.status === 'success').reduce((sum, row) => sum + row.amountPaise, 0);
     return {
       balance: paiseToRupees(balancePaise),
       added: paiseToRupees(added),
+      /** Test-mode payments: visible for testing, never spendable. */
+      testAdded: paiseToRupees(testAdded),
       spent: paiseToRupees(spent),
       fee: paiseToRupees(API_FEE_PAISE),
       gst: paiseToRupees(API_GST_PAISE),
@@ -277,13 +280,22 @@ export class WalletService {
       return (await this.entries.findOneAndUpdate({ _id: entry._id, status: 'pending' }, { status: 'failed', note: 'Razorpay amount did not match the wallet request.' }, { new: true })) ?? entry;
     }
     const reference = paid.acquirer_data?.rrn || paid.acquirer_data?.upi_transaction_id || paid.acquirer_data?.bank_transaction_id || paid.id;
+    // Test keys move no real money, so a test payment is recorded but NEVER added to the spendable
+    // balance - it cannot pay for a CIBIL check.
+    const testMode = this.razorpay.isTestMode();
     // Only one caller can move pending -> success, so the wallet is credited once.
     const claimed = await this.entries.findOneAndUpdate(
       { _id: entry._id, status: { $in: ['pending', 'failed'] } },
-      { status: 'success', note: `${RAZORPAY_NOTE} · ${paid.method ?? 'payment'}`, utr: reference, gatewayPaymentId: paid.id },
+      {
+        status: 'success',
+        note: `${RAZORPAY_NOTE}${testMode ? ' TEST' : ''} · ${paid.method ?? 'payment'}${testMode ? ' · not added to balance' : ''}`,
+        utr: reference,
+        gatewayPaymentId: paid.id,
+        testMode,
+      },
       { new: true },
     );
-    if (claimed) await this.agents.updateOne({ _id: claimed.agentId }, { $inc: { walletBalancePaise: claimed.amountPaise } });
+    if (claimed && !testMode) await this.agents.updateOne({ _id: claimed.agentId }, { $inc: { walletBalancePaise: claimed.amountPaise } });
     return claimed ?? (await this.entries.findById(entry._id));
   }
 
@@ -460,6 +472,7 @@ export class WalletService {
       status: row.status,
       note: row.note ?? '',
       utr: row.utr ?? '',
+      testMode: row.testMode === true,
       createdAt: (row as WalletEntryDocument & { createdAt?: Date }).createdAt ?? new Date(),
     };
   }

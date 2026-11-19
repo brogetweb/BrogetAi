@@ -58,7 +58,7 @@ export type WalletSnapshot = {
   fee: number;
   gst: number;
   lowBalance: boolean;
-  entries: { id: string; kind: string; amount: number; status: string; note?: string; utr?: string; fee?: number; gst?: number; createdAt: string }[];
+  entries: { id: string; kind: string; amount: number; status: string; note?: string; utr?: string; fee?: number; gst?: number; testMode?: boolean; createdAt: string }[];
 };
 
 type ErrorBody = { message?: string | string[]; code?: string };
