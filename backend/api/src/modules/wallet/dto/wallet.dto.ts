@@ -4,7 +4,7 @@ import { Allow, IsBoolean, IsNumber, IsOptional, IsString, Matches, Max, MaxLeng
 export class CreateTopupDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(300, { message: 'Minimum amount is ₹300.' })
+  @Min(65, { message: 'Minimum amount is ₹65.' })
   @Max(500000)
   amount: number;
 

@@ -218,7 +218,7 @@ export type TopupResult = {
 
 /** Same rules the backend DTO and the agent mobile app enforce. */
 export function validateTopup(amount: number, mobile: string): string | null {
-  if (!Number.isFinite(amount) || amount < 300) return "Top-up accepts ₹300 or more.";
+  if (!Number.isFinite(amount) || amount < 65) return "Top-up accepts ₹65 or more.";
   if (amount > 500000) return "The most you can add in one payment is ₹5,00,000.";
   if (Math.round(amount * 100) !== amount * 100) return "Use at most 2 decimal places.";
   if (!/^[6-9]\d{9}$/.test(mobile)) return "Enter a 10-digit mobile number.";
