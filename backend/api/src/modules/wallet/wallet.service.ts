@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { BadGatewayException, ConflictException, HttpException, HttpStatus, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -211,10 +211,12 @@ export class WalletService {
   /** Checkout success callback (web dialog and hosted page). The signature is checked, then Razorpay's API decides. */
   async verifyRazorpay(input: VerifyRazorpayDto) {
     const entry = await this.entries.findOne({ requestId: input.requestId, kind: 'topup' });
-    if (!entry || !entry.gatewayOrderId || entry.gatewayOrderId !== input.razorpay_order_id) throw new NotFoundException('Top-up not found.');
+    if (!entry || !entry.gatewayOrderId) throw new NotFoundException('Top-up not found.');
+    // Razorpay checklist: a mismatched order or signature is a 400 and the payment is never marked paid.
+    if (entry.gatewayOrderId !== input.razorpay_order_id) throw new BadRequestException('This payment does not belong to that top-up.');
     if (!this.razorpay.verifyCheckout(input.razorpay_order_id, input.razorpay_payment_id, input.razorpay_signature)) {
       this.logger.warn(`Razorpay verify ${input.requestId}: bad signature.`);
-      throw new NotFoundException('Top-up not found.');
+      throw new BadRequestException('Payment signature is invalid.');
     }
     const updated = await this.settleRazorpayTopup(input.requestId);
     return this.present(updated ?? entry);
