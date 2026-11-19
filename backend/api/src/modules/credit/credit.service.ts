@@ -66,8 +66,9 @@ export class CreditService {
     });
     await this.customers.upsertFromCheck(this.customerFromCheck(agent, input, score, ok));
     if (!ok) throw new BadGatewayException(`${message.replace(/\.?\s*$/, '.')} No fee was charged.`);
-    // A report was delivered (score and/or full-report link), so the check is paid for.
-    if (score === null && !reportUrl) return this.present(saved);
+    // The wallet is charged ONLY when a CIBIL score came back. Failures, "Deactivated", "Wallet Balance is Low",
+    // or a reply without a score are never charged.
+    if (score === null) return this.present(saved);
     try {
       await this.wallet.chargeApiHit(agent);
     } catch (error) {
