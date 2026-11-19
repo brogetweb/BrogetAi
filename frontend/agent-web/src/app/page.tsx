@@ -19,7 +19,7 @@ import { LogoMark, ScoreGauge } from "@/components/ui";
 
 const steps = [
   { title: "Get your login", copy: "Your Super Admin creates your agent account - the same email and password as the mobile app.", icon: <IconLock size={18} /> },
-  { title: "Add money", copy: "Top up your wallet with UPI, cards or net banking (Razorpay) from ₹300. Balance updates once payment confirms.", icon: <IconWallet size={18} /> },
+  { title: "Add money", copy: "Top up your wallet with UPI, cards or net banking (Razorpay) from ₹65. Balance updates once payment confirms.", icon: <IconWallet size={18} /> },
   { title: "Add a customer", copy: "Save PAN, date of birth, mobile and email once to your shared customer book.", icon: <IconUsers size={18} /> },
   { title: "Run the check", copy: "Capture consent, see the score instantly and download the PDF report.", icon: <IconGauge size={18} /> },
 ];
@@ -77,7 +77,7 @@ export default function LandingPage() {
             <dl className="mx-auto mt-9 grid max-w-md grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-white/70 py-4 shadow-[var(--shadow-xs)] backdrop-blur lg:mx-0">
               {[
                 ["300–900", "Score range"],
-                ["₹300", "Min. top-up"],
+                ["₹65", "Min. top-up"],
                 ["1 login", "Web + mobile"],
               ].map(([value, label]) => (
                 <div key={label} className="px-3 text-center">
@@ -246,7 +246,7 @@ export default function LandingPage() {
             </p>
             <p className="mt-2 text-sm text-white/55">Only pay for the checks you run. The per-check fee is set by Broget AI and shown on your dashboard.</p>
             <ul className="mt-8 space-y-3.5 border-t border-white/10 pt-8 text-sm">
-              {["No setup or monthly fee", "Flat fee + 18% GST per credit check", "UPI top-ups from ₹300", "Full wallet ledger & PDF history"].map((item) => (
+              {["No setup or monthly fee", "Flat fee + 18% GST per credit check", "UPI top-ups from ₹65", "Full wallet ledger & PDF history"].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-white/80">
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-brand text-white">
                     <IconCheck size={12} />

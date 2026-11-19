@@ -849,10 +849,10 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
                 className="input pl-8 text-base font-semibold"
               />
             </span>
-            <span className="mt-1.5 block text-xs text-subtle">Minimum ₹300 · maximum ₹5,00,000 per payment</span>
+            <span className="mt-1.5 block text-xs text-subtle">Minimum ₹65 · maximum ₹5,00,000 per payment</span>
           </label>
           <div className="mt-3 flex flex-wrap gap-2">
-            {[500, 1000, 2000, 5000].map((value) => (
+            {[100, 500, 1000, 5000].map((value) => (
               <button
                 key={value}
                 type="button"
@@ -930,7 +930,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
           <h4 className="mt-6 text-sm font-semibold text-ink">How a top-up works</h4>
           <ol className="mt-3 grid gap-3 sm:grid-cols-3">
             {[
-              ["Enter amount", "Minimum ₹300 and a UPI mobile number."],
+              ["Enter amount", "Minimum ₹65 and a UPI mobile number."],
               ["Pay securely", "UPI, card, net banking or wallet in the Razorpay window."],
               ["Balance updates", "Instantly, once Razorpay confirms."],
             ].map(([t, d], i) => (
