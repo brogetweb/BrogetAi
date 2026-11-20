@@ -58,6 +58,8 @@ export type WalletSnapshot = {
   fee: number;
   gst: number;
   lowBalance: boolean;
+  /** Server-side minimum top-up in rupees (WALLET_MIN_TOPUP_RUPEES). */
+  minTopup?: number;
   entries: { id: string; kind: string; amount: number; status: string; note?: string; utr?: string; fee?: number; gst?: number; testMode?: boolean; createdAt: string }[];
 };
 
@@ -260,8 +262,8 @@ export type TopupResult = {
 };
 
 /** Same rules the backend DTO and the agent mobile app enforce. */
-export function validateTopup(amount: number, mobile: string): string | null {
-  if (!Number.isFinite(amount) || amount < 65) return "Top-up accepts ₹65 or more.";
+export function validateTopup(amount: number, mobile: string, min = 65): string | null {
+  if (!Number.isFinite(amount) || amount < min) return `Top-up accepts ₹${min} or more.`;
   if (amount > 500000) return "The most you can add in one payment is ₹5,00,000.";
   if (Math.round(amount * 100) !== amount * 100) return "Use at most 2 decimal places.";
   if (!/^[6-9]\d{9}$/.test(mobile)) return "Enter a 10-digit mobile number.";
@@ -269,8 +271,8 @@ export function validateTopup(amount: number, mobile: string): string | null {
 }
 
 /** POST /wallet/topups - identical call to the agent mobile app (createWalletTopup). */
-export async function createTopup(amount: number, mobile: string) {
-  const invalid = validateTopup(amount, mobile);
+export async function createTopup(amount: number, mobile: string, min = 65) {
+  const invalid = validateTopup(amount, mobile, min);
   if (invalid) throw new Error(invalid);
   let response: Response;
   try {
