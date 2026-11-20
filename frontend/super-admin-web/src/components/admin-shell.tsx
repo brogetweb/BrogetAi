@@ -158,7 +158,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           onClick={() => setMenu(false)}
           className={`fixed inset-0 z-30 bg-[#0e1b33]/40 transition-opacity duration-300 ease-out lg:hidden ${menu ? "opacity-100" : "pointer-events-none opacity-0"}`}
         />
-        <aside className={`fixed inset-y-0 left-0 z-40 flex h-dvh w-[280px] max-w-[86vw] flex-col overflow-hidden bg-[#0e1b33] text-white shadow-[12px_0_40px_rgba(8,16,36,0.28)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:max-w-none lg:translate-x-0 lg:shadow-none ${menu ? "translate-x-0" : "-translate-x-full"}`}>
+        <aside className={`desk-sidebar fixed inset-y-0 left-0 z-40 flex h-dvh w-[280px] max-w-[86vw] flex-col overflow-hidden bg-[#0e1b33] text-white shadow-[12px_0_40px_rgba(8,16,36,0.28)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:max-w-none lg:translate-x-0 lg:shadow-none ${menu ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex shrink-0 items-center gap-3 px-4 py-4">
             <a href={publicWebsiteUrl} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-white/70" aria-label="Open the public website">
               <Image src="/mark.png" alt="" width={40} height={40} className="h-10 w-10 rounded-2xl" />
@@ -337,9 +337,10 @@ function SideLink({ href, icon, label, active, onPick }: { href: string; icon: s
     <Link
       href={href}
       onClick={onPick}
-      className={`mb-1 flex items-center gap-3 rounded-2xl px-2.5 py-2 text-sm font-bold transition-colors duration-200 ${active ? "bg-[#2f6bff] text-white shadow-[0_8px_20px_rgba(47,107,255,0.35)]" : "text-[#d5e0f2] hover:bg-white/10"}`}
+      aria-current={active ? "page" : undefined}
+      className={`mb-1 flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-bold transition-all duration-200 ${active ? "bg-white/[0.12] text-white ring-1 ring-white/15" : "text-[#c3d0e8] hover:bg-white/[0.06] hover:text-white"}`}
     >
-      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${active ? "bg-white/20" : "bg-white/10"}`}>
+      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg transition ${active ? "bg-[linear-gradient(140deg,#5b8cff,#2f6bff)] text-white shadow-[0_6px_14px_-4px_rgba(47,107,255,0.7)]" : "bg-white/[0.07] text-[#9fb0d0]"}`}>
         <Icon name={icon} />
       </span>
       <span className="truncate">{label}</span>

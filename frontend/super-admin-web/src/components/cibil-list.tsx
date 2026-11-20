@@ -12,6 +12,7 @@ import {
 import { phoneLabel, scoreBand } from "@/lib/desk";
 import { useDesk } from "@/components/admin-shell";
 import { inPeriod, useDeskRecords, whenLabel, type Period } from "@/components/agent-work";
+import { Segmented, StatCard, iconFor, toneFrom } from "@/components/ui";
 
 function money(n: number) {
   return `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
@@ -124,8 +125,14 @@ export function CibilList() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <TabButton active={tab === "agents"} onClick={() => setTab("agents")} label="By agent" />
-        <TabButton active={tab === "reports"} onClick={() => setTab("reports")} label="All reports" />
+        <Segmented
+          value={tab}
+          onChange={setTab}
+          options={[
+            ["agents", "By agent"],
+            ["reports", "All reports"],
+          ]}
+        />
         <button
           type="button"
           onClick={() => {
@@ -368,23 +375,6 @@ export function CibilList() {
 }
 
 function Stat({ label, value, hint, accent }: { label: string; value: string; hint: string; accent?: string }) {
-  return (
-    <div className="rounded-2xl border border-[#eef1f6] bg-white p-4">
-      <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#8b95a7]">{label}</p>
-      <p className={`mt-1 text-2xl font-extrabold tracking-tight text-[#0b1f3a] ${accent ?? ""}`}>{value}</p>
-      <p className="mt-1 text-xs font-semibold text-[#8b95a7]">{hint}</p>
-    </div>
-  );
+  return <StatCard label={label} value={value} hint={hint} tone={accent ? toneFrom(accent) : "slate"} icon={iconFor(label)} />;
 }
 
-function TabButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl px-4 py-2.5 text-sm font-extrabold ${active ? "bg-[#2f6bff] text-white" : "border border-[#e6ebf5] bg-white text-[#5c677a]"}`}
-    >
-      {label}
-    </button>
-  );
-}

@@ -5,6 +5,7 @@ import { useDesk } from "@/components/admin-shell";
 import { createAgent, deleteAgent, listAgents, setAgentStatus, type AgentProfile } from "@/lib/api";
 import { phoneLabel } from "@/lib/desk";
 import { AgentManagePanel } from "@/components/agent-manage-panel";
+import { StatCard, iconFor, toneFrom } from "@/components/ui";
 
 export function AgentsDesk() {
   const { notify } = useDesk();
@@ -239,12 +240,7 @@ function Field({ label, value, onChange, placeholder, type = "text" }: { label: 
 }
 
 function Stat({ label, value, className }: { label: string; value: number; className: string }) {
-  return (
-    <article className={`rounded-2xl border border-[#eef1f6] p-4 ${className}`}>
-      <p className="text-3xl font-extrabold tracking-tight">{value}</p>
-      <p className="mt-1 text-sm font-extrabold">{label}</p>
-    </article>
-  );
+  return <StatCard label={label} value={value} tone={toneFrom(className)} icon={iconFor(label)} />;
 }
 
 function StatusPill({ status }: { status: AgentProfile["status"] }) {

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDesk } from "@/components/admin-shell";
 import { walletOverview, type WalletOverview } from "@/lib/api";
+import { StatCard, iconFor, toneFrom } from "@/components/ui";
 
 const inr = (n: number) => `₹${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const when = (v?: string | null) => (v ? new Date(v).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "-");
@@ -159,13 +160,7 @@ export function WalletOverviewDesk() {
 }
 
 function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <article className="rounded-2xl border border-[#eef1f6] bg-white p-4">
-      <p className="text-sm font-extrabold">{label}</p>
-      <p className="mt-2 text-3xl font-extrabold tracking-tight">{value}</p>
-      <p className="mt-1 text-xs font-bold text-[#8b95a7]">{hint}</p>
-    </article>
-  );
+  return <StatCard label={label} value={value} hint={hint} tone={toneFrom(label.toLowerCase().includes("used") ? "violet" : label.toLowerCase().includes("recharged") ? "green" : "amber")} icon={iconFor(label)} />;
 }
 
 function TopupStatus({ status, test }: { status: string; test: boolean }) {
