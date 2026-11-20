@@ -15,6 +15,7 @@ import {
   type WalletOverview,
   type FlightOrderRow,
 } from "@/lib/api";
+import { StatCard, iconFor, toneFrom } from "@/components/ui";
 
 function money(n: number) {
   return `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
@@ -234,12 +235,7 @@ export function HomeDesk() {
 }
 
 function Tile({ label, value, tint }: { label: string; value: string; tint: string }) {
-  return (
-    <article className={`rounded-2xl border border-white/60 p-4 ${tint}`}>
-      <p className="text-2xl font-extrabold tracking-tight">{value}</p>
-      <p className="mt-1 text-sm font-extrabold">{label}</p>
-    </article>
-  );
+  return <StatCard label={label} value={value} tone={toneFrom(tint)} icon={iconFor(label)} />;
 }
 
 function Mini({ label, value }: { label: string; value: string }) {

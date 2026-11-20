@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table";
 import type { Row } from "@/lib/desk";
+import { StatCard, iconFor, toneFrom } from "@/components/ui";
 
 const months: Record<string, string> = {
   Jan: "01",
@@ -74,10 +75,5 @@ export function BookingDesk({ columns, rows }: { columns: string[]; rows: Row[] 
 }
 
 function Stat({ label, value, className }: { label: string; value: number; className: string }) {
-  return (
-    <article className={`rounded-2xl border border-[#eef1f6] p-4 ${className}`}>
-      <p className="text-3xl font-extrabold tracking-tight">{value}</p>
-      <p className="mt-1 text-sm font-extrabold">{label}</p>
-    </article>
-  );
+  return <StatCard label={label} value={value} tone={toneFrom(className)} icon={iconFor(label)} />;
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { listFlightOrders, type FlightOrderRow } from "@/lib/api";
+import { StatCard, iconFor, toneFrom } from "@/components/ui";
 
 function money(n: number) {
   return `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
@@ -179,13 +180,7 @@ export function FlightOrders() {
 }
 
 function Stat({ label, value, hint, accent }: { label: string; value: string; hint: string; accent?: string }) {
-  return (
-    <div className="rounded-2xl border border-[#eef1f6] bg-white p-4">
-      <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#8b95a7]">{label}</p>
-      <p className={`mt-1 text-xl font-extrabold tracking-tight text-[#0b1f3a] ${accent ?? ""}`}>{value}</p>
-      <p className="mt-1 text-xs font-semibold text-[#8b95a7]">{hint}</p>
-    </div>
-  );
+  return <StatCard label={label} value={value} hint={hint} tone={accent ? toneFrom(accent) : "blue"} icon={iconFor(label)} />;
 }
 
 function Mini({ label, value }: { label: string; value: string }) {

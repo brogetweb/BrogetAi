@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDesk } from "@/components/admin-shell";
 import { deleteKycDocument, listKycDocuments, type KycDocumentRow } from "@/lib/api";
+import { StatCard, iconFor, toneFrom } from "@/components/ui";
 
 const tones: Record<string, string> = {
   Verified: "bg-[#e8f8ee] text-[#16a34a]",
@@ -163,12 +164,7 @@ export function KycDesk() {
 }
 
 function Stat({ label, value, className }: { label: string; value: number; className: string }) {
-  return (
-    <article className={`rounded-2xl border border-[#eef1f6] p-4 ${className}`}>
-      <p className="text-3xl font-extrabold tracking-tight">{value}</p>
-      <p className="mt-1 text-sm font-extrabold">{label}</p>
-    </article>
-  );
+  return <StatCard label={label} value={value} tone={toneFrom(className)} icon={iconFor(label)} />;
 }
 
 function Item({ label, value }: { label: string; value: string }) {

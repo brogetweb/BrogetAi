@@ -43,3 +43,52 @@ main ::-webkit-scrollbar-thumb:hover { background-color: #b8c3d9; }
 .kpi-card { position: relative; overflow: hidden; }
 .kpi-card::after { content: ""; position: absolute; right: -40px; top: -40px; width: 120px; height: 120px; border-radius: 999px; background: currentColor; opacity: .06; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .page-in, .pop-in, .drawer-in, .fade-in { animation: none; } }
+
+/* ---------- Theme polish v2 ---------- */
+body { background: radial-gradient(1200px 600px at 100% -10%, #e4ecff 0%, transparent 60%), radial-gradient(900px 500px at -10% 110%, #eef3ff 0%, transparent 55%), #f3f6fb; }
+h1, h2, h3 { letter-spacing: -0.02em; }
+.tabular-nums, main td { font-variant-numeric: tabular-nums; }
+
+/* Primary / danger / dark buttons get depth */
+main button[class*="bg-[#2f6bff]"], main a[class*="bg-[#2f6bff]"] {
+  background-image: linear-gradient(180deg, #4a7dff 0%, #2f6bff 55%, #2559e6 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 8px 18px -8px rgba(47,107,255,.65);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+main button[class*="bg-[#2f6bff]"]:hover:not(:disabled), main a[class*="bg-[#2f6bff]"]:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 12px 24px -10px rgba(47,107,255,.7); }
+main button[class*="bg-[#dc2626]"] { background-image: linear-gradient(180deg, #ef4444, #dc2626); box-shadow: 0 8px 18px -10px rgba(220,38,38,.7); }
+main button[class*="bg-[#0e1b33]"] { background-image: linear-gradient(180deg, #1b2c52, #0e1b33); }
+main button:active:not(:disabled) { transform: translateY(0) scale(.99); }
+
+/* Inputs */
+main input:not([type="checkbox"]):not([type="radio"]), main select, main textarea {
+  border-color: #e3e9f3;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+main input:not([type="checkbox"]):not([type="radio"]):hover, main select:hover { border-color: #cfd9ea; }
+main input:not([type="checkbox"]):not([type="radio"]):focus, main select:focus, main textarea:focus {
+  border-color: #2f6bff; background-color: #fff; box-shadow: 0 0 0 4px rgba(47,107,255,.12); outline: none;
+}
+main input[placeholder^="Search"] {
+  padding-left: 2.4rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b95a7' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 0.85rem 50%;
+}
+
+/* Tables */
+main table thead th { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #7b879c; background: #f7f9fc; white-space: nowrap; }
+main table tbody td { vertical-align: middle; }
+main table tbody tr + tr td { border-top-color: #f0f3f8; }
+main table tbody tr:nth-child(even) { background: #fcfdff; }
+main table tbody tr:hover { background: #f4f8ff; }
+
+/* Pills */
+main span[class*="rounded-full"][class*="px-2.5"] { box-shadow: inset 0 0 0 1px rgba(18,24,43,.05); }
+
+/* Sidebar */
+aside.desk-sidebar { background: linear-gradient(180deg, #0f1d3a 0%, #0b1730 55%, #0a142a 100%); }
+aside.desk-sidebar::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(400px 260px at 0% 0%, rgba(47,107,255,.22), transparent 70%); }
+aside.desk-sidebar nav a { position: relative; }
+aside.desk-sidebar nav a:hover { transform: translateX(2px); }
+aside.desk-sidebar nav a[aria-current="page"]::before { content: ""; position: absolute; left: -12px; top: 10px; bottom: 10px; width: 4px; border-radius: 0 4px 4px 0; background: #8fb0ff; }
+aside.desk-sidebar > * { position: relative; }

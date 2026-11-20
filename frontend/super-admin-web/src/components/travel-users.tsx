@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDesk } from "@/components/admin-shell";
 import { listTravelUsers, setTravelUserStatus, type TravelUserRow } from "@/lib/api";
+import { StatCard, iconFor, toneFrom } from "@/components/ui";
 
 function prettyDate(iso: string) {
   const date = new Date(iso);
@@ -158,11 +159,5 @@ export function TravelUsers() {
 }
 
 function Stat({ label, value, hint, className }: { label: string; value: number; hint: string; className: string }) {
-  return (
-    <article className={`rounded-2xl border border-[#e6ebf5] p-4 ${className}`}>
-      <p className="text-xs font-extrabold tracking-[0.08em] text-[#8b95a7] uppercase">{label}</p>
-      <p className="mt-1 text-3xl font-extrabold tracking-tight">{value}</p>
-      <p className="mt-1 text-xs font-semibold text-[#5c677a]">{hint}</p>
-    </article>
-  );
+  return <StatCard label={label} value={value} hint={hint} tone={toneFrom(className)} icon={iconFor(label)} />;
 }
