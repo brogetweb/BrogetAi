@@ -45,6 +45,7 @@ export class WalletService {
       gst: paiseToRupees(API_GST_PAISE),
       charge: paiseToRupees(API_CHARGE_PAISE),
       lowBalance: balancePaise < API_CHARGE_PAISE,
+      minTopup: this.minTopupRupees(),
       entries: rows.map((row) => this.present(row)),
     };
   }
@@ -289,6 +290,8 @@ export class WalletService {
 
   /** Wallet top-up through Razorpay. The wallet is credited only after Razorpay reports a captured payment. */
   async createTopup(agentId: string, input: CreateTopupDto) {
+    const min = this.minTopupRupees();
+    if (input.amount < min) throw new BadRequestException(`Minimum amount is ₹${min}.`);
     const amountPaise = rupeesToPaise(input.amount);
     const requestId = `ORD${randomBytes(6).toString('hex')}`;
     const publicUrl = this.publicUrl();
@@ -515,6 +518,12 @@ export class WalletService {
     const key = this.config.get<string>('BROGETPAY_API_KEY')?.trim();
     if (!key) throw new ServiceUnavailableException('Broget Pay is not configured.');
     return key;
+  }
+
+  /** Smallest top-up an agent may make. Set WALLET_MIN_TOPUP_RUPEES (e.g. 1 for a live test, 65 normally). */
+  private minTopupRupees() {
+    const value = Number(this.config.get<string>('WALLET_MIN_TOPUP_RUPEES'));
+    return Number.isFinite(value) && value >= 1 ? value : 65;
   }
 
   private publicUrl() {

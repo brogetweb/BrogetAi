@@ -797,6 +797,7 @@ function LedgerRows({ entries }: { entries: WalletSnapshot["entries"] }) {
 
 function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletState: WalletState; notify: Notify }) {
   const { wallet, loading, reload } = walletState;
+  const minTopup = wallet?.minTopup ?? 65;
   const [amount, setAmount] = useState("500");
   const [mobile, setMobile] = useState(() => {
     const digits = (user.phone || "").replace(/\D/g, "");
@@ -811,7 +812,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
     event.preventDefault();
     const value = Number(amount.trim());
     const phone = mobile.trim();
-    const invalid = validateTopup(value, phone);
+    const invalid = validateTopup(value, phone, minTopup);
     if (invalid) {
       setError(invalid);
       return;
@@ -819,7 +820,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
     setPaying(true);
     setError(null);
     try {
-      const link = await createTopup(value, phone);
+      const link = await createTopup(value, phone, minTopup);
       setPayment({ amount: value, link });
       void reload();
     } catch (caught) {
@@ -880,7 +881,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
                 className="input pl-8 text-base font-semibold"
               />
             </span>
-            <span className="mt-1.5 block text-xs text-subtle">Minimum ₹65 · maximum ₹5,00,000 per payment</span>
+            <span className="mt-1.5 block text-xs text-subtle">Minimum ₹{minTopup} · maximum ₹5,00,000 per payment</span>
           </label>
           <div className="mt-3 flex flex-wrap gap-2">
             {[100, 500, 1000, 5000].map((value) => (
@@ -961,7 +962,7 @@ function WalletTab({ user, walletState, notify }: { user: AgentAccount; walletSt
           <h4 className="mt-6 text-sm font-semibold text-ink">How a top-up works</h4>
           <ol className="mt-3 grid gap-3 sm:grid-cols-3">
             {[
-              ["Enter amount", "Minimum ₹65 and a UPI mobile number."],
+              ["Enter amount", `Minimum ₹${minTopup} and a UPI mobile number.`],
               ["Pay securely", "UPI, card, net banking or wallet in the Razorpay window."],
               ["Balance updates", "Instantly, once Razorpay confirms."],
             ].map(([t, d], i) => (
