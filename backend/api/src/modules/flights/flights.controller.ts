@@ -16,7 +16,7 @@ import { AccessTokenGuard } from '../auth/access-token.guard';
 import { TravellerAccessPayload } from '../book/book.types';
 import { TravellerTokenGuard } from '../book/traveller-token.guard';
 import { AirSearchDto } from './dto/air-search.dto';
-import { FlightCheckoutDto, FlightPayWebhookDto, FlightQuoteDto } from './dto/flight-checkout.dto';
+import { FlightCheckoutDto, FlightPayWebhookDto, FlightQuoteDto, FlightRazorpayVerifyDto } from './dto/flight-checkout.dto';
 import { TicketPdfDto } from './dto/ticket-pdf.dto';
 import { BosFlightClient } from './bos-flight.client';
 import { WebhookSecretGuard } from '../wallet/webhook-secret.guard';
@@ -64,6 +64,13 @@ export class FlightsController {
   @UseGuards(TravellerTokenGuard)
   orderStatus(@Req() req: { traveller: TravellerAccessPayload }, @Param('requestId') requestId: string) {
     return this.orders.statusForTraveller(req.traveller.sub, requestId);
+  }
+
+  /** Razorpay Checkout success handler. The HMAC signature is the proof, so the hosted app page can call it without a token. */
+  @Post('orders/:requestId/razorpay/verify')
+  @HttpCode(200)
+  verifyRazorpay(@Param('requestId') requestId: string, @Body() body: FlightRazorpayVerifyDto) {
+    return this.orders.verifyRazorpay(requestId, body);
   }
 
   @Post('orders/:requestId/demo-pay')

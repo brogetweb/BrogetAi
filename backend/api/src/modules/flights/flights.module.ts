@@ -8,6 +8,7 @@ import { FlightOrdersService } from './flight-orders.service';
 import { FlightsController } from './flights.controller';
 import { FlightsService } from './flights.service';
 import { FlightOrder, FlightOrderSchema } from './schemas/flight-order.schema';
+import { BookRazorpayClient } from '../wallet/razorpay.client';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { FlightOrder, FlightOrderSchema } from './schemas/flight-order.schema';
     ]),
   ],
   controllers: [FlightsController],
-  providers: [BosFlightClient, FlightsService, FlightOrdersService],
+  providers: [BosFlightClient, FlightsService, FlightOrdersService, BookRazorpayClient],
   exports: [BosFlightClient, FlightsService, FlightOrdersService],
 })
 export class FlightsModule {}

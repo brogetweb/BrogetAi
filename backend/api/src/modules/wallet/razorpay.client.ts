@@ -24,8 +24,15 @@ export type RazorpayPayment = {
 @Injectable()
 export class RazorpayClient {
   private readonly logger = new Logger(RazorpayClient.name);
+  /** Env var prefix: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET. */
+  protected readonly prefix: string = 'RAZORPAY';
 
   constructor(private readonly config: ConfigService) {}
+
+  /** True when both key id and secret are set. */
+  configured() {
+    return Boolean(this.read('KEY_ID') && this.read('KEY_SECRET'));
+  }
 
   /** Public key - safe to send to the browser / app checkout. */
   keyId() {
@@ -58,7 +65,7 @@ export class RazorpayClient {
 
   /** Webhook signature: HMAC_SHA256(raw body, webhook secret). False when no webhook secret is configured. */
   verifyWebhook(rawBody: Buffer | string, signature: string | undefined) {
-    const secret = this.read('RAZORPAY_WEBHOOK_SECRET');
+    const secret = this.read('WEBHOOK_SECRET');
     if (!secret || !signature) return false;
     return safeEqual(hmac(rawBody, secret), signature);
   }
@@ -89,22 +96,31 @@ export class RazorpayClient {
     }
     if (!response.ok) {
       const error = (record.error ?? {}) as { description?: string; code?: string };
-      this.logger.warn(`Razorpay ${method} ${path.split('/').slice(0, 2).join('/')} failed: HTTP ${response.status} ${error.code ?? ''} ${error.description ?? text.slice(0, 300)}`);
+      this.logger.warn(`${this.prefix} ${method} ${path.split('/').slice(0, 2).join('/')} failed: HTTP ${response.status} ${error.code ?? ''} ${error.description ?? text.slice(0, 300)}`);
       throw new BadGatewayException(error.description || `Razorpay refused the request (HTTP ${response.status}).`);
     }
     return record as T;
   }
 
   private creds() {
-    const keyId = this.read('RAZORPAY_KEY_ID');
-    const keySecret = this.read('RAZORPAY_KEY_SECRET');
+    const keyId = this.read('KEY_ID');
+    const keySecret = this.read('KEY_SECRET');
     if (!keyId || !keySecret) throw new ServiceUnavailableException('Razorpay is not configured.');
     return { keyId, keySecret };
   }
 
-  private read(key: string) {
-    return this.config.get<string>(key)?.trim() ?? '';
+  private read(key: 'KEY_ID' | 'KEY_SECRET' | 'WEBHOOK_SECRET') {
+    return this.config.get<string>(`${this.prefix}_${key}`)?.trim() ?? '';
   }
+}
+
+/**
+ * Separate Razorpay keys for Book by Broget AI flight tickets (BOOK_RAZORPAY_*), so flight
+ * payments never use the agent wallet / CIBIL gateway keys.
+ */
+@Injectable()
+export class BookRazorpayClient extends RazorpayClient {
+  protected override readonly prefix: string = 'BOOK_RAZORPAY';
 }
 
 function hmac(value: Buffer | string, secret: string) {

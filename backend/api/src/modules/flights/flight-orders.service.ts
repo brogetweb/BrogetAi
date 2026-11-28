@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
@@ -11,8 +12,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { randomBytes } from 'crypto';
 import { Model } from 'mongoose';
 import { Traveller, TravellerDocument } from '../book/schemas/traveller.schema';
-import { FlightCheckoutDto, FlightPayWebhookDto, FlightQuoteDto } from './dto/flight-checkout.dto';
+import { BookRazorpayClient } from '../wallet/razorpay.client';
+import { FlightCheckoutDto, FlightPayWebhookDto, FlightQuoteDto, FlightRazorpayVerifyDto } from './dto/flight-checkout.dto';
 import { paiseToRupees, quoteFlightPrice, rupeesToPaise } from './flight-pricing';
+import { flightRazorpayPage } from './flight-razorpay.page';
 import { FlightOrder, FlightOrderDocument } from './schemas/flight-order.schema';
 
 @Injectable()
@@ -23,6 +26,7 @@ export class FlightOrdersService {
     @InjectModel(FlightOrder.name) private readonly orders: Model<FlightOrderDocument>,
     @InjectModel(Traveller.name) private readonly travellers: Model<TravellerDocument>,
     private readonly config: ConfigService,
+    private readonly razorpay: BookRazorpayClient,
   ) {}
 
   quote(input: FlightQuoteDto) {
@@ -54,11 +58,37 @@ export class FlightOrdersService {
       gstPaise: quote.gstPaise,
       totalPaise: quote.totalPaise,
       status: 'pending',
-      paymentMode: this.hasGatewayKey() ? 'brogetpay' : 'demo',
+      paymentMode: this.razorpay.configured()
+        ? this.razorpay.isTestMode()
+          ? 'razorpay_test'
+          : 'razorpay'
+        : this.hasGatewayKey()
+          ? 'brogetpay'
+          : 'demo',
       flight: input.flight as unknown as Record<string, unknown>,
       passengers: input.passengers as unknown as Record<string, unknown>[],
       note: 'Awaiting customer payment',
     });
+
+    if (this.razorpay.configured()) {
+      try {
+        const rzp = await this.razorpay.createOrder({
+          amountPaise: quote.totalPaise,
+          receipt: requestId,
+          notes: { requestId, travellerId: String(traveller.id), route: `${input.flight.fromCode}-${input.flight.toCode}`, flight: input.flight.flightCode },
+        });
+        order.gatewayOrderId = rzp.id;
+        await order.save();
+      } catch (error) {
+        await this.orders.updateOne({ _id: order._id, status: 'pending' }, { status: 'failed', note: 'Razorpay order create failed.' });
+        throw error;
+      }
+      return this.presentCheckout(order, {
+        paymentUrl: `${this.publicUrl()}/api/v1/book/flights/pay/open/${requestId}`,
+        checkoutUrl: '',
+        demo: false,
+      });
+    }
 
     if (!this.hasGatewayKey()) {
       // Demo / keys not configured yet — app can open demo pay sheet and confirm.
@@ -66,7 +96,7 @@ export class FlightOrdersService {
         paymentUrl: '',
         checkoutUrl: '',
         demo: true,
-        message: 'Broget Pay key missing — use in-app demo pay (set BROGETPAY_API_KEY for live).',
+        message: 'Online payment is not switched on yet. Confirm to complete this booking in demo mode.',
       });
     }
 
@@ -102,8 +132,27 @@ export class FlightOrdersService {
 
   async payOpenPage(requestId: string) {
     if (!/^FLT[A-Za-z0-9]+$/.test(requestId)) throw new NotFoundException();
-    const order = await this.orders.findOne({ requestId });
-    if (!order) throw new NotFoundException();
+    const found = await this.orders.findOne({ requestId });
+    if (!found) throw new NotFoundException();
+    if (found.gatewayOrderId) {
+      const order = await this.settleRazorpay(found);
+      const flight = order.flight ?? {};
+      return flightRazorpayPage({
+        requestId,
+        status: order.status,
+        amountPaise: order.totalPaise,
+        keyId: this.razorpay.keyId(),
+        orderId: order.gatewayOrderId,
+        name: order.travellerName,
+        email: order.travellerEmail,
+        mobile: order.travellerPhone,
+        route: `${String(flight['fromCode'] ?? '')} to ${String(flight['toCode'] ?? '')}`,
+        flight: `${String(flight['airline'] ?? '')} ${String(flight['flightCode'] ?? '')}`.trim(),
+        testMode: order.paymentMode === 'razorpay_test',
+        verifyUrl: `${this.publicUrl()}/api/v1/book/flights/orders/${requestId}/razorpay/verify`,
+      });
+    }
+    const order = found;
     const checkout = order.checkoutUrl || `${this.gatewayOrigin()}/payment/${requestId}`;
     const amount = paiseToRupees(order.totalPaise).toFixed(2);
     return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pay flight</title>
@@ -160,6 +209,9 @@ h1{font-size:22px;margin:0 0 8px}.pay{display:block;text-align:center;background
     const order = await this.orders.findOne({ requestId, travellerId });
     if (!order) throw new NotFoundException('Order not found.');
     if (order.status === 'ticketed' || order.status === 'paid') return this.presentOrder(order);
+    if (order.gatewayOrderId || order.paymentMode.startsWith('razorpay')) {
+      throw new BadRequestException('This order is paid through Razorpay. Complete the payment in the Razorpay window.');
+    }
     if (this.hasGatewayKey() && order.paymentMode === 'brogetpay') {
       throw new BadGatewayException('Live Broget Pay order — complete payment in the gateway.');
     }
@@ -175,7 +227,52 @@ h1{font-size:22px;margin:0 0 8px}.pay{display:block;text-align:center;background
   async statusForTraveller(travellerId: string, requestId: string) {
     const order = await this.orders.findOne({ requestId, travellerId });
     if (!order) throw new NotFoundException('Order not found.');
-    return this.presentOrder(order);
+    return this.presentOrder(await this.settleRazorpay(order));
+  }
+
+  /** Razorpay Checkout handler result. A wrong order id or signature is a 400 and never marks the order paid. */
+  async verifyRazorpay(requestId: string, input: FlightRazorpayVerifyDto) {
+    const order = await this.orders.findOne({ requestId });
+    if (!order || !order.gatewayOrderId) throw new NotFoundException('Order not found.');
+    if (input.razorpay_order_id !== order.gatewayOrderId || !this.razorpay.verifyCheckout(input.razorpay_order_id, input.razorpay_payment_id, input.razorpay_signature)) {
+      throw new BadRequestException('Payment signature did not match.');
+    }
+    return this.presentOrder(await this.settleRazorpay(order));
+  }
+
+  /**
+   * Asks Razorpay whether the order has a captured payment (captures an authorized one) and, when the
+   * amount matches, marks the order paid and issues the ticket. Safe to call repeatedly.
+   */
+  private async settleRazorpay(order: FlightOrderDocument): Promise<FlightOrderDocument> {
+    if (!order.gatewayOrderId || order.status !== 'pending' || !this.razorpay.configured()) return order;
+    let payments;
+    try {
+      payments = await this.razorpay.orderPayments(order.gatewayOrderId);
+    } catch {
+      return order;
+    }
+    let paid = payments.find((p) => p.status === 'captured');
+    if (!paid) {
+      const authorized = payments.find((p) => p.status === 'authorized');
+      if (authorized) paid = await this.razorpay.capture(authorized.id, order.totalPaise).catch(() => undefined);
+    }
+    if (!paid || paid.status !== 'captured') return order;
+    if (paid.amount !== order.totalPaise || paid.currency !== 'INR') {
+      await this.orders.updateOne({ _id: order._id, status: 'pending' }, { status: 'failed', note: `Amount mismatch on ${paid.id}` });
+      return (await this.orders.findById(order._id)) ?? order;
+    }
+    const claimed = await this.orders.findOneAndUpdate(
+      { _id: order._id, status: 'pending' },
+      {
+        status: 'paid',
+        utr: paid.acquirer_data?.rrn || paid.acquirer_data?.upi_transaction_id || paid.id,
+        note: `${order.paymentMode === 'razorpay_test' ? 'Razorpay TEST payment' : 'Razorpay payment'} ${paid.id} (${paid.method ?? 'online'}). Issuing ticket.`,
+      },
+      { new: true },
+    );
+    if (!claimed) return (await this.orders.findById(order._id)) ?? order;
+    return this.issueTicket(claimed);
   }
 
   async listForAdmin() {
@@ -235,6 +332,11 @@ h1{font-size:22px;margin:0 0 8px}.pay{display:block;text-align:center;background
       pnr: order.pnr || '',
       utr: order.utr || '',
       paymentMode: order.paymentMode || '',
+      /** Present while a Razorpay order is unpaid, so the website/app can (re)open Razorpay Checkout. */
+      razorpay:
+        order.gatewayOrderId && order.status === 'pending' && this.razorpay.configured()
+          ? { keyId: this.razorpay.keyId(), orderId: order.gatewayOrderId, amount: order.totalPaise, currency: 'INR', testMode: order.paymentMode === 'razorpay_test' }
+          : null,
       travellerName: order.travellerName,
       travellerEmail: order.travellerEmail,
       travellerPhone: order.travellerPhone,
@@ -249,8 +351,13 @@ h1{font-size:22px;margin:0 0 8px}.pay{display:block;text-align:center;background
     };
   }
 
+  /**
+   * Broget Pay for flight tickets is opt-in only (FLIGHT_PAYMENT_GATEWAY=brogetpay). Flights pay through
+   * Razorpay (BOOK_RAZORPAY_*); without those keys checkout falls back to demo pay, never Broget Pay.
+   */
   private hasGatewayKey() {
-    return Boolean(this.config.get<string>('BROGETPAY_API_KEY')?.trim());
+    const optedIn = this.config.get<string>('FLIGHT_PAYMENT_GATEWAY')?.trim().toLowerCase() === 'brogetpay';
+    return optedIn && Boolean(this.config.get<string>('BROGETPAY_API_KEY')?.trim());
   }
 
   private apiKey() {

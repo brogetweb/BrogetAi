@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import { Model } from 'mongoose';
 import { Session, SessionDocument } from '../auth/schemas/session.schema';
-import { BookLoginDto, BookRegisterDto } from './dto/book-auth.dto';
+import { BookChangePasswordDto, BookLoginDto, BookRegisterDto } from './dto/book-auth.dto';
 import { PublicTraveller, TravellerAccessPayload } from './book.types';
 import { Traveller, TravellerDocument } from './schemas/traveller.schema';
 
@@ -68,6 +68,20 @@ export class BookAuthService {
     }
     await traveller.save();
     return this.present(traveller);
+  }
+
+  async changePassword(travellerId: string, input: BookChangePasswordDto) {
+    const traveller = await this.travellers.findById(travellerId);
+    if (!traveller || traveller.status !== 'active') throw new UnauthorizedException('Sign in again.');
+    if (!(await bcrypt.compare(input.currentPassword, traveller.passwordHash))) {
+      throw new BadRequestException('Your current password is not correct.');
+    }
+    if (input.currentPassword === input.newPassword) {
+      throw new BadRequestException('Pick a new password that is different from the current one.');
+    }
+    traveller.passwordHash = await bcrypt.hash(input.newPassword, 12);
+    await traveller.save();
+    return { ok: true, message: 'Password updated.' };
   }
 
   /** Super-admin: Book app travellers for Active users desk. */

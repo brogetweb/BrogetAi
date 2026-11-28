@@ -1,12 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 @Schema({ timestamps: true, collection: 'flight_orders' })
 export class FlightOrder {
   @Prop({ required: true, index: true })
   requestId!: string;
 
-  @Prop({ required: true, type: Types.ObjectId, index: true })
+  /** SchemaTypes.ObjectId (not Types.ObjectId, which Mongoose treats as Mixed and never casts the string id from the token). */
+  @Prop({ required: true, type: SchemaTypes.ObjectId, index: true })
   travellerId!: Types.ObjectId;
 
   @Prop({ default: '' })
@@ -44,6 +45,10 @@ export class FlightOrder {
 
   @Prop({ default: '' })
   checkoutUrl!: string;
+
+  /** Razorpay order id (order_xxx) when the ticket is paid through Razorpay. */
+  @Prop({ default: '', index: true })
+  gatewayOrderId!: string;
 
   @Prop({ default: '' })
   utr!: string;

@@ -1,4 +1,4 @@
-import { IsEmail, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsEmail, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
 
 export class TicketPdfDto {
   @IsString()
@@ -51,11 +51,47 @@ export class TicketPdfDto {
   @IsString()
   phone?: string;
 
-  @IsInt()
+  /** Rupees, up to 2 decimals (orders include paise, e.g. 6890.58). */
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   total!: number;
 
   @IsOptional()
   @IsString()
   cabin?: string;
+
+  @IsOptional()
+  @IsString()
+  airlineCode?: string;
+
+  @IsOptional()
+  @IsString()
+  fromCity?: string;
+
+  @IsOptional()
+  @IsString()
+  toCity?: string;
+
+  /** Every traveller on the booking ("Mr Rohit Kumar"). Optional; older apps send only travellerName. */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(9)
+  @IsString({ each: true })
+  passengers?: string[];
+
+  /** Optional fare breakup in rupees, printed in the Fare summary. */
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  netFare?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  convenienceFee?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  gst?: number;
 }

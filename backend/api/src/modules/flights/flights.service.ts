@@ -105,6 +105,13 @@ export class FlightsService {
       phone: input.phone,
       total: input.total,
       cabin: input.cabin,
+      airlineCode: input.airlineCode,
+      fromCity: input.fromCity,
+      toCity: input.toCity,
+      passengers: input.passengers,
+      netFare: input.netFare,
+      convenienceFee: input.convenienceFee,
+      gst: input.gst,
     });
     return {
       body,
