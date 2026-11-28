@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { BookAuthService } from './book-auth.service';
-import { BookLoginDto, BookRegisterDto } from './dto/book-auth.dto';
+import { BookChangePasswordDto, BookLoginDto, BookRegisterDto } from './dto/book-auth.dto';
 import { TravellerAccessPayload } from './book.types';
 import { TravellerTokenGuard } from './traveller-token.guard';
 
@@ -30,5 +30,12 @@ export class BookController {
   @UseGuards(TravellerTokenGuard)
   update(@Req() req: { traveller: TravellerAccessPayload }, @Body() body: Partial<BookRegisterDto>) {
     return this.auth.updateProfile(req.traveller.sub, body);
+  }
+
+  @Post('change-password')
+  @HttpCode(200)
+  @UseGuards(TravellerTokenGuard)
+  changePassword(@Req() req: { traveller: TravellerAccessPayload }, @Body() body: BookChangePasswordDto) {
+    return this.auth.changePassword(req.traveller.sub, body);
   }
 }

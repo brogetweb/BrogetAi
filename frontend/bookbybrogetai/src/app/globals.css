@@ -32,3 +32,12 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise .35s cubic-bezier(.22,1,.36,1) both; }
 @media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
+@keyframes slide-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* No sideways scrolling on any screen. `clip` keeps the sticky header working where supported. */
+html, body { max-width: 100%; overflow-x: hidden; }
+@supports (overflow-x: clip) { html, body { overflow-x: clip; } }
+img, svg, video { max-width: 100%; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

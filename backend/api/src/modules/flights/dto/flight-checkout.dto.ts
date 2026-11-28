@@ -104,6 +104,20 @@ export class FlightCheckoutDto {
   payMobile?: string;
 }
 
+export class FlightRazorpayVerifyDto {
+  @IsString()
+  @Matches(/^order_[A-Za-z0-9]+$/)
+  razorpay_order_id!: string;
+
+  @IsString()
+  @Matches(/^pay_[A-Za-z0-9]+$/)
+  razorpay_payment_id!: string;
+
+  @IsString()
+  @MinLength(10)
+  razorpay_signature!: string;
+}
+
 export class FlightPayWebhookDto {
   @IsOptional()
   status?: boolean | string | number;
